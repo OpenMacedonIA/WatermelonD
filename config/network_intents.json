@@ -1,0 +1,44 @@
+{
+    "intents": [
+        {
+            "name": "network_scan",
+            "triggers": [
+                "escanea la red",
+                "busca intrusos",
+                "analiza mi red",
+                "hay alguien en mi wifi"
+            ],
+            "action": "network_scan",
+            "responses": [
+                "Iniciando escaneo de red. Dame unos segundos...",
+                "Voy a echar un vistazo a la red local."
+            ]
+        },
+        {
+            "name": "network_ping",
+            "triggers": [
+                "haz un ping a",
+                "comprueba si responde",
+                "hay conexión con"
+            ],
+            "action": "network_ping",
+            "responses": [
+                "Haciendo ping...",
+                "Comprobando conectividad..."
+            ]
+        },
+        {
+            "name": "network_whois",
+            "triggers": [
+                "quién es el dueño de",
+                "información del dominio",
+                "whois de"
+            ],
+            "action": "network_whois",
+            "responses": [
+                "Consultando registros WHOIS...",
+                "Buscando información del dominio..."
+            ]
+        }
+    ]
+}

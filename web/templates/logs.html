@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card h-100">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i> System Logs</h5>
+            <div class="d-flex gap-2">
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <span class="input-group-text bg-dark border-secondary"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control bg-dark border-secondary text-light" id="log-search"
+                        placeholder="Filtrar..." onkeyup="filterLogs()">
+                </div>
+                <div class="form-check form-switch d-flex align-items-center">
+                    <input class="form-check-input me-2" type="checkbox" id="auto-refresh" checked>
+                    <label class="form-check-label" for="auto-refresh">Auto</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="setFilter('ALL', this)">All</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('AUDIO', this)">Audio</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('STT', this)">STT</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('NLU', this)">NLU</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('SKILLS', this)">Skills</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('WEB', this)">Web</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="setFilter('SYSTEM', this)">System</a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="bg-black text-mono p-3" id="log-viewer"
+            style="height: calc(100vh - 240px); overflow-y: scroll; font-size: 0.85rem; white-space: pre-wrap;">
+            Cargando logs...
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let isAutoScroll = true;
+    let currentFilter = 'ALL';
+    const viewer = document.getElementById('log-viewer');
+
+    // Detect manual scroll to disable auto-scroll
+    viewer.addEventListener('scroll', () => {
+        const isAtBottom = viewer.scrollHeight - viewer.scrollTop <= viewer.clientHeight + 50;
+        isAutoScroll = isAtBottom;
+    });
+
+    function setFilter(filter, element) {
+        currentFilter = filter;
+
+        // Update active tab
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
+        updateLogs();
+    }
+
+    function colorizeLog(text) {
+        return text.replace(/INFO/g, '<span class="text-info">INFO</span>')
+            .replace(/ERROR/g, '<span class="text-danger fw-bold">ERROR</span>')
+            .replace(/WARNING/g, '<span class="text-warning">WARNING</span>')
+            .replace(/DEBUG/g, '<span class="text-secondary">DEBUG</span>')
+            .replace(/CRITICAL/g, '<span class="text-danger bg-white px-1 fw-bold">CRITICAL</span>');
+    }
+
+    function updateLogs() {
+        if (!document.getElementById('auto-refresh').checked) return;
+
+        fetch('/api/logs')
+            .then(response => response.json())
+            .then(data => {
+                const searchTerm = document.getElementById('log-search').value.toLowerCase();
+                let lines = data.logs.split('\n');
+
+                // Filter by Tab
+                if (currentFilter !== 'ALL') {
+                    if (currentFilter === 'SYSTEM') {
+                        // System logs might not have a tag, or we exclude known tags
+                        const knownTags = ['[AUDIO]', '[STT]', '[NLU]', '[SKILLS]', '[WEB]'];
+                        lines = lines.filter(line => !knownTags.some(tag => line.includes(tag)));
+                    } else {
+                        const tag = `[${currentFilter}]`;
+                        lines = lines.filter(line => line.includes(tag));
+                    }
+                }
+
+                // Filter by Search
+                if (searchTerm) {
+                    lines = lines.filter(line => line.toLowerCase().includes(searchTerm));
+                }
+
+                const coloredContent = lines.map(line => colorizeLog(line)).join('\n');
+
+                // Only update if content changed to avoid cursor jumping
+                if (viewer.innerHTML !== coloredContent) {
+                    viewer.innerHTML = coloredContent;
+
+                    if (isAutoScroll) {
+                        viewer.scrollTop = viewer.scrollHeight;
+                    }
+                }
+            });
+    }
+
+    function filterLogs() {
+        // Trigger immediate update when typing
+        updateLogs();
+    }
+
+    setInterval(updateLogs, 2000);
+    updateLogs();
+</script>
+{% endblock %}

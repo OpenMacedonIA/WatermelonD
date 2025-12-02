@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- System Update -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-primary border-opacity-25 hover-card" onclick="runAction('update')"
+            style="cursor: pointer;">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-sync-alt fa-lg text-primary"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle mb-1 text-muted">Sistema</h6>
+                    <h5 class="card-title mb-0">Actualizar</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clean Cache -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-warning border-opacity-25 hover-card" onclick="runAction('clean')"
+            style="cursor: pointer;">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-broom fa-lg text-warning"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle mb-1 text-muted">Mantenimiento</h6>
+                    <h5 class="card-title mb-0">Limpiar Caché</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-success border-opacity-25 hover-card" onclick="runAction('backup')"
+            style="cursor: pointer;">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-save fa-lg text-success"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle mb-1 text-muted">Seguridad</h6>
+                    <h5 class="card-title mb-0">Crear Backup</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restart Network -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-danger border-opacity-25 hover-card" onclick="runAction('net_restart')"
+            style="cursor: pointer;">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-network-wired fa-lg text-danger"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle mb-1 text-muted">Red</h6>
+                    <h5 class="card-title mb-0">Reiniciar Red</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-terminal me-2"></i> Salida de Acción</h5>
+    </div>
+    <div class="card-body bg-black p-0">
+        <div id="action-output" class="p-3 text-mono text-success small"
+            style="min-height: 300px; white-space: pre-wrap; overflow-y: auto;">
+            Esperando acción...
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        transform: translateY(-2px);
+        transition: all 0.2s;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function runAction(id) {
+        const output = document.getElementById('action-output');
+        output.innerHTML = `<span class="text-info">Ejecutando acción: ${id}...\nPor favor espere...</span>`;
+
+        fetch('/api/actions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        })
+            .then(res => res.json())
+            .then(data => {
+                output.innerText = data.output;
+            })
+            .catch(err => {
+                output.innerHTML = `<span class="text-danger">Error: ${err}</span>`;
+            });
+    }
+</script>
+{% endblock %}

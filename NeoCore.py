@@ -1,0 +1,673 @@
+import threading
+import os
+import queue
+import time
+import logging
+import locale
+import json
+import random
+from datetime import datetime, date, timedelta
+from functools import lru_cache
+
+# --- Módulos Internos ---
+from modules.logger import app_logger
+from modules.speaker import Speaker
+from modules.calendar import CalendarManager
+from modules.alarms import AlarmManager
+from modules.config_manager import ConfigManager
+from modules.skills.system import SystemSkill
+from modules.skills.network import NetworkSkill
+from modules.skills.time_date import TimeDateSkill
+from modules.skills.content import ContentSkill
+from modules.skills.media import MediaSkill
+from modules.skills.organizer import OrganizerSkill
+from modules.skills.ssh import SSHSkill
+from modules.skills.files import FilesSkill
+from modules.ssh_manager import SSHManager
+from modules.wifi_manager import WifiManager
+from modules.wifi_manager import WifiManager
+# from modules.vision import VisionManager # Lazy load to prevent CV2 segfaults
+from modules.file_manager import FileManager
+from modules.file_manager import FileManager
+from modules.cast_manager import CastManager
+from modules.utils import load_json_data
+from modules.mqtt_manager import MQTTManager
+from modules.bluetooth_manager import BluetoothManager
+
+# --- Nuevos Managers ---
+from modules.voice_manager import VoiceManager
+from modules.intent_manager import IntentManager
+from modules.ai_engine import AIEngine
+from modules.chat import ChatManager
+from modules.keyword_router import KeywordRouter
+
+# --- Módulos Opcionales ---
+try:
+    from modules.sysadmin import SysAdminManager
+except ImportError:
+    SysAdminManager = None
+
+try:
+    from modules.brain import Brain
+except ImportError:
+    Brain = None
+
+try:
+    from modules.web_admin import run_server, update_face
+    WEB_ADMIN_DISPONIBLE = True
+except ImportError:
+    WEB_ADMIN_DISPONIBLE = False
+    update_face = None
+
+try:
+    from modules.network import NetworkManager
+except ImportError:
+    NetworkManager = None
+
+try:
+    from modules.guard import Guard
+except ImportError:
+    Guard = None
+
+
+
+try:
+    from modules.sherlock import Sherlock
+except ImportError:
+    Sherlock = None
+
+try:
+    import vlc
+except ImportError:
+    vlc = None
+
+app_logger.info("El registro de logs ha sido iniciado (desde NeoCore Refactored).")
+
+class NeoCore:
+    """
+    Controlador principal de Neo (Refactored).
+    Orquesta VoiceManager, IntentManager, AI Engine y Skills.
+    """
+    def __init__(self):
+        app_logger.info("Iniciando Neo Core (AIEngine Edition)...")
+
+        try:
+            locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+        except locale.Error:
+            app_logger.warning("Localización 'es_ES.UTF-8' no encontrada. Usando configuración por defecto.")
+            # --- Configuración ---
+            CONFIG_FILE = "config/config.json"
+            try:
+                locale.setlocale(locale.LC_TIME, '')
+            except:
+                pass
+
+        self.event_queue = queue.Queue()
+        self.speaker = Speaker(self.event_queue)
+        self.config_manager = ConfigManager()
+        self.config = self.config_manager.get_all()
+        
+        # --- AI & Core Managers ---
+        model_path = self.config.get('ai_model_path')
+        self.ai_engine = AIEngine(model_path=model_path) 
+        self.intent_manager = IntentManager(self.config_manager)
+        self.keyword_router = KeywordRouter(self)
+        self.voice_manager = VoiceManager(
+            self.config_manager, 
+            self.speaker, 
+            self.on_voice_command,
+            update_face
+        )
+        self.chat_manager = ChatManager(self.ai_engine)
+
+        # --- Legacy Managers ---
+        self.calendar_manager = CalendarManager()
+        self.alarm_manager = AlarmManager()
+        self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
+        self.ssh_manager = SSHManager()
+        self.wifi_manager = WifiManager()
+        self.wifi_manager = WifiManager()
+        
+        # Vision (Optional & Disabled by default to prevent Segfaults)
+        if self.config.get('vision_enabled', False):
+            try:
+                from modules.vision import VisionManager
+                self.vision_manager = VisionManager(self.event_queue)
+                self.vision_manager.start()
+            except ImportError as e:
+                app_logger.error(f"No se pudo cargar VisionManager (cv2 missing?): {e}")
+                self.vision_manager = None
+            except Exception as e:
+                app_logger.error(f"Error fatal iniciando VisionManager: {e}")
+                self.vision_manager = None
+        else:
+            self.vision_manager = None
+            app_logger.info("VisionManager deshabilitado por configuración (evita Segfaults).")
+        self.file_manager = FileManager()
+        self.cast_manager = CastManager()
+        self.cast_manager.start_discovery() # Start looking for TVs/Speakers
+        
+        # --- AI Engine (Gemma 2B) ---
+        # self.ai_engine already initialized above
+        
+        # --- BRAIN (Memory & Learning) ---
+        self.brain = Brain()
+        self.brain.set_ai_engine(self.ai_engine) # Inject AI for consolidation
+        
+        # --- Chat Manager (Personality & History) ---
+        self.chat_manager = ChatManager(self.ai_engine)
+        self.chat_manager.brain = self.brain # Inject Brain for RAG
+        
+        self.network_manager = NetworkManager() if NetworkManager else None
+        self.guard = Guard(self.event_queue) if Guard else None
+        self.sherlock = Sherlock(self.event_queue) if Sherlock else None
+        
+        # --- MQTT (Network Bros) ---
+        self.mqtt_manager = MQTTManager(self.event_queue)
+        self.mqtt_manager.start() # Non-blocking, fails gracefully if no broker
+        
+        # --- Bluetooth (Fallback) ---
+        self.bluetooth_manager = BluetoothManager(self.event_queue)
+        self.bluetooth_manager.start() # Non-blocking
+        
+        # --- Skills ---
+        self.skills_system = SystemSkill(self)
+        self.skills_network = NetworkSkill(self)
+        self.skills_time = TimeDateSkill(self)
+        self.skills_media = MediaSkill(self) # Ensure MediaSkill has access to core.cast_manager
+        self.skills_content = ContentSkill(self)
+        self.skills_organizer = OrganizerSkill(self)
+        self.skills_ssh = SSHSkill(self)
+        self.skills_files = FilesSkill(self)
+        
+        self.vlc_instance, self.player = self.setup_vlc()
+        
+        # --- Variables de estado ---
+        self.consecutive_failures = 0
+        self.morning_summary_sent_today = False
+        self.waiting_for_timer_duration = False
+        self.active_timer_end_time = None
+        self.is_processing_command = False 
+        
+        # --- Variables para diálogos ---
+        self.waiting_for_reminder_date = False
+        self.pending_reminder_description = None
+        self.waiting_for_reminder_confirmation = False
+        self.pending_reminder_data = None
+        
+        self.waiting_for_alarm_confirmation = False
+        self.pending_alarm_data = None
+        
+        self.waiting_for_learning = None # Stores the key we are trying to learn
+        self.pending_suggestion = None # Stores the ambiguous intent we are asking about
+
+        self.last_spoken_text = "" 
+        self.last_intent_name = None
+        self.active_listening_end_time = 0 
+
+        self.start_background_tasks()
+        
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.on_closing()
+
+    def on_vision_event(self, event_type, data):
+        """Callback for vision events."""
+        if event_type == "known_face":
+            self.speak(f"Hola, {data}. Me alegra verte.")
+        elif event_type == "unknown_face":
+            self.speak("Detecto una presencia desconocida. ¿Quién eres?")
+
+    def speak(self, text):
+        """Pone un mensaje en la cola de eventos para que el Speaker lo diga."""
+        self.event_queue.put({'type': 'speak', 'text': text})
+
+    def setup_vlc(self):
+        """Inicializa la instancia de VLC para reproducción de radio."""
+        if vlc:
+            instance = vlc.Instance()
+            return instance, instance.media_player_new()
+        return None, None
+
+    def on_closing(self):
+        """Limpieza al cerrar."""
+        app_logger.info("Cerrando Neo Core...")
+        self.voice_manager.stop_listening()
+        if self.player:
+            self.player.stop()
+        if self.vision_manager:
+            self.vision_manager.stop()
+        if self.mqtt_manager:
+            self.mqtt_manager.stop()
+        if self.bluetooth_manager:
+            self.bluetooth_manager.stop()
+        os._exit(0)
+
+    def start_background_tasks(self):
+        """Inicia los hilos en segundo plano."""
+        # 1. Escucha de voz
+        self.voice_manager.start_listening(self.intent_manager.intents)
+        
+        # 2. Procesamiento de eventos (hablar, acciones)
+        threading.Thread(target=self.process_event_queue, daemon=True).start()
+        
+        # 3. Tareas proactivas (alarmas, etc)
+        threading.Thread(target=self.proactive_update_loop, daemon=True).start()
+
+        # 4. Web Admin (si está disponible)
+        if WEB_ADMIN_DISPONIBLE:
+            threading.Thread(target=run_server, daemon=True).start()
+            app_logger.info("Servidor Web Admin iniciado en segundo plano.")
+
+    def on_voice_command(self, command, wake_word):
+        """Callback cuando VoiceManager detecta voz."""
+        command_lower = command.lower()
+        
+        # Check Active Listening Window
+        is_active_listening = time.time() < self.active_listening_end_time
+        
+        # Wake Word Check OR Active Listening
+        if is_active_listening or wake_word in command_lower:
+             if update_face: update_face('thinking')
+             self.is_processing_command = True
+             self.voice_manager.set_processing(True)
+             
+             # --- Filler Word (Zero Latency Feel) ---
+             # Play a random "thinking" sound immediately
+             self.speaker.play_random_filler()
+             
+             # Remove wake word from command if present
+             command_clean = command_lower.replace(wake_word, "").strip()
+             
+             # Extend active listening for follow-up
+             self.active_listening_end_time = time.time() + 8
+             
+             self.handle_command(command_clean)
+             
+             self.voice_manager.set_processing(False)
+
+    def handle_command(self, command_text):
+        """Procesa el comando de texto."""
+        try:
+            try:
+                # Diálogos activos
+                if self.waiting_for_timer_duration:
+                    self.handle_timer_duration_response(command_text)
+                    return
+                if self.waiting_for_reminder_date:
+                    self.handle_reminder_date_response(command_text)
+                    return
+                if self.waiting_for_reminder_confirmation:
+                    self.handle_reminder_confirmation(command_text)
+                    return
+                if self.waiting_for_alarm_confirmation:
+                    self.handle_alarm_confirmation(command_text)
+                    return
+                if self.waiting_for_learning:
+                    self.handle_learning_response(command_text)
+                    return
+
+                if not command_text:
+                    return
+
+                # --- Keyword Router (Homemade Function Calling) ---
+                # Intercept specific commands for direct execution
+                router_result = self.keyword_router.process(command_text)
+                if router_result:
+                    app_logger.info(f"Keyword Router Action Result: {router_result}")
+                    # Use Gemma to generate a natural response based on the result
+                    final_response = self.chat_manager.get_response(command_text, system_context=router_result)
+                    self.speak(final_response)
+                    return
+
+                # --- BRAIN: Check for aliases ---
+                if self.brain:
+                    alias_command = self.brain.process_input(command_text)
+                    if alias_command:
+                        app_logger.info(f"Alias detectado: '{command_text}' -> '{alias_command}'")
+                        command_text = alias_command
+
+                app_logger.info(f"Comando: '{command_text}'. Buscando intención...")
+
+                # --- Suggestion / Learning Flow ---
+                if self.pending_suggestion:
+                    if command_text.lower() in ['sí', 'si', 'claro', 'yes', 'correcto', 'eso es']:
+                        # User confirmed!
+                        original_cmd = self.pending_suggestion['original']
+                        target_intent = self.pending_suggestion['intent']
+                        
+                        # 1. Learn Alias
+                        if self.brain:
+                            # Use the first trigger as the canonical command
+                            canonical = target_intent['triggers'][0]
+                            self.brain.learn_alias(original_cmd, canonical)
+                            self.speak(f"Entendido. Aprendo que '{original_cmd}' es '{canonical}'.")
+                        
+                        # 2. Execute Action
+                        self.pending_suggestion = None
+                        best_intent = target_intent # Proceed to execute
+                        # Fall through to execution block below...
+                    
+                    elif command_text.lower() in ['no', 'negativo', 'cancelar']:
+                        self.speak("Vale, perdona. ¿Qué querías decir?")
+                        self.pending_suggestion = None
+                        return
+                    else:
+                        # User said something else, maybe a new command?
+                        # For now, let's assume they ignored the question or it's a new command.
+                        self.pending_suggestion = None
+                        # Fall through to normal processing
+
+                # --- Normal Processing ---
+                
+                # If we fell through from confirmation, best_intent is already set.
+                # If not, we search now.
+                if not 'best_intent' in locals() or not best_intent:
+                    best_intent = self.intent_manager.find_best_intent(command_text)
+
+                if best_intent:
+                    # Check Confidence
+                    confidence = best_intent.get('confidence', 'high')
+                    
+                    if confidence == 'low':
+                        # Ambiguous match -> Ask User
+                        self.pending_suggestion = {
+                            'original': command_text,
+                            'intent': best_intent
+                        }
+                        # Construct question
+                        # Try to find a descriptive trigger or use name
+                        suggestion_text = best_intent['triggers'][0]
+                        self.speak(f"No estoy seguro. ¿Te refieres a '{suggestion_text}'?")
+                        return
+
+                    # High Confidence -> Execute
+                    app_logger.info(f"Intención encontrada: '{best_intent['name']}' ({best_intent.get('score', 0)}%)")
+                    
+                    # Reset Chat Context
+                    self.chat_manager.reset_context()
+
+                    response = random.choice(best_intent['responses'])
+                    params = best_intent.get('parameters', {})
+                    self.consecutive_failures = 0
+                    
+                    # Execute Action and Capture Result
+                    action_result = self.execute_action(best_intent.get('action'), command_text, params, response, best_intent.get('name'))
+                    
+                    # If action returned text (e.g. "Ping OK"), let Gemma wrap it
+                    if action_result and isinstance(action_result, str):
+                        app_logger.info(f"Action Result: {action_result}")
+                        # Gemma generates the final response using the action result (Streaming)
+                        try:
+                            stream = self.chat_manager.get_response_stream(command_text, system_context=action_result)
+                            buffer = ""
+                            for chunk in stream:
+                                buffer += chunk
+                                import re
+                                parts = re.split(r'([.!?\n])', buffer)
+                                if len(parts) > 1:
+                                    while len(parts) >= 2:
+                                        sentence = parts.pop(0) + parts.pop(0)
+                                        sentence = sentence.strip()
+                                        if sentence:
+                                            self.speak(sentence)
+                                    buffer = "".join(parts)
+                            if buffer.strip():
+                                self.speak(buffer)
+                        except Exception as e:
+                            app_logger.error(f"Error streaming action result: {e}")
+                            self.speak("He hecho lo que pediste, pero me he liado al contártelo.")
+                    else:
+                        # Legacy behavior (action handled speaking itself)
+                        pass
+                    return
+                
+                # Si no es un comando, hablar con Gemma
+                self.handle_unrecognized_command(command_text)
+
+            except Exception as e:
+                app_logger.error(f"Error CRÍTICO en handle_command: {e}", exc_info=True)
+                self.speak("Ha ocurrido un error interno procesando tu comando.")
+
+        finally:
+            if not self.speaker.is_busy:
+                self.is_processing_command = False
+                if update_face: update_face('idle')
+
+    def handle_unrecognized_command(self, command_text):
+        """Usa Gemma para responder en Streaming."""
+        try:
+            stream = self.chat_manager.get_response_stream(command_text)
+            
+            buffer = ""
+            self.consecutive_failures = 0
+            
+            for chunk in stream:
+                buffer += chunk
+                
+                # Check for sentence delimiters
+                # Simple heuristic: split by punctuation
+                import re
+                # Split keeping delimiters
+                parts = re.split(r'([.!?\n])', buffer)
+                
+                if len(parts) > 1:
+                    # We have at least one complete sentence
+                    # parts = ['Sentence 1', '.', 'Sentence 2', '?', 'Partial']
+                    
+                    # Process pairs (text + delimiter)
+                    while len(parts) >= 2:
+                        sentence = parts.pop(0) + parts.pop(0)
+                        sentence = sentence.strip()
+                        if sentence:
+                            app_logger.info(f"Stream Sentence: {sentence}")
+                            self.speak(sentence)
+                    
+                    # Remaining part is the new buffer
+                    buffer = "".join(parts)
+            
+            # Speak remaining buffer
+            if buffer.strip():
+                app_logger.info(f"Stream Final: {buffer}")
+                self.speak(buffer)
+                
+        except Exception as e:
+            app_logger.error(f"Error en Streaming: {e}")
+            self.speak("Lo siento, me he liado.")
+
+    def process_event_queue(self):
+        """Procesa eventos de la cola (principalmente hablar)."""
+        while True:
+            try:
+                action = self.event_queue.get()
+                action_type = action.get('type')
+
+                if action_type == 'speak':
+                    app_logger.info(f"Procesando evento SPEAK: {action.get('text')}")
+                    self.is_processing_command = True
+                    if update_face: update_face('speaking')
+                    self.last_spoken_text = action['text']
+                    self.speaker.speak(action['text'])
+                elif action_type == 'speaker_status':
+                    if action['status'] == 'idle':
+                        self.is_processing_command = False
+                        # Activar ventana de escucha activa (8 segundos)
+                        self.active_listening_end_time = time.time() + 8
+                        if update_face: update_face('listening') # Mantener cara de escucha
+                        app_logger.info("Ventana de escucha activa iniciada (8s).") 
+                
+                elif action_type == 'mqtt_alert':
+                    # Alerta crítica de un agente
+                    agent = action.get('agent')
+                    msg = action.get('msg')
+                    self.speak(f"Alerta de {agent}: {msg}")
+                    if update_face: update_face('alert', {'msg': msg})
+
+                elif action_type == 'mqtt_telemetry':
+                    # Datos de telemetría -> Actualizar UI (Pop-up)
+                    agent = action.get('agent')
+                    data = action.get('data')
+                    # Solo mostramos pop-up si es un mensaje de "estado" o cada X tiempo
+                    # Para cumplir el requisito de "aviso pop up deslizante avisando de la conexion",
+                    # podemos asumir que si recibimos telemetría, está conectado.
+                    # Delegamos a la UI la lógica de no spammear.
+                    if update_face: update_face('notification', {'title': f"Agente {agent}", 'body': "Conectado/Datos recibidos"}) 
+            except Exception as e:
+                app_logger.error(f"Error procesando cola de eventos: {e}")
+            finally:
+                self.event_queue.task_done()
+
+    def proactive_update_loop(self):
+        """Bucle para tareas periódicas (alarmas, recordatorios, resumen matutino)."""
+        last_hourly_check = time.time()
+
+        while True:
+            self._check_frequent_tasks()
+
+            now = datetime.now()
+            current_time = time.time()
+
+            if now.hour == 9 and not self.morning_summary_sent_today:
+                self.give_morning_summary() 
+                self.morning_summary_sent_today = True
+            elif now.hour != 9: 
+                self.morning_summary_sent_today = False
+
+            if current_time - last_hourly_check > 3600: 
+                self.check_calendar_events()
+                last_hourly_check = current_time
+            
+            # Tareas horarias (limpieza, mantenimiento)
+            if int(time.time()) % 3600 == 0:
+                # self.clean_tts_cache() # Assuming this function exists elsewhere or is removed
+                if self.brain:
+                    self.brain.consolidate_memory() # Try to consolidate yesterday's memory
+
+            # Reset Face if Active Listening Expired
+            if self.active_listening_end_time > 0 and time.time() > self.active_listening_end_time:
+                if update_face: update_face('idle')
+                self.active_listening_end_time = 0
+
+            time.sleep(1) # Reduced sleep for better responsiveness
+
+    def _check_frequent_tasks(self):
+        """Verifica alarmas y temporizadores."""
+        alarm_actions = self.alarm_manager.check_alarms(datetime.now())
+        for action in alarm_actions:
+            self.event_queue.put(action)
+        
+        if self.active_timer_end_time and datetime.now() >= self.active_timer_end_time:
+            self.event_queue.put({'type': 'speak', 'text': "¡El tiempo del temporizador ha terminado!"})
+            self.active_timer_end_time = None
+
+    def check_calendar_events(self):
+            """Verifica eventos del calendario para hoy."""
+            today_str = date.today().isoformat()
+            events_today = self.calendar_manager.get_events_for_day(date.today().year, date.today().month, date.today().day)
+            for event in events_today:
+                if event['date'] == today_str:
+                    msg = f"Te recuerdo que hoy a las {event['time']} tienes una cita: {event['description']}"
+                    self.event_queue.put({'type': 'speak', 'text': msg})
+
+    def execute_action(self, name, cmd, params, resp, intent_name=None):
+        """Ejecuta la función asociada a una intención."""
+        
+        # Mapa de acciones simplificado
+        action_map = {
+            # --- System & Admin ---
+            "accion_apagar": self.skills_system.apagar,
+            "check_system_status": self.skills_system.check_status,
+            "queja_factura": self.skills_system.queja_factura,
+            "diagnostico": self.skills_system.diagnostico,
+            "system_restart_service": self.skills_system.restart_service,
+            "system_update": self.skills_system.update_system,
+            "system_find_file": self.skills_system.find_file,
+            
+            # --- Time & Date ---
+            "decir_hora_actual": self.skills_time.decir_hora_fecha,
+            "decir_fecha_actual": self.skills_time.decir_hora_fecha,
+            "decir_dia_semana": self.skills_time.decir_dia_semana,
+            
+            # --- Organizer (Calendar, Alarms, Timers) ---
+            "consultar_citas": self.skills_organizer.consultar_citas,
+            "crear_recordatorio_voz": self.skills_organizer.crear_recordatorio_voz, 
+            "crear_alarma_voz": self.skills_organizer.crear_alarma_voz, 
+            "consultar_recordatorios_dia": self.skills_organizer.consultar_recordatorios_dia, 
+            "consultar_alarmas": self.skills_organizer.consultar_alarmas, 
+            "iniciar_dialogo_temporizador": self.skills_organizer.iniciar_dialogo_temporizador, 
+            "consultar_temporizador": self.skills_organizer.consultar_temporizador, 
+            "crear_temporizador_directo": self.skills_organizer.crear_temporizador_directo,
+            
+            # --- Media & Cast ---
+            "controlar_radio": self.skills_media.controlar_radio,
+            "detener_radio": self.skills_media.detener_radio, 
+            "cast_video": self.skills_media.cast_video,
+            "stop_cast": self.skills_media.stop_cast,
+            
+            # --- Content & Fun ---
+            "contar_chiste": self.skills_content.contar_contenido_aleatorio, 
+            "decir_frase_celebre": self.skills_content.decir_frase_celebre,
+            "contar_dato_curioso": self.skills_content.contar_contenido_aleatorio,
+            "aprender_alias": self.skills_content.aprender_alias,
+            "aprender_dato": self.skills_content.aprender_dato,
+            "consultar_dato": self.skills_content.consultar_dato,
+            
+            # --- Network & SSH & Files ---
+            "network_scan": self.skills_network.scan,
+            "network_ping": self.skills_network.ping,
+            "network_whois": self.skills_network.whois,
+            "public_ip": self.skills_network.public_ip,
+            "check_service": self.skills_system.check_service,
+            "disk_usage": self.skills_system.disk_usage,
+            "escalar_cluster": self.skills_network.escalar_cluster,
+            "ssh_connect": self.skills_ssh.connect,
+            "ssh_execute": self.skills_ssh.execute,
+            "ssh_disconnect": self.skills_ssh.disconnect,
+            "buscar_archivo": self.skills_files.search_file,
+            "leer_archivo": self.skills_files.read_file,
+            
+            # --- Generic ---
+            "responder_simple": lambda command, response, **kwargs: self.speak(response)
+        }
+        
+        # --- BRAIN: Store interaction ---
+        if self.brain:
+            self.brain.store_interaction(cmd, resp, intent_name)
+            
+        if name in action_map:
+            return action_map[name](command=cmd, params=params, response=resp)
+        else:
+            app_logger.warning(f"Acción '{name}' no definida o no soportada en modo headless.")
+            self.is_processing_command = False 
+            return None 
+
+    def give_morning_summary(self):
+        """Ofrece un resumen matutino con el estado del sistema."""
+        self.skills_system.give_morning_summary()
+
+    def handle_learning_response(self, command_text):
+        """Maneja la respuesta del usuario cuando se le pregunta por un dato desconocido."""
+        key = self.waiting_for_learning
+        if not key:
+            self.waiting_for_learning = None
+            return
+
+        # Si el usuario dice "no lo sé" o "cancelar"
+        if "cancelar" in command_text.lower() or "no lo sé" in command_text.lower():
+            self.speak("Vale, no pasa nada.")
+            self.waiting_for_learning = None
+            return
+
+        # Guardar el dato
+        if self.brain:
+            self.brain.add_fact(key, command_text)
+            self.speak(f"Entendido. He aprendido que {key} es {command_text}.")
+        else:
+            self.speak("No tengo cerebro disponible para guardar eso.")
+        
+        self.waiting_for_learning = None
+
+if __name__ == "__main__":
+    app = NeoCore()

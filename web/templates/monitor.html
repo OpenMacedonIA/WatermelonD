@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Histórico de Recursos</h5>
+                <span class="badge bg-success">En vivo</span>
+            </div>
+            <div class="card-body">
+                <canvas id="resourcesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="monitorTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#processes" type="button">
+                    <i class="fas fa-tasks me-2"></i> Procesos Top
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs" type="button">
+                    <i class="fas fa-file-alt me-2"></i> Logs del Sistema
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <!-- PROCESSES TAB -->
+            <div class="tab-pane fade show active" id="processes">
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-sm btn-primary" onclick="loadProcesses()">
+                        <i class="fas fa-sync-alt"></i> Refrescar
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark table-sm">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Nombre</th>
+                                <th>Usuario</th>
+                                <th>CPU %</th>
+                                <th>RAM %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="process-list">
+                            <tr>
+                                <td colspan="5" class="text-center">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LOGS TAB -->
+            <div class="tab-pane fade" id="logs">
+                <div class="d-flex gap-2 mb-3">
+                    <select class="form-select w-auto" id="log-file-select" onchange="loadLogFile()">
+                        <option value="app.log">App Log</option>
+                        <option value="neo.service">System Service (Journal)</option>
+                    </select>
+                    <button onclick="loadLogFile()" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Refrescar
+                    </button>
+                </div>
+                <div class="bg-black text-success p-3 rounded text-mono" id="system-log"
+                    style="height: 500px; overflow-y: scroll; font-size: 0.85rem;">
+                    Selecciona un archivo de log...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- CHARTS ---
+    const ctx = document.getElementById('resourcesChart').getContext('2d');
+    const resourcesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(20).fill(''),
+            datasets: [{
+                label: 'CPU %',
+                data: Array(20).fill(0),
+                borderColor: '#0d6efd',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(13, 110, 253, 0.1)'
+            }, {
+                label: 'RAM %',
+                data: Array(20).fill(0),
+                borderColor: '#ffc107',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(255, 193, 7, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            },
+            animation: { duration: 0 }
+        }
+    });
+
+    function updateChart() {
+        fetch('/api/stats')
+            .then(res => res.json())
+            .then(data => {
+                const cpu = parseFloat(data.cpu_usage.replace('%', ''));
+                const ram = parseFloat(data.ram_usage.replace('%', ''));
+
+                const labels = resourcesChart.data.labels;
+                const cpuData = resourcesChart.data.datasets[0].data;
+                const ramData = resourcesChart.data.datasets[1].data;
+
+                labels.shift();
+                labels.push('');
+                cpuData.shift();
+                cpuData.push(cpu);
+                ramData.shift();
+                ramData.push(ram);
+
+                resourcesChart.update();
+            });
+    }
+    setInterval(updateChart, 2000);
+
+    // --- PROCESSES ---
+    function loadProcesses() {
+        fetch('/api/monitor/processes')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('process-list');
+                tbody.innerHTML = '';
+                data.forEach(proc => {
+                    const row = `
+                        <tr>
+                            <td>${proc.pid}</td>
+                            <td><span class="fw-bold text-info">${proc.name}</span></td>
+                            <td>${proc.username}</td>
+                            <td>
+                                <div class="progress" style="height: 6px; width: 100px;">
+                                    <div class="progress-bar bg-primary" style="width: ${proc.cpu_percent}%"></div>
+                                </div>
+                                <small>${proc.cpu_percent}%</small>
+                            </td>
+                            <td>${proc.memory_percent.toFixed(1)}%</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+    }
+
+    // --- LOGS ---
+    function loadLogFile() {
+        const file = document.getElementById('log-file-select').value;
+        fetch('/api/logs/read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: file })
+        })
+            .then(res => res.json())
+            .then(data => {
+                const viewer = document.getElementById('system-log');
+                viewer.innerText = data.content;
+                viewer.scrollTop = viewer.scrollHeight;
+            });
+    }
+
+    // Init
+    loadProcesses();
+    setInterval(loadProcesses, 5000); // Auto refresh processes
+</script>
+{% endblock %}

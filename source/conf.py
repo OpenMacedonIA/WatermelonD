@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'OpenKompai'
+project = 'Neo'
 copyright = '2025, jrodriiguezg'
 author = 'jrodriiguezg'
 

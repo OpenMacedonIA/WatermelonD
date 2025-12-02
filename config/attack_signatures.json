@@ -1,0 +1,108 @@
+[
+  {
+    "id": "SSH_BRUTE_FORCE",
+    "name": "Intento de Fuerza Bruta SSH",
+    "description": "Múltiples fallos de autenticación en poco tiempo.",
+    "source": "log_auth",
+    "pattern": "Failed password",
+    "threshold": 5,
+    "window_seconds": 60,
+    "severity": "high"
+  },
+  {
+    "id": "SSH_INVALID_USER",
+    "name": "Intento de Acceso SSH con Usuario Inválido",
+    "description": "Intentos de conexión con usuarios que no existen.",
+    "source": "log_auth",
+    "pattern": "Invalid user",
+    "threshold": 5,
+    "window_seconds": 60,
+    "severity": "medium"
+  },
+  {
+    "id": "SUDO_ABUSE",
+    "name": "Intento de Acceso Root Fallido",
+    "description": "Usuario intentó usar sudo sin permisos o falló la contraseña.",
+    "source": "log_auth",
+    "pattern": "sudo: auth could not identify password",
+    "threshold": 3,
+    "window_seconds": 120,
+    "severity": "high"
+  },
+  {
+    "id": "DDOS_SYN_FLOOD",
+    "name": "Posible Ataque DDoS (SYN Flood)",
+    "description": "Gran cantidad de conexiones en estado SYN_SENT.",
+    "source": "net_stats",
+    "metric": "syn_sent_count",
+    "threshold": 50,
+    "severity": "critical"
+  },
+  {
+    "id": "HIGH_CPU_LOAD",
+    "name": "Anomalía: Carga CPU Crítica",
+    "description": "El uso de CPU supera el 95%. Posible minería o proceso colgado.",
+    "source": "system_stats",
+    "metric": "cpu_percent",
+    "threshold": 95,
+    "severity": "medium"
+  },
+  {
+    "id": "HIGH_MEM_USAGE",
+    "name": "Anomalía: Memoria RAM Crítica",
+    "description": "El uso de RAM supera el 90%.",
+    "source": "system_stats",
+    "metric": "memory_percent",
+    "threshold": 90,
+    "severity": "medium"
+  },
+  {
+    "id": "WEB_SQL_INJECTION",
+    "name": "Intento de SQL Injection",
+    "description": "Patrones comunes de SQLi en logs web (Apache/Nginx).",
+    "source": "log_web",
+    "pattern": "UNION SELECT",
+    "threshold": 1,
+    "window_seconds": 10,
+    "severity": "critical"
+  },
+  {
+    "id": "WEB_XSS_ATTACK",
+    "name": "Intento de XSS (Cross-Site Scripting)",
+    "description": "Etiquetas de script en peticiones web.",
+    "source": "log_web",
+    "pattern": "<script>",
+    "threshold": 1,
+    "window_seconds": 10,
+    "severity": "high"
+  },
+  {
+    "id": "WEB_DIR_TRAVERSAL",
+    "name": "Intento de Directory Traversal",
+    "description": "Intento de acceder a archivos fuera del root web.",
+    "source": "log_web",
+    "pattern": "../..",
+    "threshold": 3,
+    "window_seconds": 30,
+    "severity": "high"
+  },
+  {
+    "id": "NMAP_SCAN",
+    "name": "Escaneo de Puertos Detectado",
+    "description": "Conexiones rápidas a múltiples puertos (requiere logs de firewall).",
+    "source": "log_syslog",
+    "pattern": "UFW BLOCK",
+    "threshold": 10,
+    "window_seconds": 5,
+    "severity": "medium"
+  },
+  {
+    "id": "ZOMBIE_PROCESSES",
+    "name": "Procesos Zombis Detectados",
+    "description": "Acumulación de procesos en estado zombi.",
+    "source": "system_stats",
+    "metric": "zombie_count",
+    "threshold": 5,
+    "severity": "low"
+  }
+]

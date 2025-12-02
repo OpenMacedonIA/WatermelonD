@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo Admin - {{ page|capitalize }}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #0d6efd;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--bg-card);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link.active {
+            border-left-color: var(--primary-color);
+            background: linear-gradient(90deg, rgba(13, 110, 253, 0.1) 0%, transparent 100%);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Utilities */
+        .text-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Mobile Toggle -->
+    <button class="btn btn-dark d-md-none position-fixed top-0 start-0 m-3 z-3"
+        onclick="document.querySelector('.sidebar').classList.toggle('show')">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-robot fa-lg text-primary"></i>
+            <h3>Neo Admin</h3>
+        </div>
+
+        <div class="d-flex flex-column flex-grow-1 overflow-auto py-3">
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if page == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{{ url_for('monitor') }}" class="nav-link {% if page == 'monitor' %}active{% endif %}">
+                <i class="fas fa-heartbeat"></i> Monitor
+            </a>
+            <a href="{{ url_for('services') }}" class="nav-link {% if page == 'services' %}active{% endif %}">
+                <i class="fas fa-cogs"></i> Servicios
+            </a>
+            <a href="{{ url_for('network') }}" class="nav-link {% if page == 'network' %}active{% endif %}">
+                <i class="fas fa-wifi"></i> Red
+            </a>
+            <a href="{{ url_for('terminal') }}" class="nav-link {% if page == 'terminal' %}active{% endif %}">
+                <i class="fas fa-terminal"></i> Terminal
+            </a>
+            <a href="{{ url_for('logs') }}" class="nav-link {% if page == 'logs' %}active{% endif %}">
+                <i class="fas fa-list-alt"></i> Logs
+            </a>
+
+            <a href="{{ url_for('actions') }}" class="nav-link {% if page == 'actions' %}active{% endif %}">
+                <i class="fas fa-bolt"></i> Acciones
+            </a>
+            <a href="{{ url_for('explorer') }}" class="nav-link {% if page == 'explorer' %}active{% endif %}">
+                <i class="fas fa-folder-open"></i> Archivos
+            </a>
+            <a href="{{ url_for('knowledge') }}" class="nav-link {% if page == 'knowledge' %}active{% endif %}">
+                <i class="fas fa-brain"></i> Conocimiento
+            </a>
+            <a href="{{ url_for('skills') }}" class="nav-link {% if page == 'skills' %}active{% endif %}">
+                <i class="fas fa-cubes"></i> Habilidades
+            </a>
+            <a href="{{ url_for('training') }}" class="nav-link {% if page == 'training' %}active{% endif %}">
+                <i class="fas fa-dumbbell"></i> Entrenamiento
+            </a>
+            {% if config.neo_ssh_enabled %}
+            <a href="{{ url_for('ssh_page') }}" class="nav-link {% if page == 'ssh' %}active{% endif %}">
+                <i class="fas fa-server"></i> SSH
+            </a>
+            {% endif %}
+            <a href="{{ url_for('settings') }}" class="nav-link {% if page == 'settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i> Ajustes
+            </a>
+        </div>
+
+        <div class="p-3 border-top border-secondary border-opacity-10">
+            <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container-fluid">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">{{ page|capitalize }}</h2>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary rounded-pill px-3 py-2">v2.0</span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i> Admin
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{{ url_for('settings') }}">Perfil</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Salir</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <script>
+        // Global Socket.IO connection
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket');
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

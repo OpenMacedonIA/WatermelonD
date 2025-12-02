@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card"
+    style="height: calc(100vh - 140px); display: flex; flex-direction: column; margin-bottom: 0; overflow: hidden;">
+    <div class="card-header">
+        <h3>Command Runner</h3>
+    </div>
+    <div class="card-body" style="flex: 1; display: flex; flex-direction: column; padding: 0; min-height: 0;">
+        <div id="term-output"
+            style="flex: 1; background: #000; color: #d4d4d4; font-family: 'JetBrains Mono', monospace; padding: 15px; overflow-y: auto; white-space: pre-wrap; font-size: 0.9rem; line-height: 1.4; min-height: 0;">
+            Welcome to Neo Command Runner.
+            Type a command below and press Enter.
+        </div>
+        <div style="padding: 10px; background: #212529; display: flex; align-items: center;">
+            <span id="prompt"
+                style="color: #0f0; font-family: monospace; margin-right: 10px; font-weight: bold;">user@sys:~$</span>
+            <input type="text" id="term-input"
+                style="flex: 1; background: transparent; border: none; color: white; font-family: monospace; font-size: 1rem; outline: none;"
+                autofocus autocomplete="off">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const input = document.getElementById('term-input');
+    const output = document.getElementById('term-output');
+    const promptSpan = document.getElementById('prompt');
+
+    let commandHistory = [];
+    let historyIndex = -1;
+    let currentCwd = "~";
+
+    // ANSI Color Parsing
+    function ansiToHtml(text) {
+        if (!text) return '';
+        // Basic ANSI color mapping
+        const colors = {
+            '30': 'black', '31': '#ff5555', '32': '#50fa7b', '33': '#f1fa8c',
+            '34': '#bd93f9', '35': '#ff79c6', '36': '#8be9fd', '37': 'white',
+            '0': 'inherit', '1': 'bold'
+        };
+
+        // Remove unsupported codes and replace colors
+        return text.replace(/\033\[([0-9;]+)m/g, (match, codes) => {
+            const style = [];
+            codes.split(';').forEach(code => {
+                if (colors[code]) {
+                    if (code === '1') style.push('font-weight: bold');
+                    else if (code !== '0') style.push(`color: ${colors[code]}`);
+                }
+            });
+            return style.length ? `<span style="${style.join(';')}">` : '</span>';
+        }) + '</span>'; // Close any open spans (simplified)
+    }
+
+    // Update Prompt
+    function updatePrompt(cwd) {
+        // Shorten home dir
+        if (cwd.startsWith('/home/')) {
+            const parts = cwd.split('/');
+            if (parts.length >= 3) {
+                cwd = '~' + cwd.substring(parts.slice(0, 3).join('/').length);
+            }
+        }
+        promptSpan.innerText = `admin@neo:${cwd}$`;
+    }
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            const cmd = input.value;
+            if (!cmd) return;
+
+            // History
+            commandHistory.push(cmd);
+            historyIndex = commandHistory.length;
+
+            // Append command to output
+            const promptText = promptSpan.innerText;
+            output.innerHTML += `\n<span style="color: #0f0">${promptText}</span> ${cmd}\n`;
+            input.value = '';
+
+            // Auto scroll
+            output.scrollTop = output.scrollHeight;
+
+            fetch('/api/terminal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: cmd })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.output) {
+                        output.innerHTML += ansiToHtml(data.output) + "\n";
+                    }
+                    if (data.cwd) {
+                        updatePrompt(data.cwd);
+                    }
+                    output.scrollTop = output.scrollHeight;
+                });
+        } else if (e.key === 'Tab') {
+            e.preventDefault(); // Evitar cambio de foco
+            const cmd = input.value;
+
+            fetch('/api/terminal/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: cmd })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const matches = data.matches;
+                    const partial = data.partial;
+
+                    if (matches.length === 1) {
+                        // Autocompletar directo
+                        // Reemplazar la parte parcial con el match completo
+                        // "ls Do" -> matches=["Documents/"] -> "ls Documents/"
+
+                        // Encontrar dónde empieza la última palabra
+                        const lastIndex = input.value.lastIndexOf(partial);
+                        if (lastIndex !== -1) {
+                            input.value = input.value.substring(0, lastIndex) + matches[0];
+                        } else if (partial === "") {
+                            input.value += matches[0];
+                        }
+                    } else if (matches.length > 1) {
+                        // Mostrar opciones
+                        const promptText = promptSpan.innerText;
+                        output.innerHTML += `\n<span style="color: #0f0">${promptText}</span> ${input.value}\n`;
+                        // Formatear columnas (simple)
+                        output.innerHTML += matches.join('  ') + "\n";
+                        output.scrollTop = output.scrollHeight;
+                    }
+                });
+
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (historyIndex > 0) {
+                historyIndex--;
+                input.value = commandHistory[historyIndex];
+            }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++;
+                input.value = commandHistory[historyIndex];
+            } else {
+                historyIndex = commandHistory.length;
+                input.value = '';
+            }
+        }
+    });
+</script>
+{% endblock %}

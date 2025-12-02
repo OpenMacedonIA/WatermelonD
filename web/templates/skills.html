@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cubes me-2"></i> Gestor de Habilidades</h2>
+    <button class="btn btn-outline-light btn-sm" onclick="loadSkills()">
+        <i class="fas fa-sync-alt"></i> Actualizar
+    </button>
+</div>
+
+<div class="row" id="skills-container">
+    <!-- Skills will be loaded here -->
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal fade" id="configModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Configurar Skill: <span id="modalSkillName"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Toggle -->
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-sm btn-outline-warning" id="modeToggleBtn" onclick="toggleEditMode()">
+                        <i class="fas fa-code"></i> Modo Avanzado
+                    </button>
+                </div>
+
+                <!-- Simple Editor -->
+                <div id="simpleEditor">
+                    <div id="aliasesContainer" class="mb-3" style="display: none;">
+                        <label class="form-label text-info">Aliases (Nombres Personalizados)</label>
+                        <p class="small text-muted">Asigna nombres fáciles a direcciones IP o comandos.</p>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre (Alias)</th>
+                                        <th>Valor (IP/Comando)</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="aliasesTableBody">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success" onclick="addAliasRow()">
+                            <i class="fas fa-plus"></i> Agregar Alias
+                        </button>
+                    </div>
+
+                    <div id="serversContainer" class="mb-3" style="display: none;">
+                        <label class="form-label text-info">Servidores SSH</label>
+                        <p class="small text-muted">Configura tus conexiones remotas.</p>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Host/IP</th>
+                                        <th>Usuario</th>
+                                        <th>Puerto</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="serversTableBody">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-sm btn-outline-success" onclick="addServerRow()">
+                            <i class="fas fa-plus"></i> Agregar Servidor
+                        </button>
+                    </div>
+
+                    <div id="filesConfigContainer" class="mb-3" style="display: none;">
+                        <h6 class="text-info border-bottom border-secondary pb-2 mb-3">Configuración de Escaneo</h6>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="enableIndexing">
+                            <label class="form-check-label" for="enableIndexing">Habilitar Indexado y Búsqueda
+                                Rápida</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Intervalo de Escaneo (Horas)</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary"
+                                id="scanInterval" min="1" value="24">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Extensiones (separadas por coma)</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" id="scanTypes"
+                                placeholder="txt, pdf, md, py">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Rutas a Escanear</label>
+                            <div id="scanPathsList" class="mb-2">
+                                <!-- Dynamic paths -->
+                            </div>
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    id="newScanPath" placeholder="/home/usuario/Documentos">
+                                <button class="btn btn-outline-success" onclick="addScanPath()">Agregar</button>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top border-secondary">
+                            <button class="btn btn-warning w-100" onclick="triggerScanNow()">
+                                <i class="fas fa-search"></i> Escanear Ahora
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="noSimpleConfig" class="text-center py-4 text-muted" style="display: none;">
+                        <i class="fas fa-info-circle mb-2"></i><br>
+                        No hay configuración simplificada disponible para esta habilidad.<br>
+                        Usa el Modo Avanzado.
+                    </div>
+                </div>
+
+                <!-- Advanced Editor -->
+                <div id="advancedEditor" style="display: none;">
+                    <p class="text-muted">Edita el JSON directamente. Cuidado con la sintaxis.</p>
+                    <textarea id="configEditor" class="form-control bg-black text-success text-mono border-0 p-3"
+                        style="height: 300px; font-family: monospace;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveSkillConfig()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function loadSkills() {
+        fetch('/api/skills')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('skills-container');
+                container.innerHTML = '';
+
+                Object.keys(data).forEach(key => {
+                    const skill = data[key];
+                    const card = document.createElement('div');
+                    card.className = 'col-md-6 col-lg-4 mb-4';
+
+                    const isChecked = skill.enabled ? 'checked' : '';
+                    const statusColor = skill.enabled ? 'success' : 'secondary';
+                    const statusText = skill.enabled ? 'Activo' : 'Inactivo';
+
+                    card.innerHTML = `
+                        <div class="card h-100 border-${statusColor}">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-transparent border-${statusColor}">
+                                <h5 class="mb-0 text-capitalize">${key}</h5>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="toggle-${key}" 
+                                        ${isChecked} onchange="toggleSkill('${key}', this.checked)">
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text text-muted">${skill.description}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-${statusColor}">${statusText}</span>
+                                    <button class="btn btn-sm btn-outline-info" onclick='openConfig("${key}", ${JSON.stringify(skill.config || {})})'>
+                                        <i class="fas fa-cog"></i> Configurar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+    }
+
+    function toggleSkill(name, enabled) {
+        fetch('/api/skills/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: name, enabled: enabled }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload to update UI state (colors, etc)
+                    loadSkills();
+                } else {
+                    alert('Error al cambiar estado: ' + data.message);
+                    // Revert switch if failed
+                    document.getElementById(`toggle-${name}`).checked = !enabled;
+                }
+            });
+    }
+
+
+    let currentSkill = '';
+    let isAdvancedMode = false;
+
+    function openConfig(name, config) {
+        currentSkill = name;
+        document.getElementById('modalSkillName').innerText = name;
+
+        // Populate JSON Editor
+        document.getElementById('configEditor').value = JSON.stringify(config, null, 4);
+
+        // Reset Mode
+        isAdvancedMode = false;
+        updateEditorVisibility();
+
+        // Populate Simple Editor
+        loadSimpleEditor(config);
+
+        new bootstrap.Modal(document.getElementById('configModal')).show();
+    }
+
+    function toggleEditMode() {
+        if (!isAdvancedMode) {
+            // Switching to Advanced
+            // Sync Simple -> JSON (Optional, if we want changes to persist)
+            // For now, we assume Simple is the source of truth if active
+            syncSimpleToAdvanced();
+        } else {
+            // Switching to Simple
+            // Try to parse JSON -> Simple
+            if (!syncAdvancedToSimple()) return; // Cancel if invalid JSON
+        }
+        isAdvancedMode = !isAdvancedMode;
+        updateEditorVisibility();
+    }
+
+    function updateEditorVisibility() {
+        const simple = document.getElementById('simpleEditor');
+        const advanced = document.getElementById('advancedEditor');
+        const btn = document.getElementById('modeToggleBtn');
+
+        if (isAdvancedMode) {
+            simple.style.display = 'none';
+            advanced.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-magic"></i> Modo Simple';
+            btn.classList.replace('btn-outline-warning', 'btn-outline-info');
+        } else {
+            simple.style.display = 'block';
+            advanced.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-code"></i> Modo Avanzado';
+            btn.classList.replace('btn-outline-info', 'btn-outline-warning');
+        }
+    }
+
+    // --- Simple Editor Logic ---
+
+    function loadSimpleEditor(config) {
+        const aliasesContainer = document.getElementById('aliasesContainer');
+        const serversContainer = document.getElementById('serversContainer');
+        const filesConfigContainer = document.getElementById('filesConfigContainer');
+        const noSimple = document.getElementById('noSimpleConfig');
+
+        // Reset
+        aliasesContainer.style.display = 'none';
+        serversContainer.style.display = 'none';
+        filesConfigContainer.style.display = 'none';
+        noSimple.style.display = 'none';
+
+        let hasSimple = false;
+
+        // Check for 'aliases'
+        if (config && config.aliases) {
+            hasSimple = true;
+            aliasesContainer.style.display = 'block';
+            const tbody = document.getElementById('aliasesTableBody');
+            tbody.innerHTML = '';
+            Object.keys(config.aliases).forEach(key => {
+                addAliasRow(key, config.aliases[key]);
+            });
+        }
+
+        // Check for 'servers' (SSH)
+        if (config && config.servers && Array.isArray(config.servers)) {
+            hasSimple = true;
+            serversContainer.style.display = 'block';
+            const tbody = document.getElementById('serversTableBody');
+            tbody.innerHTML = '';
+            config.servers.forEach(srv => {
+                addServerRow(srv);
+            });
+        }
+
+        // Check for 'scan_paths' (Files)
+        if (config && config.scan_paths) {
+            hasSimple = true;
+            filesConfigContainer.style.display = 'block';
+
+            document.getElementById('enableIndexing').checked = config.enable_indexing || false;
+            document.getElementById('scanInterval').value = config.scan_interval || 24;
+            document.getElementById('scanTypes').value = (config.scan_types || []).join(', ');
+
+            const pathsList = document.getElementById('scanPathsList');
+            pathsList.innerHTML = '';
+            (config.scan_paths || []).forEach(path => {
+                addScanPathRow(path);
+            });
+        }
+
+        if (!hasSimple) {
+            noSimple.style.display = 'block';
+        }
+    }
+
+    function addAliasRow(key = '', value = '') {
+        const tbody = document.getElementById('aliasesTableBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm bg-dark text-light border-secondary alias-key" value="${key}" placeholder="Ej. mario"></td>
+            <td><input type="text" class="form-control form-control-sm bg-dark text-light border-secondary alias-val" value="${value}" placeholder="Ej. 192.168.1.50"></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function addServerRow(srv = {}) {
+        const tbody = document.getElementById('serversTableBody');
+        const tr = document.createElement('tr');
+        const name = srv.name || '';
+        const host = srv.host || '';
+        const user = srv.user || '';
+        const port = srv.port || '22';
+
+        tr.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm bg-dark text-light border-secondary srv-name" value="${name}" placeholder="Ej. Servidor Web"></td>
+            <td><input type="text" class="form-control form-control-sm bg-dark text-light border-secondary srv-host" value="${host}" placeholder="Ej. 192.168.1.100"></td>
+            <td><input type="text" class="form-control form-control-sm bg-dark text-light border-secondary srv-user" value="${user}" placeholder="Ej. root"></td>
+            <td><input type="number" class="form-control form-control-sm bg-dark text-light border-secondary srv-port" value="${port}" placeholder="22"></td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function addScanPathRow(path) {
+        const list = document.getElementById('scanPathsList');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+            <input type="text" class="form-control bg-dark text-light border-secondary scan-path-item" value="${path}" readonly>
+            <button class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+        `;
+        list.appendChild(div);
+    }
+
+    function addScanPath() {
+        const input = document.getElementById('newScanPath');
+        const path = input.value.trim();
+        if (path) {
+            addScanPathRow(path);
+            input.value = '';
+        }
+    }
+
+    function triggerScanNow() {
+        if (confirm("¿Guardar configuración e iniciar escaneo?")) {
+            saveSkillConfig(); // Save first
+
+            // Wait a bit for save to propagate
+            setTimeout(() => {
+                fetch('/api/skills/scan_files', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                    });
+            }, 1000);
+        }
+    }
+
+    function syncSimpleToAdvanced() {
+        // Read inputs and update JSON textarea
+        try {
+            const currentJSON = JSON.parse(document.getElementById('configEditor').value || '{}');
+
+            // Sync Aliases
+            if (document.getElementById('aliasesContainer').style.display !== 'none') {
+                const newAliases = {};
+                document.querySelectorAll('#aliasesTableBody tr').forEach(row => {
+                    const key = row.querySelector('.alias-key').value.trim();
+                    const val = row.querySelector('.alias-val').value.trim();
+                    if (key) newAliases[key] = val;
+                });
+                currentJSON.aliases = newAliases;
+            }
+
+            // Sync Servers
+            if (document.getElementById('serversContainer').style.display !== 'none') {
+                const newServers = [];
+                document.querySelectorAll('#serversTableBody tr').forEach(row => {
+                    const name = row.querySelector('.srv-name').value.trim();
+                    const host = row.querySelector('.srv-host').value.trim();
+                    const user = row.querySelector('.srv-user').value.trim();
+                    let port = row.querySelector('.srv-port').value.trim();
+
+                    if (!port) port = "22";
+
+                    if (name && host && user) {
+                        newServers.push({
+                            name: name,
+                            host: host,
+                            user: user,
+                            port: parseInt(port)
+                        });
+                    }
+                });
+                currentJSON.servers = newServers;
+            }
+
+            // Sync Files Config
+            if (document.getElementById('filesConfigContainer').style.display !== 'none') {
+                currentJSON.enable_indexing = document.getElementById('enableIndexing').checked;
+                currentJSON.scan_interval = parseInt(document.getElementById('scanInterval').value);
+                currentJSON.scan_types = document.getElementById('scanTypes').value.split(',').map(s => s.trim()).filter(s => s);
+
+                const paths = [];
+                document.querySelectorAll('.scan-path-item').forEach(input => {
+                    paths.push(input.value);
+                });
+                currentJSON.scan_paths = paths;
+            }
+
+            document.getElementById('configEditor').value = JSON.stringify(currentJSON, null, 4);
+        } catch (e) {
+            console.error("Error syncing simple to advanced", e);
+        }
+    }
+
+    function syncAdvancedToSimple() {
+        try {
+            const json = JSON.parse(document.getElementById('configEditor').value);
+            loadSimpleEditor(json);
+            return true;
+        } catch (e) {
+            alert("JSON Inválido. Corrige los errores antes de volver al modo simple.");
+            return false;
+        }
+    }
+
+    function saveSkillConfig() {
+        // Ensure we have the latest data in JSON format
+        if (!isAdvancedMode) {
+            syncSimpleToAdvanced();
+        }
+
+        const content = document.getElementById('configEditor').value;
+        try {
+            const json = JSON.parse(content);
+            fetch('/api/skills/save_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: currentSkill, config: json })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Configuración guardada.');
+                        bootstrap.Modal.getInstance(document.getElementById('configModal')).hide();
+                        loadSkills(); // Refresh
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+        } catch (e) {
+            alert('JSON Inválido: ' + e);
+        }
+    }
+
+    // Load on start
+    loadSkills();
+</script>
+{% endblock %}

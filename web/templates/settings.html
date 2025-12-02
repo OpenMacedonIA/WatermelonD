@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="list-group" id="settings-list-tab" role="tablist">
+            <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#general" role="tab">
+                <i class="fas fa-sliders-h me-2"></i> General
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#ai" role="tab">
+                <i class="fas fa-brain me-2"></i> Inteligencia Artificial
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#advanced" role="tab">
+                <i class="fas fa-code me-2"></i> Avanzado (JSON)
+            </a>
+            <a class="list-group-item list-group-item-action list-group-item-danger mt-4" data-bs-toggle="list"
+                href="#danger" role="tab">
+                <i class="fas fa-exclamation-triangle me-2"></i> Zona de Peligro
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="tab-content">
+
+            <!-- GENERAL TAB -->
+            <div class="tab-pane fade show active" id="general" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Configuración General</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                            {% endif %}
+                            {% endwith %}
+
+                            <div class="mb-3">
+                                <label class="form-label">Nombre de Usuario</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    name="username" value="{{ config.admin_user }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" class="form-control bg-dark text-light border-secondary"
+                                    name="password" value="{{ config.admin_pass }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Palabra de Activación</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    name="wake_word" value="{{ config.wake_word }}" required>
+                                <div class="form-text text-muted">Di esta palabra para activar el asistente (ej: "Neo",
+                                    "Kompai").</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Voz del Sistema (TTS)</label>
+                                <select name="tts_model" class="form-select bg-dark text-light border-secondary">
+                                    {% for voice in voices %}
+                                    <option value="{{ voice }}" {% if config.tts and config.tts.piper_model and voice in
+                                        config.tts.piper_model %}selected{% endif %}>
+                                        {{ voice }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="neo_ssh_enabled"
+                                    name="neo_ssh_enabled" {% if config.neo_ssh_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="neo_ssh_enabled">Habilitar Neo SSH (Gestión de
+                                    Infraestructura)</label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Cambios
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI TAB -->
+            <div class="tab-pane fade" id="ai" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Configuración de IA</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            <div class="mb-4">
+                                <label class="form-label">Modelo de Inteligencia Artificial (GGUF)</label>
+                                <select name="ai_model" class="form-select bg-dark text-light border-secondary">
+                                    {% for model in models %}
+                                    <option value="{{ model }}" {% if config.ai_model_path and model in
+                                        config.ai_model_path %}selected{% endif %}>
+                                        {{ model }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text text-muted">
+                                    Selecciona el "cerebro" que usará Neo. Los modelos más grandes (ej: 7B) son más
+                                    inteligentes pero más lentos.
+                                    <br>
+                                    <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Requiere
+                                        reiniciar el sistema para aplicar.</span>
+                                </div>
+                            </div>
+
+                            <!-- Hidden fields to preserve other settings -->
+                            <input type="hidden" name="username" value="{{ config.admin_user }}">
+                            <input type="hidden" name="password" value="{{ config.admin_pass }}">
+                            <input type="hidden" name="wake_word" value="{{ config.wake_word }}">
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Selección de IA
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADVANCED TAB -->
+            <div class="tab-pane fade" id="advanced" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Editor de Configuración (Raw JSON)</h5>
+                        <button class="btn btn-sm btn-success" onclick="saveConfig()">
+                            <i class="fas fa-save"></i> Guardar JSON
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <textarea id="json-editor" class="form-control bg-black text-success text-mono border-0 p-3"
+                            style="height: 500px; font-family: monospace;">{{ config | tojson(indent=4) }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DANGER TAB -->
+            <div class="tab-pane fade" id="danger" role="tabpanel">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Zona de Peligro</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Reiniciar el sistema aplicará todos los cambios y reiniciará el dispositivo físico o el
+                            servicio.</p>
+                        <button onclick="restartSystem()" class="btn btn-danger">
+                            <i class="fas fa-power-off me-2"></i> Reiniciar Sistema
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function restartSystem() {
+        if (confirm("¿Estás seguro de que quieres reiniciar el sistema?")) {
+            fetch('/api/restart', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => {
+                    alert("Error al intentar reiniciar.");
+                });
+        }
+    }
+
+    function saveConfig() {
+        const content = document.getElementById('json-editor').value;
+        try {
+            const json = JSON.parse(content); // Validate JSON
+            fetch('/api/config/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Configuración guardada. Reinicia para aplicar.');
+                    } else {
+                        alert('Error guardando: ' + data.message);
+                    }
+                });
+        } catch (e) {
+            alert('Error: JSON inválido.\n' + e);
+        }
+    }
+</script>
+{% endblock %}

@@ -2,10 +2,13 @@ import datetime
 import json
 import os
 import logging
+from modules.config_manager import ConfigManager
 
 class AlarmManager:
     """Gestiona las alarmas."""
-    def __init__(self, data_file='jsons/alarms.json'):
+    def __init__(self, data_file=None):
+        if data_file is None:
+            data_file = ConfigManager().get('paths', {}).get('alarms', 'jsons/alarms.json')
         self.data_file = data_file
         self.alarms = self._load_alarms()
 

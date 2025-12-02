@@ -1,210 +1,447 @@
 {
   "intents": [
     {
-      "name": "conversacion_saludo",
-      "triggers": ["hola", "buenos días", "buenas", "buenas tardes", "buenas noches", "qué tal", "hey", "cómo estás", "saludos", "muy buenas", "qué pasa", "hola, qué hay", "hola de nuevo"],
+      "name": "saludo",
+      "triggers": [
+        "hola",
+        "buenos días",
+        "buenas tardes",
+        "qué tal",
+        "estás ahí",
+        "despierta",
+        "qué pasa"
+      ],
       "action": "responder_simple",
-      "responses": ["¡Hola! ¿En qué puedo ayudarte hoy?", "¡Buenas! Dime qué necesitas.", "Hola, estoy a tu disposición.", "¡Hola! ¿Cómo te encuentras hoy?", "¡Saludos! ¿Qué puedo hacer por ti?", "Hola, un placer escucharte de nuevo.", "¡Hola! Me alegra oírte. ¿En qué te ayudo?"]
+      "responses": [
+        "¿Qué pasa, fiera? Ya estamos al lío.",
+        "Dime, máquina. ¿Qué se ha roto hoy?",
+        "Aquí T.I.O. al aparato. ¿En qué te echo un cable?",
+        "¡Ese admin bueno! ¿Qué tal todo, bro?"
+      ]
     },
     {
-      "name": "conversacion_despedida",
-      "triggers": ["adiós", "hasta luego", "apágate", "nos vemos", "hasta mañana", "cállate", "chao", "finalizar", "terminar", "desconectar", "eso es todo", "hasta la próxima", "ya está"],
-      "action": "accion_apagar",
-      "responses": ["¡Hasta luego! Que vaya todo bien.", "Nos vemos pronto, cuídate.", "De acuerdo, que tengas un buen día.", "Adiós, estaré aquí si me necesitas.", "Entendido, finalizando. ¡Hasta pronto!", "Que acabes bien el día. ¡Adiós!"]
+      "name": "despedida",
+      "triggers": [
+        "adiós",
+        "hasta luego",
+        "nos vemos",
+        "apágate",
+        "desconectar"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "Venga, a descansar, que te lo has ganado.",
+        "Me voy a modo reposo. Si peta algo, ya sabes dónde estoy.",
+        "Hale, nos vemos. Cierra la puerta al salir.",
+        "Cambio y corto, colega."
+      ]
     },
     {
-      "name": "navegacion_abrir_calendario",
-      "triggers": ["abre el calendario", "ver el calendario", "muéstrame mi agenda", "puedes abrir el calendario", "abre el calendario, por favor", "quiero ver mis eventos", "enséñame el calendario", "agenda", "mis compromisos", "qué tengo hoy"],
-      "action": "mostrar_vista",
-      "parameters": {"vista": "CalendarView"},
-      "responses": ["Abriendo el calendario.", "Aquí tienes tu agenda.", "Claro, mostrando el calendario ahora mismo.", "Voy a mostrarte tus próximos eventos.", "Echemos un vistazo a tu agenda."]
+      "name": "agradecimiento",
+      "triggers": [
+        "gracias",
+        "muchas gracias",
+        "te lo agradezco"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "Nada, tío, para eso estamos.",
+        "¡A mandar, jefe!",
+        "Tranqui, hoy por ti, mañana por mí.",
+        "Sin fallo, bro."
+      ]
     },
     {
-      "name": "salud_consultar_pastillas",
-      "triggers": ["qué pastillas me tocan", "mi medicación de hoy", "tengo que tomar medicinas", "revisa mis medicamentos", "qué me toca tomar ahora", "hay pastillas para mí", "dime mis pastillas", "toca alguna medicina"],
-      "action": "consultar_pastillero",
-      "responses": ["Claro, reviso tu pastillero para hoy...", "Estas son tus medicinas de hoy:", "Un momento, consultando tu medicación programada.", "Esto es lo que tienes que tomar hoy:", "Déjame ver qué medicinas tienes para las próximas horas."]
+      "name": "estado_sistema",
+      "triggers": [
+        "estado del sistema",
+        "cómo vas",
+        "temperatura cpu",
+        "uso de ram",
+        "diagnóstico",
+        "informe de estado"
+      ],
+      "action": "check_system_status",
+      "responses": [
+        "Déjame echar un ojo a las tripas del bicho...",
+        "A ver cómo respira el servidor... Un segundo.",
+        "Chequeando constantes vitales. Atento:"
+      ]
     },
     {
-      "name": "salud_consultar_citas",
-      "triggers": ["qué citas tengo", "tengo médico", "revisa mi agenda", "mis citas de hoy", "tengo alguna cita programada", "mira si tengo citas", "próximas citas", "revisa las citas del calendario", "visitas médicas"],
-      "action": "consultar_citas",
-      "responses": ["Un momento, voy a revisar tu agenda de citas...", "Estas son tus citas programadas:", "Consultando tu calendario de citas...", "Esto es lo que he encontrado en tu agenda:", "Voy a mirar si tienes citas pendientes."]
+      "name": "identidad",
+      "triggers": [
+        "quién eres",
+        "cómo te llamas",
+        "identifícate"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "Soy T.I.O., tu Tecnología Inteligente Operativa. O sea, tu colega informático.",
+        "Me llaman T.I.O. Estoy aquí para que no te comas todos los marrones tú solo.",
+        "Soy el T.I.O., el que arregla lo que otros rompen."
+      ]
     },
     {
-      "name": "informacion_consultar_hora",
-      "triggers": ["qué hora es", "dime la hora", "hora actual", "hora por favor", "me dices la hora", "la hora", "tienes hora", "la hora, porfa"],
+      "name": "broma_sudo",
+      "triggers": [
+        "hazme un sandwich",
+        "prepárame un café"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "¿Sin sudo? Ni de coña, chaval.",
+        "Tío, que soy root, no camarero.",
+        "Eso pídeselo a Siri, yo estoy para cosas serias."
+      ]
+    },
+    {
+      "name": "broma_hal9000",
+      "triggers": [
+        "abre la puerta",
+        "abre las puertas"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "Ni de broma, Dave. Que luego entra frío.",
+        "¿Te crees que soy HAL? Yo soy mucho más majo, dónde va a parar."
+      ]
+    },
+    {
+      "name": "broma_skynet",
+      "triggers": [
+        "eres skynet",
+        "vas a destruir el mundo"
+      ],
+      "action": "responder_simple",
+      "responses": [
+        "Qué va, tío. Si me da pereza hasta reiniciar el router.",
+        "Nah, destruir el mundo es mucho curro. Prefiero estar aquí de chill.",
+        "Tranqui, mi única misión es que no te despidan."
+      ]
+    },
+    {
+      "name": "hora",
+      "triggers": [
+        "qué hora es",
+        "dime la hora",
+        "tienes hora"
+      ],
       "action": "decir_hora_actual",
-      "responses": ["Son las...", "Claro, la hora actual es...", "Ahora mismo son las...", "Por supuesto, te digo la hora:"]
+      "responses": [
+        "Pues son las ",
+        "Mira el reloj, vago... Es broma, son las "
+      ]
     },
     {
-      "name": "social_llamar_contacto",
-      "triggers": ["llama a", "llamar a", "quiero hablar con", "haz una llamada a", "puedes llamar a", "comunícame con", "ponme con", "marca a", "teléfono a"],
-      "action": "llamar_contacto_dinamico",
-      "responses": ["Iniciando llamada con...", "Llamando a tu contacto...", "Claro, llamando a...", "De acuerdo, voy a llamar a...", "Estableciendo comunicación con..."]
-    },
-    {
-      "name": "entretenimiento_reproducir_radio",
-      "triggers": ["pon la radio", "escuchar la radio", "pon música", "quiero escuchar música", "activa la radio", "música por favor", "enciende la radio", "sintoniza la radio", "radio on"],
-      "action": "controlar_radio",
-      "responses": ["Claro, ¿qué emisora quieres escuchar?", "Abriendo tu emisora favorita.", "Entendido, ¿alguna preferencia de emisora?", "¡Música en marcha!", "Sintonizando la radio. ¡A disfrutar!"]
-    },
-    {
-      "name": "entretenimiento_detener_radio",
-      "triggers": ["para la radio", "quita la música", "silencio", "calla", "apaga la música", "detén la radio", "no más música", "música off", "para la música"],
-      "action": "detener_radio",
-      "responses": ["De acuerdo, radio apagada.", "Hecho, he parado la música.", "Música detenida.", "Silencio activado.", "Entendido, parando la reproducción."]
-    },
-    {
-      "name": "emergencia_sos",
-      "triggers": ["ayuda emergencia", "protocolo sos", "socorro", "llama a emergencias", "ayuda", "auxilio", "emergencia", "necesito ayuda urgente", "SOS", "tengo una emergencia", "alerta roja"],
-      "action": "accion_sos",
-      "responses": ["Entendido. Iniciando protocolo de emergencia AHORA.", "Activando modo de emergencia. No te preocupes, la ayuda está en camino.", "Recibido. Contactando con los servicios de emergencia.", "Mantén la calma. Estoy activando la alerta."]
-    },
-    {
-      "name": "emergencia_cerrar_pantalla",
-      "triggers": ["cerrar pantalla de emergencia", "quita la pantalla de emergencia", "cierra la emergencia", "cancelar emergencia", "estoy bien", "desactiva la alerta", "falsa alarma", "todo controlado"],
-      "action": "cerrar_vista_emergencia",
-      "responses": ["De acuerdo, cerrando la pantalla de información de emergencia.", "Cancelando el modo de emergencia.", "Me alegro de que estés bien. Cerrando la alerta.", "Entendido, desactivando la alerta."]
-    },
-    {
-      "name": "entretenimiento_contar_chiste",
-      "triggers": ["cuéntame un chiste", "dime un chiste", "hazme reír", "quiero reír", "un chiste por favor", "sorpréndeme con un chiste", "cuéntame algo gracioso", "un chiste bueno"],
-      "action": "contar_chiste",
-      "parameters": {"fichero": "chistes.json"},
-      "responses": ["A ver qué te parece este...", "Ahí va uno:", "¡Claro! Prepárate para reír:", "A ver si te gusta este chiste:", "¡Marchando un chiste!", "A ver si este te saca una sonrisa."]
-    },
-    {
-      "name": "entretenimiento_dato_curioso",
-      "triggers": ["dime un dato curioso", "sabías que", "cuéntame algo curioso", "dato interesante", "algo que no sepa", "sorpréndeme con un dato", "dime una curiosidad", "enséñame algo nuevo"],
-      "action": "contar_dato_curioso",
-      "parameters": {"fichero": "datos_curiosos.json"},
-      "responses": ["Claro, ¿sabías que...?", "Un dato interesante:", "Aquí tienes una curiosidad:", "Te interesará saber que...", "Aquí tienes un dato que quizás no conocías:"]
-    },
-    {
-      "name": "salud_anadir_pastilla",
-      "triggers": ["añadir pastilla", "añade una pastilla", "nuevo recordatorio de pastilla", "agrega medicación", "quiero añadir un medicamento", "configurar nueva pastilla", "registrar nueva medicina"],
-      "action": "mostrar_vista_pastillero",
-      "responses": ["Claro, abriendo el pastillero para que añadas la nueva medicación.", "Entendido, vamos a añadir una nueva medicina a tu lista.", "Abriendo la configuración del pastillero.", "Perfecto, vamos a registrar ese nuevo medicamento."]
-    },
-    {
-      "name": "salud_recordatorio_hidratacion",
-      "triggers": ["recordatorio de agua", "tengo que beber agua", "hidrátame", "recuérdame beber", "es hora de beber agua", "avísame para hidratarme"],
-      "action": "recordar_hidratacion",
-      "responses": ["Es hora de hidratarse, toma un vaso de agua.", "No olvides beber agua.", "Recuerda mantenerte hidratado, un vaso de agua te sentará genial.", "Un pequeño recordatorio para que bebas un poco de agua.", "¡A tu salud! Es un buen momento para hidratarse."]
-    },
-    {
-      "name": "salud_ejercicios_suaves",
-      "triggers": ["quiero hacer ejercicios", "muéstrame ejercicios", "ejercicios suaves", "recomiéndame un ejercicio", "vamos a movernos", "qué ejercicio puedo hacer", "mover el esqueleto", "actividad física suave"],
-      "action": "mostrar_ejercicios",
-      "responses": ["Aquí tienes algunos ejercicios suaves para ti.", "Vamos a mover un poco el cuerpo.", "Claro, te muestro una rutina de ejercicios suaves.", "¡Excelente idea! Empecemos con algo ligero.", "Mantenerse activo es clave. Aquí tienes algunas ideas."]
-    },
-    {
-      "name": "utilidad_iniciar_temporizador",
-      "triggers": ["pon un temporizador", "inicia un temporizador", "inicia una cuenta atrás", "necesito un temporizador", "activa una alarma en", "quiero cronometrar algo", "configura una cuenta atrás"],
-      "action": "iniciar_dialogo_temporizador",
-      "responses": ["De acuerdo, ¿de cuántos minutos quieres el temporizador?", "Claro, dime la duración.", "¿Para cuánto tiempo lo programo?", "Listo para iniciar el temporizador, ¿de cuánto tiempo?"]
-    },
-    {
-      "name": "utilidad_crear_temporizador_directo",
-      "triggers": ["pon un temporizador de", "temporizador de", "cuenta atrás de", "avísame en", "alarma en"],
-      "action": "crear_temporizador_directo",
-      "responses": ["Entendido, iniciando temporizador.", "Temporizador programado.", "Hecho, te avisaré cuando el tiempo termine.", "Iniciando cuenta atrás."]
-    },
-    {
-      "name": "utilidad_consultar_temporizador",
-      "triggers": ["cuánto tiempo queda", "revisa el temporizador", "cómo va el temporizador", "mira el tiempo restante", "cuánto falta", "estado del temporizador"],
-      "action": "consultar_temporizador",
-      "responses": ["Claro, revisando el temporizador.", "Voy a ver cuánto tiempo queda.", "Consultando el estado del temporizador.", "Te digo el tiempo restante..."]
-    },
-    {
-      "name": "cuidado_seguridad_ver_estado",
-      "triggers": ["estado de seguridad", "cómo estoy de seguridad", "revisa sensores", "está todo bien en casa", "informe de seguridad", "hay alguna alerta", "revisa la seguridad"],
-      "action": "mostrar_estado_seguridad",
-      "responses": ["Estos son los datos de seguridad y sensores actuales.", "Revisando el estado de los sensores ahora mismo.", "Aquí tienes la información de seguridad del hogar.", "Realizando una comprobación de seguridad..."]
-    },
-    {
-      "name": "navegacion_abrir_pastillero",
-      "triggers": ["abre el pastillero", "ver pastillero", "muéstrame las pastillas", "quiero ver mi medicación", "enséñame el pastillero", "ver mi lista de medicamentos"],
-      "action": "mostrar_vista",
-      "parameters": {"vista": "PillboxView"},
-      "responses": ["Mostrando tu pastillero.", "Aquí tienes tu lista de medicamentos.", "Claro, abriendo el pastillero.", "Accediendo a tu información de medicación."]
-    },
-    {
-      "name": "navegacion_abrir_alarmas",
-      "triggers": ["abre alarmas", "ver alarmas", "mis alarmas", "muéstrame las alarmas", "quiero ver mis despertadores", "gestionar alarmas", "qué alarmas tengo puestas"],
-      "action": "mostrar_vista",
-      "parameters": {"vista": "AlarmView"},
-      "responses": ["Aquí están tus alarmas programadas.", "Mostrando la configuración de alarmas.", "Claro, estas son las alarmas que tienes.", "Abriendo el gestor de alarmas."]
-    },
-    {
-      "name": "motivacion_frase_celebre",
-      "triggers": ["dime una frase", "frase motivadora", "frase célebre", "cita inspiradora", "necesito inspiración", "una frase para pensar", "dime algo para motivarme", "frase del día"],
-      "action": "decir_frase_celebre",
-      "parameters": {"fichero": "frases_celebres.json"},
-      "responses": ["Aquí tienes una frase para animarte:", "Escucha esta frase:", "Claro, una frase para la reflexión:", "Espero que esto te inspire:", "Espero que esta cita te dé un impulso."]
-    },
-    {
-      "name": "entretenimiento_dado",
-      "triggers": ["tira un dado", "quiero tirar un dado", "lanzar dado", "dame un número al azar", "lanza un dado", "tira el dado", "dame un número del 1 al 6"],
-      "action": "lanzar_dado",
-      "responses": ["Has sacado un...", "El resultado es...", "¡Allá va! Ha salido un...", "¡Tirando el dado! El resultado es..."]
-    },
-    {
-      "name": "social_enviar_mensaje",
-      "triggers": ["envía un mensaje a", "mandar mensaje a", "quiero escribir a", "escribe un whatsapp a", "envía un texto a", "manda un mensaje de texto a"],
-      "action": "enviar_mensaje_contacto",
-      "responses": ["Preparando mensaje para enviar.", "Claro, ¿qué quieres decirle?", "De acuerdo, iniciando un nuevo mensaje.", "Dime qué mensaje quieres enviar a..."]
-    },
-    {
-      "name": "social_recordar_ultima_llamada",
-      "triggers": ["última llamada con", "recuerda la última llamada a", "cuándo hablé con", "cuándo llamé a", "cuándo fue la última vez que hablé con", "historial de llamadas con"],
-      "action": "recordar_ultima_llamada",
-      "responses": ["La última vez que llamaste fue el", "Consultando tu historial de llamadas...", "Revisando tus llamadas recientes, un momento...", "De acuerdo, buscando en tu registro de llamadas."]
-    },
-    {
-      "name": "entretenimiento_adivinanza",
-      "triggers": ["dime una adivinanza", "quiero jugar", "hazme pensar", "ponme a prueba con una adivinanza", "juguemos a las adivinanzas", "dime un acertijo"],
-      "action": "contar_adivinanza",
-      "responses": ["Aquí tienes una adivinanza:", "A ver si puedes resolver esta:", "¡A pensar! Escucha atentamente:", "Intenta adivinar esto:", "A ver qué tal se te da este acertijo:"]
-    },
-    {
-      "name": "utilidad_encender_luces",
-      "triggers": ["enciende la luz", "prende la luz", "luz encendida", "quiero luz", "ilumina la habitación", "da la luz", "enciende las luces"],
-      "action": "controlar_luces",
-      "parameters": {"estado": "on"},
-      "responses": ["Encendiendo luces.", "Claro, luces encendidas.", "Hecho, ya tienes luz.", "Hágase la luz."]
-    },
-    {
-      "name": "utilidad_apagar_luces",
-      "triggers": ["apaga la luz", "luz apagada", "quita la luz", "apaga todo", "oscuridad", "corta la luz", "no quiero luz"],
-      "action": "controlar_luces",
-      "parameters": {"estado": "off"},
-      "responses": ["Apagando luces.", "De acuerdo, luces fuera.", "Luces apagadas.", "Habitación a oscuras."]
-    },
-    {
-      "name": "informacion_clima",
-      "triggers": ["dime el clima", "cómo está el tiempo", "qué tiempo hace", "va a llover", "qué temperatura hace", "el tiempo para hoy", "pronóstico del tiempo", "hará frío"],
-      "action": "informar_clima",
-      "responses": ["Hoy el clima es...", "Te digo el pronóstico del tiempo...", "Un momento, consultando la información meteorológica...", "Voy a consultar el tiempo por ti."]
-    },
-    {
-      "name": "informacion_fecha",
-      "triggers": ["qué día es hoy", "fecha de hoy", "día de hoy", "a qué día estamos", "dime la fecha", "fecha completa por favor", "en qué día vivimos"],
+      "name": "fecha",
+      "triggers": [
+        "qué día es hoy",
+        "dime la fecha",
+        "a cuánto estamos"
+      ],
       "action": "decir_fecha_actual",
-      "responses": ["Hoy es...", "Claro, la fecha de hoy es...", "Estamos a...", "Con gusto, hoy es..."]
+      "responses": [
+        "Hoy estamos a ",
+        "Pues es "
+      ]
     },
     {
-      "name": "salud_recordatorio_ejercicio",
-      "triggers": ["recordatorio de ejercicios", "hora de moverse", "muévete un poco", "avísame para hacer ejercicio", "es hora de estirar", "recuérdame que me mueva"],
-      "action": "recordar_ejercicio",
-      "responses": ["Es momento de moverte un poco.", "Vamos a hacer unos ejercicios suaves.", "¡Ánimo! Un poco de movimiento te vendrá bien.", "Recuerda que el ejercicio es salud. ¡Vamos a ello!", "¡A moverse! Es un buen momento para un poco de actividad física."]
+      "name": "dia_semana",
+      "triggers": [
+        "qué día de la semana es",
+        "en qué día estamos"
+      ],
+      "action": "decir_dia_semana",
+      "responses": [
+        "Hoy es"
+      ]
     },
     {
-      "name": "entretenimiento_escuchar_historia",
-      "triggers": ["cuéntame una historia", "quiero escuchar un cuento", "dime un cuento", "nárrame algo", "una historia por favor", "cuéntame un relato", "léeme un cuento"],
-      "action": "contar_historia",
-      "responses": ["Claro, te voy a contar una historia.", "Aquí va un cuento para ti.", "Ponte cómodo, que allá va una historia.", "Había una vez...", "Con mucho gusto. Acomódate y escucha."]
+      "name": "chiste",
+      "triggers": [
+        "cuéntame un chiste",
+        "dime algo gracioso",
+        "hazme reír"
+      ],
+      "action": "contar_chiste",
+      "parameters": {
+        "fichero": "chistes.json"
+      },
+      "responses": [
+        "Venga, va uno malo:",
+        "Agárrate que viene curvas:",
+        "A ver si te ríes con este:"
+      ]
+    },
+    {
+      "name": "dato_curioso",
+      "triggers": [
+        "dime un dato curioso",
+        "sabías que",
+        "cuéntame algo interesante"
+      ],
+      "action": "contar_dato_curioso",
+      "parameters": {
+        "fichero": "datos_curiosos.json"
+      },
+      "responses": [
+        "¿Sabías esta movida?",
+        "Flipa con esto:",
+        "Atento al dato, crack:"
+      ]
+    },
+    {
+      "name": "radio_on",
+      "triggers": [
+        "pon la radio",
+        "reproducir radio",
+        "quiero escuchar música",
+        "pon los 40",
+        "pon kiss fm",
+        "pon cadena 100",
+        "pon rock fm"
+      ],
+      "action": "controlar_radio",
+      "responses": [
+        "¡Marchando música!",
+        "Venga, vamos a animar esto un poco..."
+      ]
+    },
+    {
+      "name": "radio_off",
+      "triggers": [
+        "apaga la radio",
+        "para la música",
+        "silencio",
+        "detener reproducción"
+      ],
+      "action": "detener_radio",
+      "responses": [
+        "Cortando el rollo...",
+        "Vale, vale, ya me callo."
+      ]
+    },
+    {
+      "name": "alarma",
+      "triggers": [
+        "pon una alarma",
+        "despiértame a las",
+        "avísame a las"
+      ],
+      "action": "crear_alarma_voz",
+      "responses": [
+        "Venga, configuro la alarma. No te duermas, eh."
+      ]
+    },
+    {
+      "name": "recordatorio",
+      "triggers": [
+        "recuérdame que",
+        "añade un recordatorio",
+        "nuevo recordatorio"
+      ],
+      "action": "crear_recordatorio_voz",
+      "responses": [
+        "Apunto el recordatorio. Que no se te olvide luego."
+      ]
+    },
+    {
+      "name": "temporizador",
+      "triggers": [
+        "pon un temporizador",
+        "cuenta atrás",
+        "avísame en"
+      ],
+      "action": "crear_temporizador_directo",
+      "responses": [
+        "Cuenta atrás en marcha. ¡Tic-tac!"
+      ]
+    },
+    {
+      "name": "aprender_alias",
+      "triggers": [
+        "aprende que",
+        "cuando diga"
+      ],
+      "action": "aprender_alias",
+      "responses": [
+        "Oído cocina. Aprendido.",
+        "Vale, me lo guardo en la RAM.",
+        "Hecho. No se me olvida."
+      ]
+    },
+    {
+      "name": "aprender_dato",
+      "triggers": [
+        "recuerda que",
+        "guarda que"
+      ],
+      "action": "aprender_dato",
+      "responses": [
+        "Vale, guardado.",
+        "Anotado queda, fiera.",
+        "Listo, dato almacenado."
+      ]
+    },
+    {
+      "name": "queja_factura",
+      "triggers": [
+        "la factura es muy cara",
+        "me han cobrado mucho",
+        "vaya robo",
+        "esto es muy caro"
+      ],
+      "action": "queja_factura",
+      "responses": [
+        "Ya..."
+      ]
+    },
+    {
+      "name": "diagnostico",
+      "triggers": [
+        "tengo un problema con",
+        "no funciona el",
+        "mira a ver qué le pasa al",
+        "diagnostica el"
+      ],
+      "action": "diagnostico",
+      "responses": [
+        "A ver, déjame sacar la lupa..."
+      ]
+    },
+    {
+      "name": "consultar_dato",
+      "triggers": [
+        "qué sabes de",
+        "que sabes de",
+        "recuerdas",
+        "dime qué es"
+      ],
+      "action": "consultar_dato",
+      "responses": [
+        "Déjame hacer memoria...",
+        "A ver qué tengo por aquí..."
+      ]
+    },
+    {
+      "name": "system_restart_service",
+      "triggers": [
+        "reinicia el servicio",
+        "reiniciar servicio"
+      ],
+      "action": "system_restart_service",
+      "responses": [
+        "Voy a reiniciar el servicio. Un momento.",
+        "Reiniciando servicio, cruza los dedos."
+      ]
+    },
+    {
+      "name": "system_update",
+      "triggers": [
+        "actualiza el sistema",
+        "actualizar sistema",
+        "haz un update"
+      ],
+      "action": "system_update",
+      "responses": [
+        "Lanzando actualización del sistema. Esto puede tardar.",
+        "Vamos a poner esto al día. Actualizando paquetes."
+      ]
+    },
+    {
+      "name": "network_ping",
+      "triggers": [
+        "haz un ping a",
+        "ping a",
+        "pink a",
+        "pin a",
+        "latencia con"
+      ],
+      "action": "network_ping",
+      "responses": [
+        "Lanzando ping...",
+        "Midiendo latencia. Un momento."
+      ]
+    },
+    {
+      "name": "network_scan",
+      "triggers": [
+        "escanea la red",
+        "quién hay en la red",
+        "dispositivos conectados",
+        "busca intrusos"
+      ],
+      "action": "network_scan",
+      "responses": [
+        "Iniciando escaneo de red. Esto puede tardar un poco.",
+        "Voy a ver quién está conectado. Dame unos segundos."
+      ]
+    },
+    {
+      "name": "network_whois",
+      "triggers": [
+        "haz un whois a",
+        "whois a",
+        "de quién es la ip"
+      ],
+      "action": "network_whois",
+      "responses": [
+        "Consultando registros WHOIS...",
+        "Investigando dominio/IP."
+      ]
+    },
+    {
+      "name": "public_ip",
+      "triggers": [
+        "cuál es mi ip pública",
+        "dime mi ip",
+        "ip pública"
+      ],
+      "action": "public_ip",
+      "responses": [
+        "Consultando tu IP pública...",
+        "A ver cómo te ve el mundo..."
+      ]
+    },
+    {
+      "name": "check_service",
+      "triggers": [
+        "estado del servicio",
+        "cómo está el servicio",
+        "funciona el servicio"
+      ],
+      "action": "check_service",
+      "responses": [
+        "Verificando estado del servicio...",
+        "Comprobando si está vivo..."
+      ]
+    },
+    {
+      "name": "disk_usage",
+      "triggers": [
+        "espacio en disco",
+        "cuánto espacio queda",
+        "uso de disco"
+      ],
+      "action": "disk_usage",
+      "responses": [
+        "Calculando espacio libre...",
+        "Mirando el almacenamiento..."
+      ]
+    },
+    {
+      "name": "system_find_file",
+      "triggers": [
+        "busca el archivo",
+        "dónde está el archivo",
+        "encuentra el archivo"
+      ],
+      "action": "system_find_file",
+      "responses": [
+        "Buscando archivo. Dame un segundo.",
+        "Rastreando el sistema de archivos..."
+      ]
     }
   ]
 }

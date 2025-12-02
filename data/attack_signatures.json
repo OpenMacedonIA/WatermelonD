@@ -1,0 +1,10 @@
+{
+    "signatures": [
+        {
+            "name": "SSH Brute Force",
+            "pattern": "Failed password for",
+            "log_file": "/var/log/auth.log",
+            "action": "alert"
+        }
+    ]
+}

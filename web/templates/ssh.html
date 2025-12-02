@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="card">
+        <div class="card-header">
+            <h3>Gestión de Infraestructura (Neo SSH)</h3>
+            <button onclick="showAddServerModal()" class="btn-primary">Añadir Servidor</button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Alias</th>
+                            <th>Host</th>
+                            <th>Usuario</th>
+                            <th>Puerto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servers-table-body">
+                        <!-- Servers will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Server Modal -->
+<div id="addServerModal" class="modal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div class="modal-content"
+        style="background:var(--card-bg); margin:10% auto; padding:20px; width:50%; border-radius:8px; border:1px solid var(--border-color);">
+        <h3>Añadir Servidor</h3>
+        <form id="addServerForm" onsubmit="addServer(event)">
+            <div class="form-group">
+                <label>Alias (Nombre único)</label>
+                <input type="text" name="alias" required placeholder="ej: produccion">
+            </div>
+            <div class="form-group">
+                <label>Host (IP o Dominio)</label>
+                <input type="text" name="host" required placeholder="ej: 192.168.1.100">
+            </div>
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" name="user" required placeholder="ej: root">
+            </div>
+            <div class="form-group">
+                <label>Puerto</label>
+                <input type="number" name="port" value="22" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña (Opcional si usas claves)</label>
+                <input type="password" name="password">
+            </div>
+            <div class="form-group">
+                <label>Ruta Key (Opcional)</label>
+                <input type="text" name="key_path" placeholder="/home/user/.ssh/id_rsa">
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeModal()" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function loadServers() {
+        fetch('/api/ssh/list')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('servers-table-body');
+                tbody.innerHTML = '';
+                for (const [alias, info] of Object.entries(data)) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${alias}</td>
+                        <td>${info.host}</td>
+                        <td>${info.user}</td>
+                        <td>${info.port}</td>
+                        <td>
+                            <button onclick="deleteServer('${alias}')" class="btn-danger btn-sm">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+    }
+
+    function showAddServerModal() {
+        document.getElementById('addServerModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('addServerModal').style.display = 'none';
+    }
+
+    function addServer(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch('/api/ssh/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    loadServers();
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    function deleteServer(alias) {
+        if (confirm(`¿Eliminar servidor ${alias}?`)) {
+            fetch('/api/ssh/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alias: alias })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) loadServers();
+                    else alert('Error: ' + data.message);
+                });
+        }
+    }
+
+    // Load on start
+    loadServers();
+</script>
+{% endblock %}

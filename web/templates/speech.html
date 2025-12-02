@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Historial de Voz</h3>
+        <span class="status-indicator active">En vivo</span>
+    </div>
+    <div class="card-body">
+        <div id="speech-log" class="terminal-window"
+            style="height: 500px; overflow-y: auto; display: flex; flex-direction: column-reverse;">
+            <!-- Chat bubbles will appear here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateSpeechLog() {
+        fetch('/api/speech_history')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('speech-log');
+                container.innerHTML = ''; // Clear current
+
+                // Data comes sorted DESC (newest first), but we want to display newest at bottom usually?
+                // Actually, flex-direction: column-reverse handles "newest at bottom" if we append them in order?
+                // Let's just render them.
+
+                data.forEach(item => {
+                    const row = document.createElement('div');
+                    row.style.marginBottom = '15px';
+                    row.style.borderBottom = '1px solid #333';
+                    row.style.paddingBottom = '10px';
+
+                    const time = new Date(item.timestamp).toLocaleTimeString();
+
+                    row.innerHTML = `
+                        <div style="font-size: 0.8em; color: #666;">${time} - ${item.intent || 'Unknown'}</div>
+                        <div style="color: #4CAF50;"><strong>User:</strong> ${item.user}</div>
+                        <div style="color: #2196F3;"><strong>Tío:</strong> ${item.neo}</div>
+                    `;
+                    container.appendChild(row);
+                });
+            })
+            .catch(err => console.error('Error fetching speech history:', err));
+    }
+
+    // Update every 2 seconds
+    setInterval(updateSpeechLog, 2000);
+    updateSpeechLog();
+</script>
+{% endblock %}

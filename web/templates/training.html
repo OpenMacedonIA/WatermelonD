@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-primary"><i class="fas fa-dumbbell"></i> Entrenamiento NLU</h2>
+        <p class="text-muted">Revisa las frases que T.I.O. no ha entendido y enséñale qué significan.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header border-secondary">
+                <h5 class="card-title mb-0">Bandeja de Entrada (No Reconocidos)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Frase</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inboxTable">
+                            <!-- JS will populate -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-dark border-secondary mb-3">
+            <div class="card-header border-secondary">
+                <h5 class="card-title mb-0">Estado</h5>
+            </div>
+            <div class="card-body">
+                <p>Las nuevas frases se guardan en <code>config/learned_intents.json</code>.</p>
+                <p>Para aplicar los cambios, debes reiniciar el servicio.</p>
+                <button class="btn btn-warning w-100" onclick="restartService()">
+                    <i class="fas fa-sync"></i> Reiniciar Neo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Train Modal -->
+<div class="modal fade" id="trainModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Entrenar Frase</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Frase: <strong id="modalPhrase" class="text-info"></strong></p>
+                <div class="mb-3">
+                    <label class="form-label">Asignar a Intent:</label>
+                    <select id="intentSelect" class="form-select bg-black text-light border-secondary">
+                        <!-- JS will populate -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmTrain()">Entrenar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPhrase = '';
+    let intents = [];
+
+    function loadInbox() {
+        fetch('/api/nlu/inbox')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('inboxTable');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No hay frases pendientes.</td></tr>';
+                    return;
+                }
+                data.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td>"${item.text}"</td>
+                            <td class="text-muted small">${item.timestamp}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success" onclick="openTrain('${item.text}')">
+                                    <i class="fas fa-check"></i> Enseñar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+    }
+
+    function loadIntents() {
+        fetch('/api/nlu/intents')
+            .then(res => res.json())
+            .then(data => {
+                intents = data.sort();
+                const select = document.getElementById('intentSelect');
+                select.innerHTML = '';
+                intents.forEach(intent => {
+                    select.innerHTML += `<option value="${intent}">${intent}</option>`;
+                });
+            });
+    }
+
+    function openTrain(phrase) {
+        currentPhrase = phrase;
+        document.getElementById('modalPhrase').innerText = phrase;
+        new bootstrap.Modal(document.getElementById('trainModal')).show();
+    }
+
+    function confirmTrain() {
+        const intent = document.getElementById('intentSelect').value;
+        fetch('/api/nlu/train', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phrase: currentPhrase, intent: intent })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('trainModal')).hide();
+                    loadInbox();
+                    alert('Aprendido. Reinicia el servicio para aplicar.');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    function restartService() {
+        if (confirm('¿Reiniciar el servicio Neo?')) {
+            fetch('/api/services/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'neo.service', action: 'restart' })
+            }).then(() => alert('Reiniciando... espera unos segundos.'));
+        }
+    }
+
+    // Init
+    loadInbox();
+    loadIntents();
+</script>
+{% endblock %}

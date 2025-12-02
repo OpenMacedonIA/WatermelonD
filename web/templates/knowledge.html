@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Base de Conocimientos</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFactModal">
+                    <i class="fas fa-plus me-2"></i>Añadir Dato
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="knowledgeTable">
+                        <thead>
+                            <tr>
+                                <th>Clave (Key)</th>
+                                <th>Valor (Value)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="knowledgeList">
+                            <!-- JS populates this -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Fact Modal -->
+<div class="modal fade" id="addFactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Añadir Nuevo Conocimiento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Clave (Concepto)</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="factKey">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Valor (Definición)</label>
+                    <textarea class="form-control bg-dark text-light border-secondary" id="factValue"
+                        rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addFact()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadKnowledge() {
+        fetch('/api/knowledge/list')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('knowledgeList');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td><strong>${item.key}</strong></td>
+                            <td>${item.value}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="deleteFact('${item.key}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+    }
+
+    function addFact() {
+        const key = document.getElementById('factKey').value;
+        const value = document.getElementById('factValue').value;
+
+        fetch('/api/knowledge/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key, value: value })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('addFactModal')).hide();
+                    document.getElementById('factKey').value = '';
+                    document.getElementById('factValue').value = '';
+                    loadKnowledge();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    function deleteFact(key) {
+        if (confirm('¿Seguro que quieres borrar este dato?')) {
+            fetch('/api/knowledge/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) loadKnowledge();
+                });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadKnowledge);
+</script>
+{% endblock %}

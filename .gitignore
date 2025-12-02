@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+tio.venv/
+unsloth_env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# User Data & Database
+brain.db
+*.sqlite
+*.sqlite3
+database/
+training_data/
+# init_db.py # Keep this if it's the schema creator
+
+# Configuration & Secrets
+.env
+config.json
+private/
+secrets/
+# config.example.json
+
+# Logs
+logs/
+*.log
+
+# Large AI Models & Binaries
+models/
+vosk-models/
+vosk_models/
+piper/
+pipper/
+piper_bin/
+pipper_bin/
+tts_cache/
+*.gguf
+*.bin
+*.pt
+*.safetensors
+
+# Experiments & Notebooks
+NB/
+MNB/
+experiments/
+*.ipynb
+sounds/
+docs/
+.tools/
+source/
+roadmap.md
+test_pipeline.py
+# Tests
+tests/
+
+# Hardware/Specific Modules
+esp32_cam/
+
+# IDE & System
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+debug_kiosk.sh
+# User Requested Ignore
+# resources/

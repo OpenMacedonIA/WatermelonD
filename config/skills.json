@@ -1,0 +1,59 @@
+{
+    "system": {
+        "enabled": true,
+        "description": "Control del sistema (apagar, reiniciar, estado, actualizaciones)."
+    },
+    "network": {
+        "enabled": true,
+        "description": "Herramientas de red (ping, escaneo, IP pública, cluster).",
+        "config": {
+            "aliases": {
+                "router": "192.168.1.1",
+                "google": "8.8.8.8"
+            }
+        }
+    },
+    "time": {
+        "enabled": true,
+        "description": "Fecha, hora y consultas temporales."
+    },
+    "media": {
+        "enabled": true,
+        "description": "Reproducción de música, radio y control de medios (Cast)."
+    },
+    "content": {
+        "enabled": true,
+        "description": "Entretenimiento: chistes, curiosidades, frases célebres y aprendizaje."
+    },
+    "organizer": {
+        "enabled": true,
+        "description": "Gestión personal: alarmas, temporizadores y recordatorios."
+    },
+    "ssh": {
+        "enabled": true,
+        "description": "Gestión remota de servidores vía SSH.",
+        "config": {
+            "servers": []
+        }
+    },
+    "files": {
+        "enabled": true,
+        "description": "Búsqueda y lectura de archivos en el sistema.",
+        "config": {
+            "scan_paths": [
+                "~/"
+            ],
+            "scan_interval": 24,
+            "scan_types": [
+                "txt",
+                "pdf",
+                "md",
+                "py",
+                "jpg",
+                "png",
+                "json"
+            ],
+            "enable_indexing": false
+        }
+    }
+}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>System Services</h3>
+    </div>
+    <div class="card-body">
+        <table class="services-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 10px;">Service</th>
+                    <th style="padding: 10px;">Status</th>
+                    <th style="padding: 10px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="services-list">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateServices() {
+        fetch('/api/services')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('services-list');
+                tbody.innerHTML = '';
+                data.forEach(srv => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid var(--border-color)';
+
+                    const statusColor = srv.status === 'active' ? 'var(--success-color)' : 'var(--danger-color)';
+
+                    row.innerHTML = `
+                        <td style="padding: 15px 10px; font-weight: 500;">${srv.name}</td>
+                        <td style="padding: 15px 10px;">
+                            <span style="color: ${statusColor}; font-weight: bold; text-transform: uppercase; font-size: 0.8rem;">
+                                ● ${srv.status}
+                            </span>
+                        </td>
+                        <td style="padding: 15px 10px;">
+                            <button onclick="controlService('${srv.name}', 'start')" class="btn-sm">Start</button>
+                            <button onclick="controlService('${srv.name}', 'restart')" class="btn-sm">Restart</button>
+                            <button onclick="controlService('${srv.name}', 'stop')" class="btn-sm btn-danger-sm">Stop</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            });
+    }
+
+    function controlService(name, action) {
+        if (!confirm(`Are you sure you want to ${action} ${name}?`)) return;
+
+        fetch('/api/services/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, action: action })
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                updateServices();
+            });
+    }
+
+    updateServices();
+</script>
+
+<style>
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        color: var(--text-primary);
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .btn-sm:hover {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .btn-danger-sm {
+        color: var(--danger-color);
+    }
+
+    .btn-danger-sm:hover {
+        background: var(--danger-color);
+        color: white;
+    }
+</style>
+{% endblock %}
