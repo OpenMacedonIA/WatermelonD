@@ -39,7 +39,7 @@ El núcleo (`NeoCore.py`) orquesta varios módulos independientes:
 
 *   **Managers**: `VoiceManager`, `IntentManager`, `AIEngine`, `MQTTManager`, `SSHManager`, etc.
 *   **Skills**: Módulos funcionales específicos (`skills/system`, `skills/network`, `skills/media`, etc.).
-*   **Web Admin**: Panel de control web para gestión y visualización. (localhost:5000)
+*   **Web Admin**: Panel de control web para gestión y visualización. (`localhost:5000`)
 
 ## 📋 Requisitos
 
