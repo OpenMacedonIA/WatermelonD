@@ -7,6 +7,7 @@ import struct
 import os
 import sys
 import base64
+import wave
 
 # Add root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -111,6 +112,18 @@ class STTService:
             raw_data = base64.b64decode(b64_data)
             logger.info(f"Received audio data: {len(raw_data)} bytes")
             
+            # --- DEBUG: SAVE AUDIO TO FILE ---
+            try:
+                with wave.open("debug_last_audio.wav", "wb") as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(rate)
+                    wf.writeframes(raw_data)
+                logger.info("Saved debug_last_audio.wav")
+            except Exception as e:
+                logger.error(f"Failed to save debug audio: {e}")
+            # ---------------------------------
+
             text = ""
             if self.sherpa_recognizer:
                 text = self.transcribe_sherpa(raw_data, rate)
