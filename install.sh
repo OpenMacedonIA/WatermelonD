@@ -204,13 +204,13 @@ $HOME/.pyenv/versions/$PYTHON_VERSION/bin/python -m venv $VENV_DIR
 
 # --- 3.1 INSTALACIÓN DE LIBRERÍAS DE PYTHON ---
 echo "[PASO 3.1/5] Instalando las librerías de Python en el entorno virtual..."
-$VENV_DIR/bin/pip install -U pip
+$VENV_DIR/bin/pip install -U pip --no-cache-dir
 
 # Fix FANN2 installation (Padatious dependency)
 echo "Aplicando corrección para fann2..."
 $VENV_DIR/bin/python resources/tools/install_fann_fix.py
 
-$VENV_DIR/bin/pip install -r requirements.txt
+$VENV_DIR/bin/pip install -r requirements.txt --no-cache-dir
 echo "Librerías de Python instaladas correctamente."
 echo ""
 
