@@ -7,6 +7,9 @@
 <a name="english"></a>
 ## English
 
+> [!WARNING]
+> **Testing Branch**: You are currently viewing the development version (v2.5.0-testing). Features like Self-Healing and MANGO T5 are experimental and might be unstable. Use at your own risk.
+
 **C.O.L.E.G.A.** (Language Copilot for Group and Administration Environments)
 
 > Formerly known as **OpenKompai Nano**
@@ -80,6 +83,9 @@ Once installed, COLEGA will run as a background service.
 
 <a name="español"></a>
 ## Español
+
+> [!WARNING]
+> **Rama Testing**: Estás viendo la versión de desarrollo (v2.5.0-testing). Funcionalidades como Self-Healing y MANGO T5 son experimentales y podrían ser inestables. Úsalo bajo tu propia responsabilidad.
 
 **C.O.L.E.G.A.** (COpiloto de Lenguaje para Entornos de Grupo y Administración)
 
