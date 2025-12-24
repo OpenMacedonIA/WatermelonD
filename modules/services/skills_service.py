@@ -13,6 +13,7 @@ from modules.utils import load_json_data
 from modules.bus_client import BusClient
 from modules.config_manager import ConfigManager
 from modules.logger import app_logger
+from modules.database import DatabaseManager
 
 # Managers
 from modules.calendar_manager import CalendarManager
@@ -102,7 +103,7 @@ class SkillsService:
         
         # Connect to Bus
         # Connect to Bus
-        self.bus.connect()
+        # Connect to Bus handled in run()
         self.register_intents()
 
     def load_intents(self):
@@ -119,6 +120,7 @@ class SkillsService:
     def init_managers(self):
         logger.info("Initializing Managers...")
         self.calendar_manager = CalendarManager()
+        self.db = DatabaseManager()
         self.alarm_manager = AlarmManager()
         self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
         self.ssh_manager = SSHManager()
