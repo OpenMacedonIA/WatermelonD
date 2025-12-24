@@ -16,7 +16,11 @@ temp.json
 brain.db
 *.sqlite
 *.sqlite3
-database/
+database/knowledge_db
+database/brain.db
+database/jobs.sqlite
+database/brain.db-shm
+database/brain.db-wal
 training_data/
 # init_db.py # Keep this if it's the schema creator
 

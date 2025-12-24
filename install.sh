@@ -14,6 +14,15 @@ echo "Este script instalará todo lo necesario para ejecutar la aplicación en m
 echo "Se requerirá tu contraseña para instalar paquetes del sistema (sudo)."
 echo ""
 
+# --- CONFIGURACIÓN DE TMPDIR (Para evitar errores de espacio en /tmp) ---
+# Usamos un directorio temporal dentro del proyecto porque /tmp suele ser pequeño
+export TMPDIR="$(pwd)/temp_build"
+if [ ! -d "$TMPDIR" ]; then
+    mkdir -p "$TMPDIR"
+fi
+echo "Directorio temporal configurado en: $TMPDIR"
+echo ""
+
 # --- 1. DETECCIÓN DEL SISTEMA Y GESTOR DE PAQUETES ---
 echo "[PASO 1/5] Detectando sistema operativo..."
 
@@ -230,6 +239,39 @@ done
 
 # --- 3.2. INICIALIZACIÓN DE LA BASE DE DATOS ---
 echo "[PASO 3.2/5] Inicializando base de datos (Neo Brain)..."
+
+# Self-healing: Check if script exists (corruption check)
+if [ ! -f "database/init_db.py" ]; then
+    echo "⚠️  AVISO: No se encuentra database/init_db.py."
+    echo "Recreando el archivo faltante..."
+    
+    mkdir -p database
+    cat <<EOT > database/init_db.py
+from modules.database import DatabaseManager
+import logging
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+
+def init():
+    print("Initializing Neo Brain Database...")
+    try:
+        db = DatabaseManager()
+        # The __init__ method of DatabaseManager calls init_db(), which creates tables if they don't exist.
+        # We can also explicitly check connection here.
+        conn = db.get_connection()
+        print("Database 'brain.db' created/verified successfully.")
+        db.close()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        exit(1)
+
+if __name__ == "__main__":
+    init()
+EOT
+    echo "Archivo restaurado correctamente."
+fi
+
 export PYTHONPATH=$(pwd)
 $VENV_DIR/bin/python database/init_db.py
 

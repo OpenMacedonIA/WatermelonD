@@ -354,8 +354,126 @@ class NeoCore:
                 if not command_text:
                     return
 
-                # --- Keyword Router (Homemade Function Calling) ---
-                # Intercept specific commands for direct execution
+                # --- 1. MANGO T5 (SysAdmin AI) - PRIMARY ENGINE ---
+                # Check this FIRST to prioritize Model over Rules (Intents)
+                
+                # --- Context Injection (Simplified) ---
+                # User Request: "Contexto: ['archivo1', 'archivo2'] | Instrucción: Borra la foto"
+                try:
+                    # List files in current directory (excluding hidden ones for noise reduction)
+                    files_in_cwd = [f for f in os.listdir('.') if not f.startswith('.')]
+                    # Limit list size to avoid token overflow
+                    if len(files_in_cwd) > 20: 
+                        files_in_cwd = files_in_cwd[:20] + ["..."]
+                except:
+                    files_in_cwd = []
+
+                # Construct Prompt
+                mango_prompt = f"Contexto: {files_in_cwd} | Instrucción: {command_text}"
+                
+                app_logger.info(f"MANGO Prompt (Simple): '{mango_prompt}'")
+                
+                # --- SELF-CORRECTION LOOP ---
+                max_retries = 1 # Allow 1 attempt to fix
+                attempt = 0
+                command_to_run = None
+                repair_prompt = None
+                
+                # First attempt: Infer from original prompt
+                mango_cmd, mango_conf = self.mango_manager.infer(mango_prompt)
+                
+                if mango_cmd and mango_conf > 0.85:
+                    command_to_run = mango_cmd
+                
+                # If we have a command, enter execution/correction flow
+                if command_to_run:
+                    while attempt <= max_retries:
+                         app_logger.info(f"MANGO Exec Attempt {attempt+1}: {command_to_run}")
+                         
+                         # 0. Flag Validation (RAG for Manuals)
+                         # Validate flags before even asking for permission or executing
+                         is_valid_cmd, val_msg = self.sysadmin_manager.validate_command_flags(command_to_run)
+                         
+                         if not is_valid_cmd:
+                             app_logger.warning(f"MANGO Validation Failed: {val_msg}")
+                             # Treat as failure to trigger self-correction
+                             success = False
+                             output = f"Command validation failed: {val_msg}"
+                             # Skip execution, fall through to correction logic
+                         # 0. Flag Validation (RAG for Manuals)
+                         # Validate flags before even asking for permission or executing
+                         is_valid_cmd, val_msg = self.sysadmin_manager.validate_command_flags(command_to_run)
+                         
+                         if not is_valid_cmd:
+                             app_logger.warning(f"MANGO Validation Failed: {val_msg}")
+                             # Treat as failure to trigger self-correction
+                             success = False
+                             output = f"Command validation failed: {val_msg}"
+                             # Skip execution, fall through to correction logic
+                         else:
+                             # 1. Risk Analysis (Rule-Based Risk Analyzer)
+                             risk_level = self.sysadmin_manager.analyze_command_risk(command_to_run)
+                             app_logger.info(f"Risk Level for '{command_to_run}': {risk_level.upper()}")
+                             
+                             should_execute = False
+                             
+                             if risk_level == 'safe':
+                                 if attempt == 0: self.speak(f"Ejecutando: {command_to_run}")
+                                 else: self.speak(f"Reintentando con: {command_to_run}")
+                                 should_execute = True
+                                 
+                             elif risk_level == 'caution':
+                                 # Caution -> Ask for confirmation (First attempt only)
+                                 # If correcting, maybe we ask again? Let's implement strict confirm for now.
+                                 self.pending_mango_command = command_to_run
+                                 self.speak(f"He generado: {command_to_run}. Es una acción de sistema. ¿Ejecuto?")
+                                 return # Exit loop, wait for user "Sí"
+                                 
+                             elif risk_level == 'danger':
+                                 # Danger -> Strong warning
+                                 self.pending_mango_command = command_to_run
+                                 self.speak(f"¡Atención! El comando {command_to_run} puede ser destructivo. ¿Estás seguro?")
+                                 return # Exit loop, wait for user
+
+                             if should_execute:
+                                 success, output = self.sysadmin_manager.run_command(command_to_run)
+                             else:
+                                 # Should not happen if logic is correct
+                                 return
+
+                         # Common Result Handling (Execution OR Validation Failure)
+
+                         # Common Result Handling (Execution OR Validation Failure)
+                         if success:
+                             # It worked!
+                             self.handle_action_result_with_chat(command_text, output)
+                             return
+                         else:
+                             # It failed (Runtime or Validation)! output contains error
+                             error_msg = output
+                             app_logger.warning(f"MANGO Command Failed: {error_msg}")
+                             
+                             if attempt < max_retries:
+                                 attempt += 1
+                                 # Construct Repair Prompt
+                                 repair_prompt = f"Previous command '{command_to_run}' failed with error: '{error_msg}'. Fix the command to: {command_text}"
+                                 app_logger.info(f"MANGO Repair Prompt: {repair_prompt}")
+                                 
+                                 # Ask MANGO to fix
+                                 fixed_cmd, fixed_conf = self.mango_manager.infer(repair_prompt)
+                                 if fixed_cmd:
+                                     command_to_run = fixed_cmd
+                                     self.speak(f"Detecté un error en el comando. Corrigiendo...")
+                                     continue # Loop again
+                                 else:
+                                     self.speak("No he podido corregir el error.")
+                                     break
+                             else:
+                                 # Out of retries
+                                 self.speak(f"No he podido ejecutarlo. Error: {error_msg}")
+                                 return
+
+                # --- Keyword Router (Legacy Function Calling) ---
                 router_result = self.keyword_router.process(command_text)
                 if router_result:
                     app_logger.info(f"Keyword Router Action Result: {router_result}")
@@ -402,10 +520,10 @@ class NeoCore:
                         self.pending_suggestion = None
                         # Fall through to normal processing
 
-                # --- Normal Processing ---
+                # --- Normal Processing (Legacy Intents) ---
+                # This is now Secondary/Fallback or for Non-System tasks (Alarms, Jokes)
                 
                 # If we fell through from confirmation, best_intent is already set.
-                # If not, we search now.
                 if not 'best_intent' in locals() or not best_intent:
                     best_intent = self.intent_manager.find_best_intent(command_text)
 
@@ -466,23 +584,20 @@ class NeoCore:
                         pass
                     return
                 
-                # --- MANGO T5 Check (NL2Bash) ---
-                # Only if text looks like a technical request and IntentManager failed
-                mango_cmd, mango_conf = self.mango_manager.infer(command_text)
+                # --- MANGO T5 Fallback (Low Confidence System Commands) ---
+                # If IntentManager also failed, check Mango again with lower threshold (e.g. 0.6)
+                # This catches things that look like system commands but Mango wasn't super sure.
                 if mango_cmd and mango_conf > 0.6: 
-                     # Check if command is obviously safe (whitelist)
+                     # Same logic as above but effectively treating it as "Last Resort" before Chat
                      if mango_cmd.startswith("echo ") or mango_cmd == "ls" or mango_cmd.startswith("ls "):
-                         # Safe execution
                          self.speak(f"Ejecutando: {mango_cmd}")
                          success, output = self.sysadmin_manager.run_command(mango_cmd)
                          result_text = output if success else f"Error: {output}"
-                         # Let ChatManager wrap the result
                          self.handle_action_result_with_chat(command_text, result_text)
                          return
                      else:
-                         # Hazardous execution -> Ask for confirmation
                          self.pending_mango_command = mango_cmd
-                         self.speak(f"He generado el comando: {mango_cmd}. ¿Quieres que lo ejecute?")
+                         self.speak(f"He generado el comando: {mango_cmd}. ¿Ejecuto?")
                          return
 
                 # Si no es un comando, hablar con Gemma

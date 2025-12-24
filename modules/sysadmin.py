@@ -339,3 +339,104 @@ class SysAdminManager:
             return {"error": "El test de velocidad tardó demasiado."}
         except Exception as e:
             return {"error": str(e)}
+
+    def validate_command_flags(self, command):
+        """
+        Valida si los flags utilizados en un comando son válidos consultando la ayuda (--help) del ejecutable.
+        Retorna: (True, None) si es válido, (False, "Error msg") si no.
+        """
+        try:
+            parts = command.strip().split()
+            if not parts:
+                return False, "Comando vacío"
+            
+            executable = parts[0]
+            # Solo validar flags que empiezan con -
+            flags = [p for p in parts[1:] if p.startswith('-')]
+            
+            if not flags:
+                return True, None
+                
+            # Obtener ayuda (limitado a 5s para no bloquear)
+            # Probamos --help primero, es el estándar más rápido
+            try:
+                help_proc = subprocess.run(
+                    [executable, '--help'], 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=5
+                )
+                help_text = help_proc.stdout + help_proc.stderr
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                # Si falla --help o no encuentra el ejecutable, no podemos validar.
+                # Asumimos válido para no bloquear comandos legítimos sin --help.
+                # O podríamos devolver warning.
+                return True, None 
+            
+            invalid_flags = []
+            for flag in flags:
+                # Limpiar flag (ej. --sort=size -> --sort)
+                clean_flag = flag.split('=')[0]
+                
+                # Búsqueda simple: ¿Está el string del flag en el texto de ayuda?
+                # Esto puede dar falsos positivos pero reduce falsos negativos.
+                if clean_flag not in help_text:
+                    invalid_flags.append(flag)
+            
+            if invalid_flags:
+                return False, f"Flags posiblemente inválidos detectados: {', '.join(invalid_flags)} para el comando '{executable}'"
+            
+            return True, None
+
+            if invalid_flags:
+                return False, f"Flags posiblemente inválidos detectados: {', '.join(invalid_flags)} para el comando '{executable}'"
+            
+            return True, None
+
+        except Exception as e:
+            logging.error(f"Error validando flags: {e}")
+            return True, None # Fail safe open
+
+    def analyze_command_risk(self, command):
+        """
+        Analiza el riesgo de un comando basándose en reglas y listas blancas/negras.
+        Retorna: 'safe', 'caution', 'danger'
+        """
+        import shlex
+        
+        # 1. Definición de Categorías
+        DANGER_CMDS = ['rm', 'dd', 'mkfs', 'reboot', 'shutdown', 'poweroff', 'init', 'wipe', 'shred']
+        CAUTION_CMDS = ['systemctl', 'service', 'chmod', 'chown', 'mv', 'cp', 'kill', 'pkill', 'apt', 'dnf', 'yum', 'pacman', 'docker', 'snap', 'flatpak', 'nano', 'vim', 'vi']
+        SAFE_CMDS = ['ls', 'cat', 'grep', 'find', 'echo', 'date', 'df', 'free', 'uptime', 'whoami', 'pwd', 'tail', 'head', 'stat', 'id', 'ip', 'ifconfig', 'ping', 'curl', 'wget', 'tree']
+        
+        try:
+            # 2. Parsing con shlex (Maneja comillas y espacios correctamente)
+            parts = shlex.split(command)
+            if not parts:
+                return 'safe' # Nada que ejecutar
+            
+            exe = parts[0]
+            
+            # 3. Detección de Redirecciones Peligrosas (>, >>, |)
+            # shlex.split a veces se come los operadores si no están entre comillas,
+            # pero para comandos simples de MANGO suelen ser explícitos.
+            # Mejor chequeo crudo para operadores de shell
+            if '>' in command or '|' in command or ';' in command or '&' in command:
+                # La presencia de pipes o redirecciones eleva el riesgo automáticamente
+                # "echo hello > archivo" es escritura.
+                if '>' in command: return 'caution' # Escritura en archivo
+                
+            # 4. Clasificación por Ejecutable
+            if exe in DANGER_CMDS:
+                return 'danger'
+            if exe in CAUTION_CMDS:
+                return 'caution'
+            if exe in SAFE_CMDS:
+                return 'safe'
+            
+            # 5. Default para desconocidos
+            return 'caution' # "Ante la duda, pregunta"
+            
+        except Exception as e:
+            logging.error(f"Error analizando riesgo: {e}")
+            return 'caution' # Fail safe

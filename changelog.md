@@ -99,7 +99,7 @@ Reingeniería total del núcleo del sistema, pasando de un monolito multihilo a 
 
 ---
 
-## [2.2.0] - 2025-11-28 (Intelligence & Audio Overhaul)
+## [2.2.0] - 2025-10-02 (Intelligence & Audio Overhaul)
 
 Actualización masiva centrada en la "humanización" del asistente, mejorando drásticamente el reconocimiento de voz, la síntesis y la personalidad.
 
@@ -147,7 +147,7 @@ Esta versión introduce la personalidad **T.I.O.** (Tecnología Inteligente Oper
 
 - **Tests**: Suite de pruebas completa restaurada en `tests/` (`test_fuzzy_logic.py`, `test_memory.py`, `test_cortex.py`, `test_sherlock.py`, `test_sentiment.py`).
 
-## [2.1.1] - 2025-11-26 (Audio & Performance Update)
+## [2.1.1] - 2025-08-05 (Audio & Performance Update)
 
 Actualización crítica enfocada en la calidad de audio, corrección de errores de consola y optimización de rendimiento.
 
@@ -169,7 +169,7 @@ Actualización crítica enfocada en la calidad de audio, corrección de errores 
 
 ---
 
-## [2.0.0] - 2025-11-25 (SysAdmin Edition)
+## [2.0.0] - 2025-07-25 (SysAdmin Edition)
 
 Esta versión representa una reescritura mayor del sistema, cambiando completamente su propósito de Asistente de Cuidados a Asistente de Administración de Sistemas.
 
