@@ -292,8 +292,8 @@ if [ -d "vosk-models/es" ]; then
 else
     echo "----------------------------------------------------------------"
     echo "AVISO: No se encontró un modelo de voz instalado."
-    echo "Para instalar uno, ejecuta manualmente el siguiente script:"
-    echo "  python3 resources/tools/download_vosk_model.py"
+    echo "Para instalar uno, ejecuta manualmente el siguiente script usando el entorno virtual:"
+    echo "  ./venv/bin/python resources/tools/download_vosk_model.py"
     echo "Este script te ayudará a elegir el mejor modelo para tu sistema."
     echo "----------------------------------------------------------------"
 fi
