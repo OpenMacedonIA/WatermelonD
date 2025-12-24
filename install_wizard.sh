@@ -10,17 +10,35 @@ echo "2) Nodo Principal Headless (Solo NeoCore API)"
 echo "3) Cliente Web Remoto (Solo Interfaz)"
 read -p "Opción [1-3]: " OPCION
 
+# Advertencia inicial sobre Distrobox/Podman vs Nativo
+IS_DEBIAN=false
+if command -v apt-get &> /dev/null; then
+    IS_DEBIAN=true
+    echo -e "${YELLOW}Sistema Debian/Ubuntu detectado.${NC}"
+else
+    echo -e "${YELLOW}Sistema Fedora/Atomic detectado (o sin apt).${NC}"
+fi
+
 case $OPCION in
     1)
-        echo -e "${YELLOW}Instalando Nodo Principal Completo...${NC}"
-        ./setup_distrobox.sh
+        if [ "$IS_DEBIAN" = true ]; then
+            echo -e "${YELLOW}Instalando de forma Nativa (install.sh)...${NC}"
+            ./install.sh
+        else
+            echo -e "${YELLOW}Instalando mediante Distrobox (setup_distrobox.sh)...${NC}"
+            ./setup_distrobox.sh
+        fi
         ;;
     2)
-        echo -e "${YELLOW}Instalando Nodo Principal Headless...${NC}"
-        # Same setup, but we might want to disable auto-start of local web?
-        # For now, standard setup includes everything.
-        ./setup_distrobox.sh
-        echo -e "${GREEN}Para ejecutar SIN web local (ahorrando recursos), edite NeoCore.py o use config.${NC}"
+        if [ "$IS_DEBIAN" = true ]; then
+             echo -e "${YELLOW}Instalando Nodo Headless Nativo (install.sh)...${NC}"
+             # install.sh ya configura modo servicio adecuado
+             ./install.sh
+        else
+             echo -e "${YELLOW}Instalando Nodo Headless en Distrobox...${NC}"
+             ./setup_distrobox.sh
+             echo -e "${GREEN}Para ejecutar SIN web local, edite la configuración posteriormente.${NC}"
+        fi
         ;;
     3)
         echo -e "${YELLOW}Instalando Cliente Web Remoto...${NC}"
