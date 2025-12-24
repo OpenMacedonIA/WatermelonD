@@ -58,8 +58,8 @@ The core (`NeoCore.py`) orchestrates several independent modules:
 
 ```bash
 # Clone the repository and switch to testing branch
-git clone https://github.com/jrodriiguezg/NEO.git
-cd NEO
+git clone https://github.com/jrodriiguezg/COLEGA.git
+cd COLEGA
 git checkout testing
 
 # Run the native installer (User Service Mode)
@@ -128,8 +128,8 @@ COLEGA es un asistente personal proactivo y modular diseñado para ejecutarse lo
 
 ```bash
 # Clonar y cambiar a rama testing
-git clone https://github.com/jrodriiguezg/NEO.git
-cd NEO
+git clone https://github.com/jrodriiguezg/COLEGA.git
+cd COLEGA
 git checkout testing
 
 # Ejecutar instalador nativo (Modo Servicio de Usuario)
