@@ -40,6 +40,7 @@ class STTService:
         
         # Models
         self.vosk_model = None
+        self.vosk_recognizer = None
         self.sherpa_recognizer = None
         
         self.setup_stt()
@@ -66,6 +67,7 @@ class STTService:
         if os.path.exists(model_path):
             try:
                 self.vosk_model = vosk.Model(model_path)
+                self.vosk_recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000)
                 logger.info("Vosk Model loaded.")
             except Exception as e:
                 logger.error(f"Failed to load Vosk: {e}")
@@ -129,10 +131,13 @@ class STTService:
         return s.result.text.strip()
 
     def transcribe_vosk(self, raw_data, rate):
-        rec = vosk.KaldiRecognizer(self.vosk_model, rate)
-        rec.AcceptWaveform(raw_data)
-        res = json.loads(rec.Result())
-        return res.get('text', '')
+        if not self.vosk_recognizer:
+            return ""
+            
+        if self.vosk_recognizer.AcceptWaveform(raw_data):
+            res = json.loads(self.vosk_recognizer.Result())
+            return res.get('text', '')
+        return ""
 
     def check_wake_word(self, text):
         wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro'])
