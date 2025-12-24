@@ -134,10 +134,17 @@ class STTService:
         if not self.vosk_recognizer:
             return ""
             
-        if self.vosk_recognizer.AcceptWaveform(raw_data):
-            res = json.loads(self.vosk_recognizer.Result())
-            return res.get('text', '')
-        return ""
+        # Feed the entire audio chunk
+        self.vosk_recognizer.AcceptWaveform(raw_data)
+        
+        # Force a final result since AudioService sends complete utterances
+        res = json.loads(self.vosk_recognizer.FinalResult())
+        text = res.get('text', '')
+        
+        if text:
+            logger.info(f"Vosk FinalResult: '{text}'")
+            
+        return text
 
     def check_wake_word(self, text):
         wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro'])
