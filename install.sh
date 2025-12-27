@@ -14,6 +14,31 @@ echo "Este script instalará todo lo necesario para ejecutar la aplicación en m
 echo "Se requerirá tu contraseña para instalar paquetes del sistema (sudo)."
 echo ""
 
+# --- 0. AUTO-UPDATE CHECK ---
+echo "[PASO 0/5] Buscando actualizaciones..."
+if [ -d ".git" ] && command -v git &> /dev/null; then
+    echo "Repositorio git detectado. Ejecutando git pull..."
+    
+    # Guardar el hash actual
+    CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
+    
+    # Intentar actualizar
+    if git pull; then
+        NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
+        if [ "$CURRENT_HASH" != "$NEW_HASH" ]; then
+            echo "----------------------------------------------------------------"
+            echo "¡Se han descargado actualizaciones!"
+            echo "Reiniciando el instalador para aplicar los cambios..."
+            echo "----------------------------------------------------------------"
+            exec "$0" "$@"
+        fi
+    else
+        echo "⚠️  Error al actualizar (git pull falló). Continuando con la versión actual..."
+    fi
+else
+    echo "No se detectó repositorio git o git no está instalado. Saltando actualización."
+fi
+echo ""
 # --- CONFIGURACIÓN DE TMPDIR (Para evitar errores de espacio en /tmp) ---
 # Usamos un directorio temporal dentro del proyecto porque /tmp suele ser pequeño
 export TMPDIR="$(pwd)/temp_build"
