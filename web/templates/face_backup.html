@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo Face AI</title>
+    <!-- Socket.IO v4 Client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Sphere Emoji Palette */
+            --primary: #FFC000;
+            /* Warm Yellow */
+            --primary-glow: transparent;
+            /* Removed glow */
+            --secondary: #FF8C00;
+            /* Orange */
+            --bg: #050505;
+            --eyelid-color: #050505;
+            /* Match background for "disappearing" effect */
+        }
+
+        body {
+            background-color: var(--bg);
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        /* --- FACE CONTAINER --- */
+        .face-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .eyes {
+            display: flex;
+            gap: 40px;
+            /* Reduced gap for larger eyes */
+            z-index: 10;
+        }
+
+        /* --- EYE STRUCTURE --- */
+        .eye {
+            width: 440px;
+            /* Massive size for 14" screen */
+            height: 440px;
+            background: var(--primary);
+            border-radius: 50%;
+            position: relative;
+            /* Border matching background to hide anti-aliasing yellow artifacts */
+            border: 4px solid var(--bg);
+            box-sizing: border-box;
+            /* Removed external glow, kept internal depth */
+            box-shadow:
+                inset -20px -20px 60px rgba(0, 0, 0, 0.3),
+                /* Stronger depth shadow */
+                inset 20px 20px 60px rgba(255, 255, 255, 0.5);
+            /* Highlight */
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            /* Important for eyelids */
+        }
+
+        /* Pupil */
+        .pupil {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            transition: all 0.1s ease-out;
+            /* Fast for mouse tracking */
+        }
+
+        /* Glint (Brillo) */
+        .glint {
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px white;
+            opacity: 0.9;
+            z-index: 20;
+        }
+
+        .glint.small {
+            top: 35%;
+            left: 35%;
+            width: 10px;
+            height: 10px;
+            opacity: 0.7;
+        }
+
+        /* --- EYELIDS (Párpados) --- */
+        .eyelid {
+            position: absolute;
+            left: -5%;
+            /* Overlap width to prevent side gaps */
+            width: 110%;
+            background: var(--eyelid-color);
+            z-index: 30;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Removed borders to prevent artifacts */
+        }
+
+        .eyelid.lower {
+            border-bottom: none;
+        }
+
+        .eyelid.upper {
+            top: 0;
+            height: 0%;
+            /* Default open */
+        }
+
+        .eyelid.lower {
+            bottom: 0;
+            height: 0%;
+            /* Default open */
+        }
+
+        /* --- STATES --- */
+
+        /* IDLE / CHILL: Eyelids down ~35% */
+        body.idle .eyelid.upper {
+            height: 35%;
+        }
+
+        body.idle .eye {
+            /* Sligthly dimmer in idle */
+            filter: brightness(0.9);
+        }
+
+        /* LISTENING / ALERT: Wide Open */
+        body.listening .eyelid.upper {
+            height: 0%;
+        }
+
+        body.listening .eye {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px var(--primary-glow);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 60px var(--primary-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 100px var(--primary-glow);
+            }
+
+            100% {
+                box-shadow: 0 0 60px var(--primary-glow);
+            }
+        }
+
+        /* BORED: Droopy eyelids, looking away */
+        body.bored .eyelid.upper {
+            height: 65%;
+        }
+
+        body.bored .eyelid.lower {
+            height: 0%;
+        }
+
+        /* SLEEPING: Fully closed */
+        body.sleeping .eyelid.upper {
+            height: 50%;
+        }
+
+        body.sleeping .eyelid.lower {
+            height: 50%;
+        }
+
+        body.sleeping .eye {
+            filter: brightness(0.5);
+        }
+
+        /* PEEKING (during sleep) */
+        body.sleeping.peeking .eyelid.upper {
+            height: 40%;
+        }
+
+        body.sleeping.peeking .eyelid.lower {
+            height: 40%;
+        }
+
+        /* SURPRISED: Pop and Shake */
+        body.surprised .eye {
+            transform: scale(1.2);
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        body.surprised .eyelid.upper {
+            height: 0%;
+        }
+
+        body.surprised .eyelid.lower {
+            height: 0%;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: scale(1.2) translate3d(-2px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: scale(1.2) translate3d(4px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: scale(1.2) translate3d(-8px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: scale(1.2) translate3d(8px, 0, 0);
+            }
+        }
+
+        /* THINKING: Concentration (Symmetric Squint) */
+        body.thinking .eyelid.upper {
+            height: 40%;
+            /* Both eyes squint slightly */
+        }
+
+        body.thinking .eyelid.lower {
+            height: 40%;
+        }
+
+        /* Remove fixed pupil transform for thinking, handled by JS now */
+
+        /* HAPPY: Squint from bottom too */
+        body.happy .eyelid.upper {
+            height: 45%;
+        }
+
+        body.happy .eyelid.lower {
+            height: 45%;
+        }
+
+        /* CONFUSED: One eye squinted */
+        body.confused .eye.left .eyelid.upper {
+            height: 60%;
+        }
+
+        body.confused .eye.right .eyelid.upper {
+            height: 0%;
+        }
+
+        /* BLINK ANIMATION CLASS */
+        .blinking .eyelid.upper {
+            height: 55% !important;
+            /* Meet in middle */
+        }
+
+        .blinking .eyelid.lower {
+            height: 55% !important;
+        }
+
+        /* --- STATUS TEXT --- */
+        .status-pill {
+            margin-top: 60px;
+            padding: 8px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        body:not(.idle) .status-pill {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- CONNECTION STATUS --- */
+        #conn-status {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff3333;
+            opacity: 0.5;
+            transition: background 0.5s;
+        }
+
+        #conn-status.connected {
+            background: #00ff41;
+        }
+
+        /* --- SPLIT SCREEN LAYOUT --- */
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: all 0.5s ease;
+        }
+
+        .face-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .content-section {
+            flex: 0;
+            width: 0;
+            background: #1e1e1e;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-left: 1px solid #333;
+        }
+
+        /* Split Active State */
+        body.split-view .face-section {
+            flex: 0 0 30%;
+            /* Face takes 30% */
+        }
+
+        body.split-view .content-section {
+            flex: 1;
+            /* Content takes rest */
+            width: auto;
+        }
+
+        /* Adjust eyes for smaller face section */
+        body.split-view .eye {
+            width: 200px;
+            height: 200px;
+            border-width: 2px;
+        }
+
+        body.split-view .eyes {
+            gap: 20px;
+        }
+
+        body.split-view .pupil {
+            width: 50px;
+            height: 50px;
+        }
+
+        body.split-view .glint {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* Content Viewer */
+        #visual-content {
+            width: 95%;
+            height: 95%;
+            object-fit: contain;
+            border-radius: 8px;
+            display: none;
+        }
+
+        iframe#visual-content {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+    </style>
+</head>
+
+<body class="idle">
+
+    <div class="container">
+        <!-- Face Section -->
+        <div class="face-section">
+            <div class="face-wrapper">
+                <div class="eyes">
+                    <!-- Left Eye -->
+                    <div class="eye left" id="eye-left">
+                        <div class="eyelid upper"></div>
+                        <div class="eyelid lower"></div>
+                        <div class="pupil">
+                            <div class="glint"></div>
+                            <div class="glint small"></div>
+                        </div>
+                    </div>
+                    <!-- Right Eye -->
+                    <div class="eye right" id="eye-right">
+                        <div class="eyelid upper"></div>
+                        <div class="eyelid lower"></div>
+                        <div class="pupil">
+                            <div class="glint"></div>
+                            <div class="glint small"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-pill" id="status-text">ESPERANDO...</div>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content-section" id="content-area">
+            <img id="visual-img" src="" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+            <iframe id="visual-frame" src="" style="display:none; width:100%; height:100%; border:none;"></iframe>
+        </div>
+    </div>
+
+    <div id="conn-status" title="Connection Status"></div>
+
+    <script>
+        const socket = io({
+            transports: ['websocket', 'polling'],
+            reconnection: true
+        });
+
+        const body = document.body;
+        const statusText = document.getElementById('status-text');
+        const connStatus = document.getElementById('conn-status');
+        const eyes = document.querySelectorAll('.eye');
+        const pupils = document.querySelectorAll('.pupil');
+        const eyeLeft = document.getElementById('eye-left');
+        const eyeRight = document.getElementById('eye-right');
+
+        // --- CONNECTION HANDLING ---
+        socket.on('connect', () => {
+            console.log('✅ Connected to Neo Server');
+            connStatus.classList.add('connected');
+        });
+
+        socket.on('disconnect', () => {
+            console.warn('❌ Disconnected from Neo Server');
+            connStatus.classList.remove('connected');
+            setState('sleeping'); // Go to sleep on disconnect
+        });
+
+        // --- STATE HANDLING ---
+        socket.on('face_update', (data) => {
+            console.log('Face Update:', data);
+            setState(data.state, data.data);
+        });
+
+        // --- VISUAL SKILL HANDLING ---
+        socket.on('visual:show', (data) => {
+            console.log('Visual Show:', data);
+            showContent(data.url, data.type);
+        });
+
+        socket.on('visual:close', () => {
+            console.log('Visual Close');
+            closeContent();
+        });
+
+        function showContent(url, type) {
+            body.classList.add('split-view');
+
+            const img = document.getElementById('visual-img');
+            const frame = document.getElementById('visual-frame');
+
+            // Reset
+            img.style.display = 'none';
+            frame.style.display = 'none';
+            img.src = '';
+            frame.src = '';
+
+            if (type === 'image') {
+                img.src = url;
+                img.style.display = 'block';
+            } else {
+                frame.src = url;
+                frame.style.display = 'block';
+            }
+        }
+
+        function closeContent() {
+            body.classList.remove('split-view');
+            setTimeout(() => {
+                document.getElementById('visual-img').src = '';
+                document.getElementById('visual-frame').src = '';
+            }, 500); // Clear after transition
+        }
+
+        let currentState = 'idle';
+        let idleInterval = null;
+        let thinkingInterval = null;
+        let boredomTimeout = null;
+        let sleepInterval = null;
+
+        function setState(state, data) {
+            // Handle Surprise Transition
+            if ((currentState === 'bored' || currentState === 'sleeping') &&
+                (state === 'user_detected' || state === 'listening')) {
+
+                // Trigger Surprise first
+                applyState('surprised');
+                setTimeout(() => {
+                    applyState(state);
+                }, 1000); // Hold surprise for 1s
+                return;
+            }
+
+            applyState(state);
+        }
+
+        function applyState(state) {
+            currentState = state;
+            body.className = state;
+
+            // Text Updates
+            const texts = {
+                'idle': '',
+                'bored': 'ABURRIDO',
+                'sleeping': 'DESCONECTADO',
+                'listening': 'ESCUCHANDO',
+                'thinking': 'PROCESANDO',
+                'speaking': 'HABLANDO',
+                'happy': 'FELIZ',
+                'confused': 'CONFUNDIDO',
+                'surprised': '!',
+                'user_detected': 'HOLA'
+            };
+            statusText.innerText = texts[state] || state.toUpperCase();
+
+            // Clear all behaviors first
+            stopIdleBehavior();
+            stopThinkingBehavior();
+            stopSleepBehavior();
+            clearTimeout(boredomTimeout);
+
+            // Activate specific behaviors
+            if (state === 'idle') {
+                startIdleBehavior();
+                resetBoredomTimer();
+            } else if (state === 'thinking') {
+                startThinkingBehavior();
+            } else if (state === 'sleeping') {
+                startSleepBehavior();
+            } else {
+                // Reset pupils to center for other states
+                pupils.forEach(p => {
+                    p.style.transition = 'transform 0.3s ease-out';
+                    p.style.transform = 'translate(-50%, -50%)';
+                });
+            }
+        }
+
+        // --- BOREDOM SYSTEM ---
+        function resetBoredomTimer() {
+            clearTimeout(boredomTimeout);
+            boredomTimeout = setTimeout(() => {
+                if (currentState === 'idle') {
+                    setState('bored');
+                }
+            }, 10000); // 10 seconds to boredom
+        }
+
+        // --- SLEEP BEHAVIOR ---
+        function startSleepBehavior() {
+            if (sleepInterval) return;
+            sleepInterval = setInterval(() => {
+                // Random peek every 5-15 seconds
+                if (Math.random() < 0.3) {
+                    peek();
+                }
+            }, 5000);
+        }
+
+        function stopSleepBehavior() {
+            if (sleepInterval) {
+                clearInterval(sleepInterval);
+                sleepInterval = null;
+            }
+            body.classList.remove('peeking');
+        }
+
+        function peek() {
+            body.classList.add('peeking');
+            setTimeout(() => {
+                body.classList.remove('peeking');
+            }, 1500); // Peek duration
+        }
+
+        // --- IDLE BEHAVIOR ---
+        function startIdleBehavior() {
+            if (idleInterval) return;
+            scheduleBlink();
+            idleInterval = setInterval(() => {
+                const rand = Math.random();
+                if (rand < 0.3) lookAroundRandomly();
+            }, 2500);
+        }
+
+        function stopIdleBehavior() {
+            if (idleInterval) {
+                clearInterval(idleInterval);
+                idleInterval = null;
+            }
+            clearTimeout(blinkTimeout);
+        }
+
+        // --- THINKING BEHAVIOR ---
+        function startThinkingBehavior() {
+            if (thinkingInterval) return;
+            wanderEyes();
+            thinkingInterval = setInterval(() => {
+                wanderEyes();
+            }, 1500);
+        }
+
+        function stopThinkingBehavior() {
+            if (thinkingInterval) {
+                clearInterval(thinkingInterval);
+                thinkingInterval = null;
+            }
+        }
+
+        function wanderEyes() {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 30 + Math.random() * 40;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance - 20;
+
+            pupils.forEach(p => {
+                p.style.transition = 'transform 1s cubic-bezier(0.45, 0, 0.55, 1)';
+                p.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            });
+        }
+
+        // --- SHARED ANIMATIONS ---
+        let blinkTimeout;
+        function scheduleBlink() {
+            const delay = Math.random() * 3000 + 2000;
+            blinkTimeout = setTimeout(() => {
+                blink();
+                scheduleBlink();
+            }, delay);
+        }
+
+        function blink() {
+            eyes.forEach(e => e.classList.add('blinking'));
+            setTimeout(() => {
+                eyes.forEach(e => e.classList.remove('blinking'));
+            }, 200);
+        }
+
+        function lookAroundRandomly() {
+            const x = (Math.random() - 0.5) * 60;
+            const y = (Math.random() - 0.5) * 40;
+
+            pupils.forEach(p => {
+                p.style.transition = 'transform 0.5s ease-out';
+                p.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            });
+
+            setTimeout(() => {
+                pupils.forEach(p => p.style.transform = 'translate(-50%, -50%)');
+            }, 1000);
+        }
+
+        // --- REALISTIC MOUSE TRACKING ---
+        let eyeRects = {
+            left: eyeLeft.getBoundingClientRect(),
+            right: eyeRight.getBoundingClientRect()
+        };
+
+        window.addEventListener('resize', () => {
+            eyeRects.left = eyeLeft.getBoundingClientRect();
+            eyeRects.right = eyeRight.getBoundingClientRect();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            // Reset boredom on interaction
+            if (currentState === 'idle') resetBoredomTimer();
+
+            // Track in Idle, Listening, User Detected, and Bored
+            if (currentState !== 'idle' && currentState !== 'listening' &&
+                currentState !== 'user_detected' && currentState !== 'bored') return;
+
+            const maxOffset = 90;
+
+            updatePupil(eyeLeft, eyeRects.left, e.clientX, e.clientY, maxOffset);
+            updatePupil(eyeRight, eyeRects.right, e.clientX, e.clientY, maxOffset);
+        });
+
+        function updatePupil(eye, rect, mouseX, mouseY, maxR) {
+            const pupil = eye.querySelector('.pupil');
+            const eyeCenterX = rect.left + rect.width / 2;
+            const eyeCenterY = rect.top + rect.height / 2;
+
+            let dx = mouseX - eyeCenterX;
+            let dy = mouseY - eyeCenterY;
+
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+
+            const r = Math.min(distance / 4, maxR);
+
+            const moveX = r * Math.cos(angle);
+            const moveY = r * Math.sin(angle);
+
+            pupil.style.transition = 'transform 0.1s ease-out';
+            pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+        }
+
+        startIdleBehavior();
+
+    </script>
+</body>
+
+</html>
