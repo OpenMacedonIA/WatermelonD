@@ -63,6 +63,28 @@
     </div>
 </div>
 
+<div class="row g-4 mb-4">
+    <!-- Microphone Control -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                     <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3" id="mic-icon-bg">
+                        <i class="fas fa-microphone-slash fa-2x text-danger" id="mic-icon"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Micrófono</h5>
+                        <small class="text-muted" id="mic-status-text">Desactivado</small>
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="mic-toggle" style="width: 3em; height: 1.5em; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -80,6 +102,50 @@
 
 {% block scripts %}
 <script>
+    const micToggle = document.getElementById('mic-toggle');
+    const micIcon = document.getElementById('mic-icon');
+    const micIconBg = document.getElementById('mic-icon-bg');
+    const micStatusText = document.getElementById('mic-status-text');
+
+    function updateMicUI(start_enabled) {
+        if (start_enabled) {
+            micToggle.checked = true;
+            micIcon.className = 'fas fa-microphone fa-2x text-success';
+            micIconBg.className = 'rounded-circle bg-success bg-opacity-10 p-3 me-3';
+            micStatusText.innerText = 'Escuchando';
+        } else {
+            micToggle.checked = false;
+            micIcon.className = 'fas fa-microphone-slash fa-2x text-danger';
+            micIconBg.className = 'rounded-circle bg-danger bg-opacity-10 p-3 me-3';
+            micStatusText.innerText = 'Silenciado';
+        }
+    }
+
+    // Initial Status Check
+    fetch('/api/audio/status')
+        .then(res => res.json())
+        .then(data => {
+            updateMicUI(data.input);
+        });
+
+    // Toggle Handler
+    micToggle.addEventListener('change', function() {
+        fetch('/api/audio/toggle', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                // UI will be updated by socketio event ideally, but we accept response too
+                updateMicUI(!data.muted); 
+            });
+    });
+
+    // SocketIO Event (Requires socket.io client script in base.html)
+    // Assuming socket is available globally based on WebAdmin setup
+    if (typeof socket !== 'undefined') {
+        socket.on('audio_status', function(data) {
+            updateMicUI(data.input);
+        });
+    }
+
     function updateStats() {
         fetch('/api/stats')
             .then(response => response.json())

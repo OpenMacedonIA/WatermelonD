@@ -50,15 +50,39 @@ def set_audio_status(output_enabled, input_enabled):
 def inject_status():
     return dict(audio_status=AUDIO_STATUS)
 
+from modules.bus_client import BusClient
+
 sys_admin = SysAdminManager()
 db = DatabaseManager()
-ssh_manager = SSHManager()
 ssh_manager = SSHManager()
 file_manager = FileManager()
 wifi_manager = WifiManager()
 dashboard_manager = DashboardDataManager(config_manager)
 knowledge_base = KnowledgeBase() # RAG System
 scheduler_manager = SchedulerManager(app) # Task Scheduler
+
+# --- Bus Client Integration ---
+bus = BusClient(name="WebAdmin")
+
+def on_mic_status(message):
+    data = message.get('data', {})
+    muted = data.get('muted', False)
+    # Update global status
+    AUDIO_STATUS['input'] = not muted
+    
+    # Broadcast to Web Clients via SocketIO
+    update_face('status_update', {'mic_muted': muted})
+    # Also emit specific event for dashboard
+    try:
+        socketio.emit('audio_status', AUDIO_STATUS)
+    except:
+        pass
+
+bus.on('mic:status', on_mic_status)
+bus.connect()
+# Run bus in background thread
+import threading
+threading.Thread(target=bus.run_forever, daemon=True).start()
 
 # --- Security Headers & Middlewares ---
 @app.after_request
@@ -340,7 +364,28 @@ def update_system():
         subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
         return jsonify({'success': True, 'message': f'Actualizado correctamente. Reiniciando... \n{result.stdout}'})
     except Exception as e:
+        subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
+        return jsonify({'success': True, 'message': f'Actualizado correctamente. Reiniciando... \n{result.stdout}'})
+    except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/audio/toggle', methods=['POST'])
+@login_required
+def api_audio_toggle():
+    """Toggles microphone mute state."""
+    bus.emit('mic:toggle', {})
+    # Return optimistic status, actual confirmation comes via socketio
+    new_state = not AUDIO_STATUS['input']
+    AUDIO_STATUS['input'] = new_state # Optimistic local update
+    return jsonify({'success': True, 'muted': not new_state})
+
+@app.route('/api/audio/status', methods=['GET'])
+@login_required
+def api_audio_status():
+    """Returns current audio status."""
+    # Force refresh request
+    bus.emit('mic:get_status', {})
+    return jsonify(AUDIO_STATUS)
 
 @app.route('/api/stats')
 @login_required

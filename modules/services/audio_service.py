@@ -23,10 +23,13 @@ class AudioService:
         self.bus = BusClient(name="AudioService")
         self.is_listening = False
         self.is_paused = False
+        self.is_muted = False
         
         self.bus.connect()
         self.bus.on('speak', self.on_speak_start)
         self.bus.on('speak:done', self.on_speak_done)
+        self.bus.on('mic:toggle', self.on_mic_toggle)
+        self.bus.on('mic:get_status', self.broadcast_status)
 
     def on_speak_start(self, data):
         self.is_paused = True
@@ -34,9 +37,25 @@ class AudioService:
     def on_speak_done(self, data):
         self.is_paused = False
 
+    def on_mic_toggle(self, data):
+        """Toggles microphone mute state."""
+        # Optional: Allow setting specific state
+        if 'enabled' in data:
+            self.is_muted = not data['enabled']
+        else:
+            self.is_muted = not self.is_muted
+            
+        logger.info(f"Microphone Muted: {self.is_muted}")
+        self.broadcast_status()
+
+    def broadcast_status(self, data=None):
+        self.bus.emit('mic:status', {'muted': self.is_muted, 'listening': self.is_listening})
+
     def run(self):
         self.is_listening = True
         threading.Thread(target=self.mic_loop, daemon=True).start()
+        # Initial broadcast
+        self.broadcast_status()
         self.bus.run_forever()
 
     def mic_loop(self):
@@ -56,7 +75,7 @@ class AudioService:
         is_recording = False
         
         while self.is_listening:
-            if self.is_paused:
+            if self.is_paused or self.is_muted:
                 time.sleep(0.1)
                 continue
 
