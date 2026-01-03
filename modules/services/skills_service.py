@@ -190,6 +190,7 @@ class SkillsService:
             "system_restart_service": self.skills_system.restart_service,
             "system_update": self.skills_system.update_system,
             "system_find_file": self.skills_system.find_file,
+            "list_services": self.skills_system.list_services,
             # Time
             "decir_hora_actual": self.skills_time.decir_hora_fecha,
             "decir_fecha_actual": self.skills_time.decir_hora_fecha,

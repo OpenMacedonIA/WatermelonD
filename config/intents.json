@@ -510,6 +510,21 @@
         "Iniciando prueba de velocidad. Esto tomará unos segundos...",
         "Midiendo el ancho de banda. Espera un momento..."
       ]
+    },
+    {
+      "name": "list_services",
+      "triggers": [
+        "servicios activos en el sistema",
+        "qué servicios hay corriendo",
+        "lista de servicios",
+        "servicios del sistema",
+        "servicios activos"
+      ],
+      "action": "system_list_services",
+      "responses": [
+        "Listando servicios activos...",
+        "A ver qué está corriendo por aquí..."
+      ]
     }
   ]
 }

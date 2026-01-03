@@ -202,7 +202,13 @@ class SysAdminManager:
                 timeout=10,
                 cwd=cwd
             )
-            return True, result.stdout + result.stderr
+            
+            output = result.stdout + result.stderr
+            if "sudo: a terminal is required" in output:
+                output += "\n(Error: sudo requiere contraseña. Configura 'visudo' o añade la contraseña en config.)"
+                return False, output
+                
+            return True, output
         except subprocess.TimeoutExpired:
             return False, "Error: El comando excedió el tiempo límite."
         except Exception as e:

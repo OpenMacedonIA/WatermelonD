@@ -15,6 +15,37 @@ class SystemSkill(BaseSkill):
         else:
             self.speak("El módulo de administración no está disponible.")
 
+    def list_services(self, command, response, **kwargs):
+        """Lista los servicios activos."""
+        if not self.core.sysadmin_manager:
+            self.speak("No tengo permisos de administrador.")
+            return
+
+        self.speak(response)
+        cmd = "systemctl list-units --type=service --state=running --no-pager --plain --no-legend"
+        success, output = self.core.sysadmin_manager.run_command(cmd)
+        
+        if success:
+            lines = output.strip().split('\n')
+            count = len(lines)
+            if count > 0:
+                self.speak(f"Hay {count} servicios corriendo en este momento.")
+                # Optional: Read first few? "Como ssh, docker..."
+                # Extract names: 'service.name.service   loaded active running   Description'
+                examples = []
+                for line in lines[:3]:
+                    parts = line.split()
+                    if parts:
+                        name = parts[0].replace('.service', '')
+                        examples.append(name)
+                
+                if examples:
+                    self.speak(f"Por ejemplo: {', '.join(examples)}.")
+            else:
+                self.speak("No encontré servicios activos (lo cual es raro).")
+        else:
+            self.speak("No pude listar los servicios.")
+
     def apagar(self, response, **kwargs):
         # Biometric Check (Alpha)
         if hasattr(self.core, 'biometrics_manager'):
