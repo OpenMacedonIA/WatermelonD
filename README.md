@@ -1,4 +1,4 @@
-# COLEGA (v2.5.0-stable)
+# COLEGA (v2.5.0-Experimental)
 
 [🇺🇸 English](#english) | [🇪🇸 Español](#español)
 
@@ -89,7 +89,7 @@ COLEGA es un asistente personal proactivo y modular diseñado para ejecutarse lo
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-green)
 
-### 🌟 Novedades en v2.5.0 (Stable)
+### 🌟 Novedades en v2.5.0 (Experimental)
 
 * **⚡ Core V2.5 (Optimización)**: Optimización interna profunda para CPUs de doble núcleo (i3).
   * **Thread Watchdog**: Sistema de "autocuración" para procesos internos (Voz, Eventos).
