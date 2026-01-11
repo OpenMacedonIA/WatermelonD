@@ -1127,3 +1127,11 @@ class NeoCore:
 
 if __name__ == "__main__":
     app = NeoCore()
+    app.run()
+    
+    # Keep main thread alive for daemons
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        app.on_closing()
