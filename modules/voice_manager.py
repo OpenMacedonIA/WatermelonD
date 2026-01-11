@@ -142,16 +142,18 @@ class VoiceManager:
 
     def _continuous_voice_listener(self, intents):
         """Bucle principal de escucha de voz."""
-        stt_engine = self.config_manager.get('stt', {}).get('engine', 'whisper') # Default to whisper now
-        app_logger.info(f"DEBUG: Listening thread running. Engine: {stt_engine}")
+        stt_config = self.config_manager.get('stt', {})
+        stt_engine = stt_config.get('engine', 'vosk') # Default to vosk
+        app_logger.info(f"DEBUG: Listening thread running. Engine: {stt_engine} | Raw Config: {stt_config}")
         
         if stt_engine == 'sherpa':
             self._sherpa_listener()
             return
 
-        if stt_engine == 'whisper' and self.whisper_model:
-            self._whisper_listener()
-            return
+        # Disable Whisper for now as implementation is missing (causing crash loop)
+        # if stt_engine == 'whisper' and self.whisper_model:
+        #    self._whisper_listener()
+        #    return
 
         if not self.vosk_model:
             vosk_logger.error("Modelo Vosk no cargado. No se puede iniciar escucha.")
