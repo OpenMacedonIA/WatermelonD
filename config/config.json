@@ -14,7 +14,7 @@
         "driver": "alsa"
     },
     "ai_model_path": "models/gemma-2b-it-q4_k_m.gguf",
-    "vision_enabled": true,
+    "vision_enabled": false,
     "experimental": {
         "voice_auth_enabled": false
     },

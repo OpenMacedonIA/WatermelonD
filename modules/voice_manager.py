@@ -24,6 +24,9 @@ except ImportError:
 import numpy as np
 import struct
 
+import base64
+from modules.bus_client import BusClient
+
 class VoiceManager:
     def __init__(self, config_manager, speaker, on_command_detected, update_face_callback=None):
         self.config_manager = config_manager
@@ -37,6 +40,15 @@ class VoiceManager:
         
         self.setup_vosk()
         self.setup_whisper()
+        
+        # --- BUS CLIENT ---
+        self.bus = BusClient(name="VoiceManager")
+        self.bus.on('recognizer_loop:audio', self.on_audio_data)
+        self.bus.connect()
+        # Start bus thread
+        threading.Thread(target=self.bus.run_forever, daemon=True).start()
+        
+        # Disable Sherlock setup if minimal? Keeping it for now.
         self.setup_sherpa()
 
     def setup_vosk(self):
@@ -155,97 +167,47 @@ class VoiceManager:
                 
         return None
 
-    def _continuous_voice_listener(self, intents):
-        """Bucle principal de escucha de voz."""
-        try:
-            stt_config = self.config_manager.get('stt', {})
-            stt_engine = stt_config.get('engine', 'vosk') # Default to vosk
-            app_logger.info(f"DEBUG: Listening thread running. Engine: {stt_engine} | Raw Config: {stt_config}")
-            
-            if stt_engine == 'sherpa':
-                self._sherpa_listener()
-                return
-
-            if not self.vosk_model:
-                vosk_logger.error("Modelo Vosk no cargado. No se puede iniciar escucha.")
-                app_logger.error("DEBUG: Modelo Vosk no cargado (listener guard hit).")
-                return
-
-            app_logger.info("DEBUG: Vosk model present. initializing recognizer...")
-            use_grammar = self.config_manager.get('stt', {}).get('use_grammar', True)
-            
-            if use_grammar and intents:
-                grammar = self.get_grammar(intents)
-                recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000, grammar)
-            else:
-                recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000)
-                
-            app_logger.info("DEBUG: Recognizer initialized. Starting PyAudio...")
-        except Exception as e:
-            import traceback
-            app_logger.error(f"CRITICAL ERROR in voice listener initialization: {e}")
-            app_logger.error(traceback.format_exc())
+    def on_audio_data(self, message):
+        """Procesa audio recibido del bus (AudioService)."""
+        if not self.is_listening or self.is_processing:
             return
-            
-        with no_alsa_error():
-            p = pyaudio.PyAudio()
-            device_index = self.config_manager.get('stt', {}).get('input_device_index', None)
-            last_face_update = 0
-            try:
-                stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, 
-                                frames_per_buffer=8192, input_device_index=device_index)
-                stream.start_stream()
-                vosk_logger.info(f"Escucha activa. Motor: {stt_engine}")
-            except Exception as e:
-                vosk_logger.error(f"Error stream audio: {e}")
-                self.is_listening = False # Disable loop to prevent watchdog spam
-                return
 
-        while self.is_listening:
-            try:
-                # Pause if speaker is busy or system is processing a command
-                if self.speaker.is_busy or self.is_processing:
-                    time.sleep(0.1) 
-                    continue
-
-                data = stream.read(4096, exception_on_overflow=False)
-
-                if recognizer.AcceptWaveform(data):
-                    result = json.loads(recognizer.Result())
+        try:
+            payload = message.get('data', {})
+            b64_data = payload.get('data')
+            if b64_data and self.vosk_model:
+                # Initialize recognizer if needed (lazy init)
+                if not hasattr(self, 'recognizer') or self.recognizer is None:
+                     self.recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000)
+                
+                audio_data = base64.b64decode(b64_data)
+                
+                if self.recognizer.AcceptWaveform(audio_data):
+                    result = json.loads(self.recognizer.Result())
                     command = result.get('text', '')
                     if command:
                         ww = self._check_wake_word(command)
-                        # Pass wake word if found, or just 'neo' as default if logic requires it
                         self.on_command_detected(command, ww if ww else 'neo')
-                else:
-                    # Check for partial results to trigger "listening" animation
-                    partial = json.loads(recognizer.PartialResult())
-                    if partial.get('partial') and self.update_face:
-                         # Only update if we haven't recently (to avoid spamming)
-                         current_time = time.time()
-                         if current_time - last_face_update > 1.0:
-                             self.update_face('listening')
-                             last_face_update = current_time
-
-            except IOError as e:
-                # Common PyAudio overflow/underflow
-                if e.errno == pyaudio.paInputOverflowed:
-                    pass # Ignore overflow
-                else:
-                    vosk_logger.error(f"Error I/O Audio: {e}")
-                    time.sleep(1)
-            except Exception as e:
-                vosk_logger.error(f"Error en bucle de voz: {e}")
-                time.sleep(1)
-        
-        # Cleanup
-        try:
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
-            vosk_logger.info("Stream de audio cerrado correctamente.")
         except Exception as e:
-            vosk_logger.error(f"Error cerrando stream: {e}")
+            app_logger.error(f"Error processing bus audio: {e}")
+
+    def _continuous_voice_listener(self, intents):
+        """Bucle principal de escucha (Legacy Local PyAudio)."""
+        # En arquitectura distribuida/bus, este método no debería bloquear ni usar PyAudio local
+        # si ya tenemos AudioService enviando datos.
+        # Por seguridad, si llega aquí y usa Vosk, inicializamos el reconocedor para usarlo en el callback
+        if not self.vosk_model:
+             return
+
+        if not hasattr(self, 'recognizer') or self.recognizer is None:
+             self.recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000)
+             
+        app_logger.info("VoiceManager en modo BUS/PASIVO. Esperando eventos 'recognizer_loop:audio'...")
+        # No abrimos PyAudio local para evitar conflictos con AudioService
+        while self.is_listening:
+            time.sleep(1) # Keep thread alive just in case logic depends on it, but do nothing
+
+
 
     def _whisper_listener(self):
         """Bucle de escucha para Faster-Whisper con VAD basado en energía."""
