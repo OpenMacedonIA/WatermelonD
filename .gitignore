@@ -12,6 +12,7 @@ unsloth_env/
 pip-log.txt
 pip-delete-this-directory.txt
 temp.json
+colab/
 # User Data & Database
 brain.db
 *.sqlite

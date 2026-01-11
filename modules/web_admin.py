@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_file, send_from_directory, abort
+import base64
 from flask_socketio import SocketIO, emit
 import functools
 import os
@@ -7,6 +8,9 @@ import subprocess
 import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
+
+# Import brain module explicitly to access learn_alias if needed via direct import or ensure db has it
+from modules.brain import Brain
 
 from modules.sysadmin import SysAdminManager
 from modules.database import DatabaseManager
@@ -58,8 +62,10 @@ ssh_manager = SSHManager()
 file_manager = FileManager()
 wifi_manager = WifiManager()
 dashboard_manager = DashboardDataManager(config_manager)
+dashboard_manager = DashboardDataManager(config_manager)
 knowledge_base = KnowledgeBase() # RAG System
 scheduler_manager = SchedulerManager(app) # Task Scheduler
+brain = Brain() # Initialize independent Brain instance for Web Admin operations
 
 # --- Bus Client Integration ---
 bus = BusClient(name="WebAdmin")
@@ -93,6 +99,63 @@ def add_security_headers(response):
     response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
+
+# --- Finder & Viewer API ---
+
+@app.route('/api/viewer/serve/<encoded_path>')
+def serve_viewer_content(encoded_path):
+    """
+    Serves local files for the PiP Viewer.
+    Requires path to be Base64 encoded to avoid URL issues.
+    Enforces Strict Whitelist.
+    """
+    if not session.get('logged_in'):
+        return abort(403)
+        
+    try:
+        decoded_path = base64.urlsafe_b64decode(encoded_path).decode('utf-8')
+        
+        # Security Checks
+        if not os.path.exists(decoded_path):
+            return abort(404)
+            
+        # Extension Whitelist (Double Check)
+        ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.mp3', '.wav', '.ogg', '.pdf', '.md', '.txt', '.log', '.json', '.csv']
+        ext = os.path.splitext(decoded_path)[1].lower()
+        if ext not in ALLOWED_EXTS:
+            return abort(403, description="File type not allowed")
+            
+        return send_file(decoded_path)
+    except Exception as e:
+        print(f"Error serving file: {e}")
+        return abort(500)
+
+@app.route('/api/settings/user_docs', methods=['GET', 'POST'])
+def settings_user_docs():
+    """
+    Read/Write config/user_docs.json for the Settings Editor.
+    """
+    if not session.get('logged_in'):
+        return abort(403)
+        
+    config_path = "config/user_docs.json"
+    
+    if request.method == 'GET':
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return jsonify(json.load(f))
+        return jsonify({})
+        
+    if request.method == 'POST':
+        try:
+            new_data = request.json
+            # Validate structure? For now assume user knows or frontend validates.
+            with open(config_path, 'w') as f:
+                json.dump(new_data, f, indent=2)
+            return jsonify({"status": "success", "message": "Docs updated"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # Simple in-memory Login Rate Limiter
 login_attempts = {}
@@ -798,6 +861,52 @@ def api_nlu_train():
         
         if intent not in learned_data:
             learned_data[intent] = []
+        
+        if phrase not in learned_data[intent]:
+            learned_data[intent].append(phrase)
+            
+        with open(learned_path, 'w') as f:
+            json.dump(learned_data, f, indent=4)
+            
+        # Update intents.json if needed (optional, logic kept simple)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/nlu/train/alias', methods=['POST'])
+@login_required
+def api_nlu_train_alias():
+    """Asigna una frase fallida a un comando específico (Alias)."""
+    data = request.json
+    trigger = data.get('trigger')
+    command = data.get('command')
+    
+    if not trigger or not command:
+        return jsonify({'success': False, 'message': 'Faltan datos'})
+
+    try:
+        # 1. Use Brain to store Alias
+        if brain.learn_alias(trigger, command):
+            
+            # 2. Remove from Inbox
+            inbox_path = 'data/nlu_inbox.json'
+            if os.path.exists(inbox_path):
+                with open(inbox_path, 'r', encoding='utf-8') as f:
+                    inbox = json.load(f)
+                
+                # Filter out the learned trigger
+                new_inbox = [i for i in inbox if i['text'] != trigger]
+                
+                with open(inbox_path, 'w', encoding='utf-8') as f:
+                    json.dump(new_inbox, f, indent=4, ensure_ascii=False)
+            
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Error al guardar alias en base de datos'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
         
         if phrase not in learned_data[intent]:
             learned_data[intent].append(phrase)

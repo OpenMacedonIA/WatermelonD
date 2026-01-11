@@ -58,6 +58,17 @@ if command -v apt-get &> /dev/null; then
     DEPENDENCIES=(
         git
         python3-pip
+        # Basic Admin Tools
+        vim
+        nano
+        htop
+        tree
+        net-tools
+        ufw
+        # Network Analysis Tools
+        dnsutils
+        network-manager
+        iputils-ping
         vlc
         libvlc-dev
         portaudio19-dev
@@ -99,6 +110,7 @@ if command -v apt-get &> /dev/null; then
         libsqlite3-dev
         libffi-dev
         liblzma-dev
+        ffmpeg
     )
     
     sudo apt-get update
@@ -114,6 +126,41 @@ else
     chmod +x setup_distrobox.sh
     exec ./setup_distrobox.sh
 fi
+
+echo ""
+# --- 1.1 CONFIGURACIÓN INTERACTIVA (MINIMAL / OPTIMIZACIÓN) ---
+echo "----------------------------------------------------------------"
+echo "¿Deseas aplicar una configuración MINIMAL y OPTIMIZADA para Debian?"
+echo "Esto hará lo siguiente:"
+echo "  1. Configurar hostname como 'COLEGA'."
+echo "  2. Eliminar bloatware (LibreOffice, juegos, etc.)."
+echo "  3. Instalar herramientas de gestión de ventanas (wmctrl, xdotool)."
+echo "----------------------------------------------------------------"
+read -p "¿Optimizar sistema? (s/n): " OPTIMIZE_OPT
+
+# Configurar Hostname (Siempre a COLEGA)
+echo "Configurando hostname a 'COLEGA'..."
+sudo hostnamectl set-hostname COLEGA
+# Actualizar /etc/hosts para evitar warnings de sudo
+if ! grep -q "127.0.1.1.*COLEGA" /etc/hosts; then
+    sudo sed -i 's/127.0.1.1.*/127.0.1.1\tCOLEGA/g' /etc/hosts
+fi
+
+if [[ "$OPTIMIZE_OPT" =~ ^[Ss]$ ]]; then
+    echo "Aplicando optimizaciones..."
+    
+    # Añadir herramientas de ventana a la lista de dependencias
+    DEPENDENCIES+=(wmctrl xdotool)
+    
+    # Eliminar Bloatware común en instalaciones desktop standard
+    echo "Eliminando software innecesario..."
+    sudo apt-get purge -y libreoffice* aisleriot gnomine mahjongg quadrapassel *sudoku* || true
+    sudo apt-get autoremove -y
+else
+    echo "Instalación estándar (sin eliminar paquetes)."
+fi
+echo "----------------------------------------------------------------"
+echo ""
 
 echo "Instalando dependencias del sistema..."
 $INSTALL_CMD "${DEPENDENCIES[@]}"
@@ -333,7 +380,8 @@ echo ""
 # --- 5. CONFIGURACIÓN DEL SERVICIO SYSTEMD (USER MODE) ---
 echo "[PASO 5/5] Configurando el servicio systemd (Modo Usuario)..."
 
-APP_PATH="$(pwd)/start_services.py"
+APP_PATH="$(pwd)/NeoCore.py"
+WEB_PATH="$(pwd)/web_client/app.py"
 PROJECT_DIR="$(pwd)"
 
 # Detect real user if run with sudo
@@ -352,6 +400,7 @@ USER_ID=$(id -u $USER_NAME)
 USER_HOME=$(eval echo ~$USER_NAME)
 SERVICE_DIR="$USER_HOME/.config/systemd/user"
 SERVICE_FILE="$SERVICE_DIR/neo.service"
+WEB_SERVICE_FILE="$SERVICE_DIR/neo-web.service"
 
 echo "Configurando servicio para el usuario: $USER_NAME (UID: $USER_ID)"
 
@@ -385,14 +434,14 @@ fi
 # Tampoco necesitamos Environment=DISPLAY o PULSE porque se heredan.
 cat <<EOT > "$SERVICE_FILE"
 [Unit]
-Description=Neo Assistant Service (User Mode)
+Description=Neo Core Backend Service
 After=network.target sound.target
 
 [Service]
 Type=simple
 Environment=PYTHONUNBUFFERED=1
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/venv/bin/python $PROJECT_DIR/start_services.py
+ExecStart=$PROJECT_DIR/venv/bin/python $APP_PATH
 Restart=always
 RestartSec=5
 SyslogIdentifier=neo_core
@@ -401,7 +450,27 @@ SyslogIdentifier=neo_core
 WantedBy=default.target
 EOT
 
-chown $USER_NAME:$USER_NAME "$SERVICE_FILE"
+# Crear el fichero de servicio WEB (Frontend)
+cat <<EOT > "$WEB_SERVICE_FILE"
+[Unit]
+Description=Neo Web Client Service
+After=network.target neo.service
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+Environment=NEO_API_URL=http://localhost:5000
+WorkingDirectory=$PROJECT_DIR
+ExecStart=$PROJECT_DIR/venv/bin/python $WEB_PATH
+Restart=always
+RestartSec=5
+SyslogIdentifier=neo_web
+
+[Install]
+WantedBy=default.target
+EOT
+
+chown $USER_NAME:$USER_NAME "$SERVICE_FILE" "$WEB_SERVICE_FILE"
 
 echo "Recargando demonio de systemd (usuario)..."
 
@@ -418,8 +487,8 @@ export XDG_RUNTIME_DIR="/run/user/$USER_ID"
 # Ejecutar systemctl como el usuario real con la variable de entorno correcta
 sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
 echo "Habilitando el servicio para que arranque al inicio de sesión..."
-sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
-sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
+sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service neo-web.service
+sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service neo-web.service
 
 # Habilitar linger para que el servicio arranque sin login explícito
 loginctl enable-linger $USER_NAME
@@ -433,8 +502,9 @@ if [ -f "/etc/systemd/system/neo.service" ]; then
     sudo systemctl daemon-reload
 fi
 
-echo "El servicio se ha configurado en modo USUARIO."
-echo "Logs: journalctl --user -u neo.service -f"
+echo "Los servicios se han configurado en modo USUARIO."
+echo "Logs Core: journalctl --user -u neo.service -f"
+echo "Logs Web:  journalctl --user -u neo-web.service -f"
 echo ""
 
 # --- 5.1 SEGURIDAD (SSL & PASSWORD) ---
@@ -538,9 +608,9 @@ xset s noblank
 # Iniciar gestor de ventanas
 openbox &
 
-# Esperar a que el servidor Flask esté listo (puerto 5000)
-echo "Esperando a que Neo Core inicie el servidor web..."
-while ! curl -s http://localhost:5000/face > /dev/null; do
+# Esperar a que el servidor Flask esté listo (puerto 8000 - Web Client)
+echo "Esperando a que Neo Web Client inicie..."
+while ! curl -s http://localhost:8000 > /dev/null; do
     sleep 2
 done
 
@@ -552,7 +622,7 @@ fi
 
 # Bucle infinito para el navegador
 while true; do
-    \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:5000/face
+    \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:8000
     sleep 2
 done
 EOT

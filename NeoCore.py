@@ -24,6 +24,7 @@ from modules.skills.organizer import OrganizerSkill
 from modules.skills.ssh import SSHSkill
 from modules.skills.files import FilesSkill
 from modules.skills.files import FilesSkill
+from modules.skills.finder import FinderSkill
 from modules.skills.docker import DockerSkill
 from modules.skills.diagnosis import DiagnosisSkill
 from modules.ssh_manager import SSHManager
@@ -57,11 +58,13 @@ except ImportError:
     Brain = None
 
 try:
+    import modules.web_admin as web_admin_module
     from modules.web_admin import run_server, update_face, set_audio_status
     WEB_ADMIN_DISPONIBLE = True
 except ImportError as e:
     app_logger.error(f"No se pudo importar Web Admin: {e}")
     WEB_ADMIN_DISPONIBLE = False
+    web_admin_module = None
     update_face = None
 
 try:
@@ -150,6 +153,9 @@ class NeoCore:
         # Update Web Admin Status
         if WEB_ADMIN_DISPONIBLE:
             set_audio_status(getattr(self, 'audio_output_enabled', False), getattr(self, 'audio_input_enabled', False))
+            self.web_server = web_admin_module
+        else:
+            self.web_server = None
             
         self.chat_manager = ChatManager(self.ai_engine)
         self.biometrics_manager = BiometricsManager(self.config_manager)
@@ -226,7 +232,9 @@ class NeoCore:
         self.skills_ssh = SSHSkill(self)
         self.skills_files = FilesSkill(self)
         self.skills_docker = DockerSkill(self)
+        self.skills_docker = DockerSkill(self)
         self.skills_diagnosis = DiagnosisSkill(self)
+        self.skills_finder = FinderSkill(self)
         
         self.vlc_instance, self.player = self.setup_vlc()
         
@@ -318,6 +326,41 @@ class NeoCore:
     def speak(self, text):
         """Pone un mensaje en la cola de eventos para que el Speaker lo diga."""
         self.event_queue.put({'type': 'speak', 'text': text})
+
+    def log_to_inbox(self, command_text):
+        """Log unrecognized command to inbox for future aliasing."""
+        import os
+        import json
+        import time
+        try:
+            inbox_path = self.config_manager.get('paths', {}).get('nlu_inbox', 'data/nlu_inbox.json')
+            
+            # Ensure proper JSON structure
+            if os.path.exists(inbox_path):
+                with open(inbox_path, 'r', encoding='utf-8') as f:
+                    try:
+                        inbox = json.load(f)
+                    except:
+                        inbox = []
+            else:
+                inbox = []
+
+            # Check duplication
+            if not any(entry['text'] == command_text for entry in inbox):
+                inbox.append({
+                    'text': command_text,
+                    'timestamp': time.time()
+                })
+                
+                # Limit size
+                inbox = sorted(inbox, key=lambda x: x['timestamp'], reverse=True)[:50]
+
+                with open(inbox_path, 'w', encoding='utf-8') as f:
+                    json.dump(inbox, f, indent=4, ensure_ascii=False)
+                
+                app_logger.info(f"Command '{command_text}' added to NLU Inbox.")
+        except Exception as e:
+            app_logger.error(f"Error logging to inbox: {e}")
 
     def setup_vlc(self):
         """Inicializa la instancia de VLC para reproducción de radio."""
@@ -416,8 +459,46 @@ class NeoCore:
                         self.speak("Lo siento, mis sistemas de visión no están activos.")
                         return
 
-                # --- 1. MANGO T5 (SysAdmin AI) - PRIMARY ENGINE ---
-                # Check this FIRST to prioritize Model over Rules (Intents)
+                # --- 1. SKILLS (IntentManager) - PRIORITY 1 ---
+                # Check this FIRST to protect critical systems (System, SSH, Alarms)
+                best_intent = self.intent_manager.find_best_intent(command_text)
+                
+                if best_intent and best_intent.get('confidence') == 'high':
+                     app_logger.info(f"SKILL HIGH CONFIDENCE: '{best_intent['name']}' ({best_intent.get('score', 0)}%)")
+                     self.chat_manager.reset_context()
+                     response = random.choice(best_intent['responses'])
+                     params = best_intent.get('parameters', {})
+                     self.consecutive_failures = 0
+                     
+                     # Execute Action
+                     action_result = self.execute_action(best_intent.get('action'), command_text, params, response, best_intent.get('name'))
+                     
+                     # Handle Text Result (Streaming)
+                     if action_result and isinstance(action_result, str):
+                         app_logger.info(f"Action Result: {action_result}")
+                         try:
+                             stream = self.chat_manager.get_response_stream(command_text, system_context=action_result)
+                             buffer = ""
+                             for chunk in stream:
+                                 buffer += chunk
+                                 import re
+                                 parts = re.split(r'([.!?\n])', buffer)
+                                 if len(parts) > 1:
+                                     while len(parts) >= 2:
+                                         sentence = parts.pop(0) + parts.pop(0)
+                                         sentence = sentence.strip()
+                                         if sentence:
+                                             self.speak(sentence)
+                                     buffer = "".join(parts)
+                             if buffer.strip():
+                                 self.speak(buffer)
+                         except Exception as e:
+                             app_logger.error(f"Error streaming action result: {e}")
+                             self.speak("He hecho lo que pediste, pero me he liado al contártelo.")
+                     return
+
+                # --- 2. MANGO T5 (SysAdmin AI) - PRIORITY 2 ---
+                # Check this SECOND (Fallback for explicit bash/admin commands)
                 
                 # --- Context Injection (Simplified) ---
                 # User Request: "Contexto: ['archivo1', 'archivo2'] | Instrucción: Borra la foto"
@@ -446,6 +527,16 @@ class NeoCore:
                 
                 if mango_cmd and mango_conf > 0.85:
                     command_to_run = mango_cmd
+                
+                # --- GIT FILTER (Security) ---
+                # User Requirement: Block all git commands generated by Mango EXCEPT "git push".
+                if command_to_run and command_to_run.strip().startswith('git'):
+                    # Normalize whitespace for check using simplified strings
+                    cleaned_cmd = " ".join(command_to_run.strip().split())
+                    if not cleaned_cmd.startswith('git push'):
+                        self.speak(f"Lo siento, por seguridad no ejecuto comandos git generados, salvo push. Comando bloqueado: {command_to_run}")
+                        app_logger.warning(f"BLOCKED Git Command: {command_to_run}")
+                        return
                 
                 # If we have a command, enter execution/correction flow
                 if command_to_run:
@@ -582,68 +673,19 @@ class NeoCore:
                         self.pending_suggestion = None
                         # Fall through to normal processing
 
-                # --- Normal Processing (Legacy Intents) ---
-                # This is now Secondary/Fallback or for Non-System tasks (Alarms, Jokes)
+                # --- 3. AMBIGUITY CHECK (Legacy Intents) ---
+                # If we are here, it means:
+                # 1. Intent was NOT High Confidence.
+                # 2. Mango was NOT High Confidence (or failed).
                 
-                # If we fell through from confirmation, best_intent is already set.
-                if not 'best_intent' in locals() or not best_intent:
-                    best_intent = self.intent_manager.find_best_intent(command_text)
-
                 if best_intent:
-                    # Check Confidence
-                    confidence = best_intent.get('confidence', 'high')
-                    
-                    if confidence == 'low':
-                        # Ambiguous match -> Ask User
-                        self.pending_suggestion = {
-                            'original': command_text,
-                            'intent': best_intent
-                        }
-                        # Construct question
-                        # Try to find a descriptive trigger or use name
-                        suggestion_text = best_intent['triggers'][0]
-                        self.speak(f"No estoy seguro. ¿Te refieres a '{suggestion_text}'?")
-                        return
-
-                    # High Confidence -> Execute
-                    app_logger.info(f"Intención encontrada: '{best_intent['name']}' ({best_intent.get('score', 0)}%)")
-                    
-                    # Reset Chat Context
-                    self.chat_manager.reset_context()
-
-                    response = random.choice(best_intent['responses'])
-                    params = best_intent.get('parameters', {})
-                    self.consecutive_failures = 0
-                    
-                    # Execute Action and Capture Result
-                    action_result = self.execute_action(best_intent.get('action'), command_text, params, response, best_intent.get('name'))
-                    
-                    # If action returned text (e.g. "Ping OK"), let Gemma wrap it
-                    if action_result and isinstance(action_result, str):
-                        app_logger.info(f"Action Result: {action_result}")
-                        # Gemma generates the final response using the action result (Streaming)
-                        try:
-                            stream = self.chat_manager.get_response_stream(command_text, system_context=action_result)
-                            buffer = ""
-                            for chunk in stream:
-                                buffer += chunk
-                                import re
-                                parts = re.split(r'([.!?\n])', buffer)
-                                if len(parts) > 1:
-                                    while len(parts) >= 2:
-                                        sentence = parts.pop(0) + parts.pop(0)
-                                        sentence = sentence.strip()
-                                        if sentence:
-                                            self.speak(sentence)
-                                    buffer = "".join(parts)
-                            if buffer.strip():
-                                self.speak(buffer)
-                        except Exception as e:
-                            app_logger.error(f"Error streaming action result: {e}")
-                            self.speak("He hecho lo que pediste, pero me he liado al contártelo.")
-                    else:
-                        # Legacy behavior (action handled speaking itself)
-                        pass
+                    # Low/Medium match -> Ask User
+                    self.pending_suggestion = {
+                        'original': command_text,
+                        'intent': best_intent
+                    }
+                    suggestion_text = best_intent['triggers'][0]
+                    self.speak(f"No estoy seguro. ¿Te refieres a '{suggestion_text}'?")
                     return
                 
                 # --- MANGO T5 Fallback (Low Confidence System Commands) ---
@@ -662,7 +704,8 @@ class NeoCore:
                          self.speak(f"He generado el comando: {mango_cmd}. ¿Ejecuto?")
                          return
 
-                # Si no es un comando, hablar con Gemma
+                # Si no es un comando, loguear para aprendizaje y hablar con Gemma
+                self.log_to_inbox(command_text)
                 self.handle_unrecognized_command(command_text)
                 
 
@@ -941,7 +984,13 @@ class NeoCore:
             "ssh_execute": self.skills_ssh.execute,
             "ssh_disconnect": self.skills_ssh.disconnect,
             "buscar_archivo": self.skills_files.search_file,
+            "buscar_archivo": self.skills_files.search_file,
             "leer_archivo": self.skills_files.read_file,
+            
+            # --- Finder & Viewer ---
+            "system_find_file": self.skills_finder.execute,
+            "visual_show": self.skills_finder.execute,
+            "visual_close": self.skills_finder.execute,
             
             # --- Generic ---
             "responder_simple": lambda command, response, **kwargs: self.speak(response)

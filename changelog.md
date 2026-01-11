@@ -4,6 +4,42 @@ Todas las modificaciones notables en el proyecto **Neo Nano** se documentarán e
 
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y este proyecto adhiere a Versionado Semántico.
 
+## [2.6.0-stable] - 2026-01-11 (Routing Logic & SSH Security)
+
+Mejora crítica en la lógica de decisión del sistema y refactorización de seguridad para la administración remota.
+
+### Novedades Principales
+
+- **Routing Priority System**:
+    - Reordenamiento del pipeline de ejecución: **Skills > Mango > Chat**.
+    - Protege comandos críticos (Apagar, Alarmas) de ser interceptados incorrectamente como comandos bash.
+    - Implementación de lógica de "fall-through": Si una skill no tiene alta confianza, el comando pasa a Mango T5 automáticamente.
+
+- **SSH Skill 2.0**:
+    - **Secure Storage**: Las contraseñas en `servers.json` ahora se almacenan ofuscadas (`ENC:...`) en lugar de texto plano.
+    - **Natural Language Command Generation**: Integración con **Mango T5** para traducir peticiones naturales a comandos remotos (ej. "Dime los archivos de home en Ubuntu" -> Ejecuta `ls /home` en servidor Ubuntu).
+    - Mantiene el establecimiento de conexión seguro mediante `SSHManager` mientras delega la sintaxis del comando a la IA.
+
+- **Adaptive Learning (Aliases)**:
+    - **NLU Inbox**: El sistema ahora detecta comandos fallidos o no entendidos y los guarda en un "Inbox" (`data/nlu_inbox.json`).
+    - **NLU Inbox**: El sistema ahora detecta comandos fallidos o no entendidos y los guarda en un "Inbox" (`data/nlu_inbox.json`).
+    - **Train API**: Nuevo endpoint `/api/nlu/train/alias` para que el usuario pueda enlazar esos comandos fallidos a acciones concretas (ej. "estado de contenedores" -> `docker ps`), permitiendo que el sistema aprenda de sus errores.
+
+- **Security & Filtering**:
+    - **Git Filter**: Implementada restricción estricta en comandos generados por IA. Bloquea cualquier comando `git ...` excepto `git push` para prevenir desincronizaciones accidentales.
+
+- **Finder & Viewer Skill**:
+    - **Universal Search**: Finds system logs, configured user docs, and performs fuzzy search.
+    - **PiP Viewer**: Displays content directly in the Web Interface (Face UI).
+    - **Security**: Strict whitelist for file serving.
+    - **Settings Editor**: Configure shortcuts in `user_docs.json` via Web UI.
+
+### Correcciones
+
+- Eliminada la condición de carrera en tests de unidad para `NeoCore`.
+- Mocking mejorado para dependencias de sistema (`vlc`, `paramiko`) en pruebas automatizadas.
+
+
 ## [2.5.0-**Experimental**] - 2026-01-07 (Core Utilization & Web Polish)
 
 Versión estable optimizada específicamente para hardware de recursos limitados (i3 7th Gen / 8GB RAM) con una interfaz web pulida y robusta.

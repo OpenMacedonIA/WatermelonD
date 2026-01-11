@@ -36,3 +36,4 @@ sentencepiece
 Flask-APScheduler
 pypdf
 SQLAlchemy
+requests

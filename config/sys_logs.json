@@ -1,0 +1,118 @@
+{
+    "apache error": [
+        "/var/log/httpd/error_log",
+        "/var/log/apache2/error.log"
+    ],
+    "apache access": [
+        "/var/log/httpd/access_log",
+        "/var/log/apache2/access.log"
+    ],
+    "apache": [
+        "/var/log/httpd/access_log",
+        "/var/log/httpd/error_log",
+        "/var/log/apache2/access.log"
+    ],
+    "nginx error": [
+        "/var/log/nginx/error.log"
+    ],
+    "nginx access": [
+        "/var/log/nginx/access.log"
+    ],
+    "nginx": [
+        "/var/log/nginx/access.log",
+        "/var/log/nginx/error.log"
+    ],
+    "neo error": [
+        "logs/neo_error.log"
+    ],
+    "neo": [
+        "logs/neo_core.log"
+    ],
+    "sistema": [
+        "/var/log/messages",
+        "/var/log/syslog"
+    ],
+    "seguridad": [
+        "/var/log/secure",
+        "/var/log/auth.log"
+    ],
+    "boot": [
+        "/var/log/boot.log",
+        "/var/log/dmesg"
+    ],
+    "mariadb": [
+        "/var/log/mariadb/mariadb.log",
+        "/var/log/mysql/error.log"
+    ],
+    "cron": [
+        "/var/log/cron"
+    ],
+    "dnf": [
+        "/var/log/dnf.log",
+        "/var/log/dnf.rpm.log"
+    ],
+    "teamviewer": [
+        "/var/log/teamviewer15/TeamViewer15.log"
+    ],
+    "mail error": [
+        "/var/log/mail.err",
+        "/var/log/exim/main.log"
+    ],
+    "mail": [
+        "/var/log/maillog",
+        "/var/log/mail.log"
+    ],
+    "samba error": [
+        "/var/log/samba/log.smbd"
+    ],
+    "samba": [
+        "/var/log/samba/log.smbd",
+        "/var/log/samba/log.nmbd"
+    ],
+    "audit": [
+        "/var/log/audit/audit.log"
+    ],
+    "fail2ban": [
+        "/var/log/fail2ban.log"
+    ],
+    "cups error": [
+        "/var/log/cups/error_log"
+    ],
+    "cups": [
+        "/var/log/cups/access_log",
+        "/var/log/cups/page_log"
+    ],
+    "postgresql": [
+        "/var/log/postgresql/postgresql.log",
+        "/var/lib/pgsql/data/log/postgresql.log"
+    ],
+    "virtualization": [
+        "/var/log/libvirt/libvirtd.log",
+        "/var/log/libvirt/qemu/instance.log",
+        "/var/log/vbox-setup.log"
+    ],
+    "display": [
+        "/var/log/Xorg.0.log",
+        "/var/log/Xorg.1.log",
+        "/var/log/gdm/:0.log",
+        "/var/log/lightdm/lightdm.log"
+    ],
+    "firewall": [
+        "/var/log/firewalld",
+        "/var/log/ufw.log"
+    ],
+    "php error": [
+        "/var/log/php-fpm/error.log",
+        "/var/log/php-fpm/www-error.log"
+    ],
+    "php": [
+        "/var/log/php-fpm/error.log"
+    ],
+    "squid": [
+        "/var/log/squid/access.log",
+        "/var/log/squid/cache.log"
+    ],
+    "redis": [
+        "/var/log/redis/redis.log"
+    ]
+}

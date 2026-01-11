@@ -2,6 +2,7 @@ import paramiko
 import json
 import os
 import logging
+import base64
 from modules.config_manager import ConfigManager
 
 logger = logging.getLogger("SSHManager")
@@ -21,11 +22,32 @@ class SSHManager:
         if os.path.exists(self.servers_file):
             try:
                 with open(self.servers_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # Migrate old plain text if necessary? For now assume mixed
+                    return data
             except Exception as e:
                 logger.error(f"Error cargando servidores: {e}")
                 return {}
         return {}
+    
+    def _obfuscate(self, text):
+        """Simple obfuscation to avoid plain text storage."""
+        if not text: return None
+        # Base64 encode
+        encoded = base64.b64encode(text.encode()).decode()
+        # Add a simple prefix to identify
+        return f"ENC:{encoded}"
+
+    def _deobfuscate(self, text):
+        """Reverses obfuscation."""
+        if not text: return None
+        if text.startswith("ENC:"):
+            try:
+                raw = text.split("ENC:")[1]
+                return base64.b64decode(raw).decode()
+            except:
+                return text # Fallback if decode fails
+        return text # Fallback for legacy plain text
 
     def _save_servers(self):
         try:
@@ -40,7 +62,7 @@ class SSHManager:
             "user": user,
             "port": port,
             "key_path": key_path,
-            "password": password # WARNING: Storing plaintext password is risky, but requested for simplicity
+            "password": self._obfuscate(password) if password else None
         }
         self._save_servers()
         logger.info(f"Servidor '{alias}' añadido.")
@@ -75,7 +97,7 @@ class SSHManager:
             if server.get('key_path'):
                 connect_kwargs['key_filename'] = server['key_path']
             elif server.get('password'):
-                connect_kwargs['password'] = server['password']
+                connect_kwargs['password'] = self._deobfuscate(server['password'])
             
             client.connect(**connect_kwargs)
             self.active_connections[alias] = client

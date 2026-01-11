@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PiP Test</title>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        
+        /* Main Container */
+        #container { position: relative; width: 100vw; height: 100vh; }
+        
+        /* Face UI (Default Fullscreen) */
+        #face-ui {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 20;
+            background: #000; /* Ensure opaque background to cover viewer initially */
+        }
+        
+        #face-circle {
+            width: 300px; height: 300px;
+            background: cyan; border-radius: 50%;
+            box-shadow: 0 0 50px cyan;
+            transition: all 0.8s ease;
+        }
+
+        /* PiP Mode (Active when class .pip-mode is added to body/container) */
+        body.pip-mode #face-ui {
+            width: 150px; height: 150px;
+            top: 20px; left: auto; right: 20px; /* Top Right Corner */
+            background: transparent;
+        }
+        
+        body.pip-mode #face-circle {
+            width: 100px; height: 100px;
+            box-shadow: 0 0 20px cyan;
+        }
+
+        /* Content Viewer (Behind Face initially, exposed in PiP) */
+        #content-viewer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.6s ease 0.2s; /* Delayed fade in */
+        }
+
+        body.pip-mode #content-viewer {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        iframe { width: 90%; height: 90%; border: 1px solid #333; background: #222; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Face Layer -->
+        <div id="face-ui">
+            <div id="face-circle"></div>
+        </div>
+
+        <!-- Content Layer -->
+        <div id="content-viewer">
+            <h1>CONTENT VIEWER</h1>
+            <iframe id="viewer-frame" src=""></iframe>
+        </div>
+    </div>
+
+    <button onclick="togglePip()" style="position:absolute; bottom:20px; left:20px; z-index:30">Toggle PiP</button>
+
+    <script>
+        function togglePip() {
+            document.body.classList.toggle('pip-mode');
+        }
+    </script>
+</body>
+</html>

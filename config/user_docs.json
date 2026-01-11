@@ -1,0 +1,13 @@
+{
+    "manuals": {
+        "guia_usuario": "docs/manual_usuario.pdf",
+        "instalacion": "public_docs/install.md"
+    },
+    "colega_logs": {
+        "neocore": "logs/neo_core.log",
+        "voice": "logs/voice_service.log"
+    },
+    "rag_files": {
+        "arquitectura": "docs/architecture.md"
+    }
+}

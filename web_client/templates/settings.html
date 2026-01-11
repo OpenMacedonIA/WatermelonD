@@ -19,6 +19,9 @@
             <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#advanced" role="tab">
                 <i class="fas fa-code me-3"></i> Avanzado
             </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#docs" role="tab">
+                <i class="fas fa-folder-open me-3"></i> Documentación
+            </a>
             <a class="list-group-item list-group-item-action text-danger" data-bs-toggle="list" href="#danger"
                 role="tab">
                 <i class="fas fa-exclamation-triangle me-3"></i> Zona de Peligro
@@ -234,6 +237,28 @@
                 </div>
             </div>
 
+            <!-- DOCS TAB -->
+            <div class="tab-pane fade" id="docs" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Accesos Directos a Documentación</h5>
+                        <button class="btn btn-sm btn-success" onclick="saveDocsConfig()">
+                            <i class="fas fa-save"></i> Guardar Shortcuts
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            Define aquí los manuales, logs y archivos RAG que quieres buscar rápidamente.
+                            <br>
+                            Uso: "manuals": { "nombre": "ruta" } <br>
+                            Comando: "busca el manual de nombre"
+                        </div>
+                        <textarea id="docs-editor" class="form-control bg-dark text-info text-mono border-0 p-3"
+                            style="height: 400px; font-family: monospace;"></textarea>
+                    </div>
+                </div>
+            </div>
+
             <!-- EXPERIMENTAL TAB -->
             <div class="tab-pane fade" id="experimental" role="tabpanel">
                 <div class="card border-warning">
@@ -297,6 +322,37 @@
 {% endblock %}
 
 <script>
+    // Load User Docs on Start
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/settings/user_docs')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('docs-editor').value = JSON.stringify(data, null, 4);
+            });
+    });
+
+    function saveDocsConfig() {
+        const content = document.getElementById('docs-editor').value;
+        try {
+            const json = JSON.parse(content);
+            fetch('/api/settings/user_docs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(json)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.notify("Guardado", "Shortcuts actualizados.", "success");
+                    } else {
+                        window.notify("Error", data.message, "danger");
+                    }
+                });
+        } catch (e) {
+            window.notify("JSON Inválido", e, "danger");
+        }
+    }
+
     function restartSystem() {
         if (confirm("¿Estás seguro de que quieres reiniciar el sistema?")) {
             // Show overlay immediately
