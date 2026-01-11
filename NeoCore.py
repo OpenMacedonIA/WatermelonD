@@ -1089,8 +1089,8 @@ class NeoCore:
     def execute_command(self, command_text):
         """Intenta ejecutar un comando usando los diferentes gestores (Intent, Keyword, etc)."""
         # 1. Intent Manager (NLP)
-        intent = self.intent_manager.detect_intent(command_text)
-        if intent and intent['confidence'] > 0.7:
+        intent = self.intent_manager.find_best_intent(command_text)
+        if intent and intent.get('score', 0) > 70:
              app_logger.info(f"Intent detectado: {intent['intent']} ({intent['confidence']})")
              # Aquí iría la lógica de ejecución de intents, por ahora devolvemos respuesta simple o delegamos
              # En la versión refactorizada, NeoCore delegaba esto.
