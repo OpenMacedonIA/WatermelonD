@@ -4,8 +4,6 @@
 
 ---
 
-`<a name="english"></a>`
-
 ## English
 
 > [!WARNING]
@@ -73,8 +71,6 @@ Main configuration: `config/config.json`.
 Access the Web Interface at `http://localhost:5000`.
 
 ---
-
-`<a name="español"></a>`
 
 ## Español
 
