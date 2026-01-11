@@ -220,7 +220,7 @@ class VoiceManager:
                          partial = json.loads(self.recognizer.PartialResult())
                          if partial.get('partial') and self.update_face:
                              current_time = time.time()
-                             if current_time - last_face_update > 0.5:
+                             if current_time - last_face_update > 1.5:
                                  self.update_face('listening')
                                  last_face_update = current_time
                                  

@@ -387,6 +387,7 @@ class NeoCore:
 
     def on_voice_command(self, command, wake_word):
         """Callback cuando VoiceManager detecta voz."""
+        app_logger.info(f"🎤 VOICE RECEIVED: '{command}' (WW: {wake_word})")
         command_lower = command.lower()
         
         # Check Active Listening Window
@@ -516,28 +517,15 @@ class NeoCore:
                      # Execute Action
                      action_result = self.execute_action(best_intent.get('action'), command_text, params, response, best_intent.get('name'))
                      
-                     # Handle Text Result (Streaming)
+                     # Handle Text Result (Streaming) or Default Response
                      if action_result and isinstance(action_result, str):
                          app_logger.info(f"Action Result: {action_result}")
-                         try:
-                             stream = self.chat_manager.get_response_stream(command_text, system_context=action_result)
-                             buffer = ""
-                             for chunk in stream:
-                                 buffer += chunk
-                                 import re
-                                 parts = re.split(r'([.!?\n])', buffer)
-                                 if len(parts) > 1:
-                                     while len(parts) >= 2:
-                                         sentence = parts.pop(0) + parts.pop(0)
-                                         sentence = sentence.strip()
-                                         if sentence:
-                                             self.speak(sentence)
-                                     buffer = "".join(parts)
-                             if buffer.strip():
-                                 self.speak(buffer)
-                         except Exception as e:
-                             app_logger.error(f"Error streaming action result: {e}")
-                             self.speak("He hecho lo que pediste, pero me he liado al contártelo.")
+                         self.speak(action_result) # Shortcut strict streaming for now to ensure stability
+                     elif response:
+                         # If action didn't return text but we have a response configured in Intent
+                         app_logger.info(f"Action silent, speaking intent response: {response}")
+                         self.speak(response)
+                     
                      return
 
                 # --- 2. MANGO T5 (SysAdmin AI) - PRIORITY 2 ---

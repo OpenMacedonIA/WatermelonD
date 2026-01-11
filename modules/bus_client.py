@@ -77,13 +77,19 @@ class BusClient:
         self.sio.wait()
 
     def connect(self):
-        """Connect to the bus."""
+        """Connect to the bus with retry logic."""
         url = f"http://{self.host}:{self.port}"
-        try:
-            # Force polling because server is running in threading mode (no websockets)
-            self.sio.connect(url, transports=['polling'])
-        except Exception as e:
-            logger.error(f"Connection failed: {e}")
+        
+        while not self.connected:
+            try:
+                # Force polling because server is running in threading mode (no websockets)
+                self.sio.connect(url, transports=['polling'], wait_timeout=5)
+                # If we get here, connection successful (event handler sets self.connected)
+                # self.connected = True # Let the event handler do this
+                break 
+            except Exception as e:
+                logger.error(f"Connection failed ({url}): {e}. Retrying in 5s...")
+                time.sleep(5)
 
     def close(self):
         self.sio.disconnect()

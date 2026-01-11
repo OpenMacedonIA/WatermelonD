@@ -438,8 +438,9 @@ def api_audio_toggle():
 @login_required
 def api_audio_status():
     """Returns current audio status."""
-    # Force refresh request
-    bus.emit('mic:get_status', {})
+    # Force refresh request only if connected to avoid log spam
+    if bus.connected:
+        bus.emit('mic:get_status', {})
     return jsonify(AUDIO_STATUS)
 
 @app.route('/api/stats')
