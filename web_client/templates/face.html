@@ -445,8 +445,10 @@
     <div id="conn-status" title="Connection Status"></div>
 
     <script>
+        // Force polling for compatibility with Threaded Flask Server
         const socket = io({
-            transports: ['websocket', 'polling'],
+            transports: ['polling'],
+            upgrade: false,
             reconnection: true
         });
 

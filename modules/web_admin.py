@@ -39,8 +39,8 @@ app.secret_key = secret_key
 csrf = CSRFProtect(app)
 
 # Initialize SocketIO
-# Usamos eventlet para WebSockets robustos (requiere pip install eventlet)
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+# Revert to threading for compatibility with PyAudio/Voice Threads
+socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 
 # Global System Status
 AUDIO_STATUS = {'output': False, 'input': False}

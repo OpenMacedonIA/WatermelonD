@@ -1,7 +1,3 @@
-# --- MONKEY PATCHING PARA SOCKETIO/EVENTLET ---
-import eventlet
-eventlet.monkey_patch()
-
 import threading
 import os
 import queue
