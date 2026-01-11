@@ -1183,4 +1183,4 @@ def run_server():
         
     print(f"🚀 Neo Web Admin running on https://{host}:{port}" if ssl_context else f"🚀 Neo Web Admin running on http://{host}:{port}")
     
-    socketio.run(app, host=host, port=port, debug=debug_mode, use_reloader=False, ssl_context=ssl_context)
+    socketio.run(app, host=host, port=port, debug=debug_mode, use_reloader=False, ssl_context=ssl_context, allow_unsafe_werkzeug=True)
