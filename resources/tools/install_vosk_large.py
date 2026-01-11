@@ -8,7 +8,7 @@ import shutil
 MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-es-0.42.zip"
 MODEL_ZIP = "vosk-model-es-0.42.zip"
 EXTRACT_DIR = "vosk-models"
-FINAL_DIR = "vosk-models/es-large"
+FINAL_DIR = "vosk-models/es"
 
 def download_file(url, dest_path):
     print(f"Downloading {url}...")

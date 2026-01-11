@@ -443,6 +443,20 @@ else
 fi
 echo ""
 
+# --- 4.6. DESCARGA DE DEPENDENCIAS WEB (SOCKET.IO) ---
+echo "[PASO 4.6/5] Descargando Socket.IO local..."
+SOCKET_JS_DIR="web_client/static/js"
+if [ ! -d "$SOCKET_JS_DIR" ]; then
+    mkdir -p "$SOCKET_JS_DIR"
+fi
+if [ ! -f "$SOCKET_JS_DIR/socket.io.min.js" ]; then
+    wget -q -O "$SOCKET_JS_DIR/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
+    echo "Socket.IO descargado correctamente."
+else
+    echo "Socket.IO ya existe localmente."
+fi
+echo ""
+
 # --- 4.5. DESCARGA DEL MODELO VOSK (LARGE) ---
 echo "[PASO 4.5/5] Instalando modelo Vosk Large (Mejor precisión)..."
 if [ -f "resources/tools/install_vosk_large.py" ]; then
