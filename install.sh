@@ -391,7 +391,7 @@ echo ""
 # --- 4.1. INSTALACIÓN DE PIPER TTS ---
 echo "[PASO 4.1/5] Instalando Piper TTS (Voz Natural)..."
 if [ -f "resources/tools/install_piper.py" ]; then
-    python3 resources/tools/install_piper.py
+    $VENV_DIR/bin/python resources/tools/install_piper.py
     # Ensure binary is executable
     if [ -f "piper/piper" ]; then
         chmod +x piper/piper
