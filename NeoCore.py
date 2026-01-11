@@ -1102,6 +1102,7 @@ class NeoCore:
 
         return None
 
+    def handle_mango_confirmation(self, text):
         """Confirma o cancela un comando de sistema propuesto por Mango."""
         command = self.pending_mango_command
         self.pending_mango_command = None # Reset state
