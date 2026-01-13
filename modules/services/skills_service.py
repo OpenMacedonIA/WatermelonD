@@ -60,7 +60,7 @@ from modules.skills.visual import VisualSkill
 
 # Mango (NL2Bash)
 try:
-    from modules.mango_manager import MangoManager
+    from modules.mango.engine import MangoManager
 except ImportError:
     MangoManager = None
 

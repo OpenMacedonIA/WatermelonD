@@ -40,7 +40,7 @@ from modules.intent_manager import IntentManager
 from modules.keyword_router import KeywordRouter
 from modules.chat import ChatManager
 from modules.biometrics_manager import BiometricsManager
-from modules.mango_manager import MangoManager # MANGO T5
+from modules.mango.engine import MangoManager # MANGO T5
 from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
 import threading
