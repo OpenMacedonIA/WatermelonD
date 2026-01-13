@@ -134,16 +134,8 @@ wget -O install.sh https://raw.githubusercontent.com/jrodriiguezg/NEOPapaya/refs
 **Manual Installation:**
 
 ```bash
-<<<<<<< HEAD
 git clone https://github.com/jrodriiguezg/NEOPapaya.git
 cd NEOPapaya
-=======
-# Clona el respositorio
-git clone https://github.com/jrodriiguezg/NEOPapaya.git
-cd NEOPapaya
-
-# Ejecuta el instalador
->>>>>>> 6c23f643ddc77386f3e72379cbb72cb6ad3ab76e
 ./install.sh
 ```
 
