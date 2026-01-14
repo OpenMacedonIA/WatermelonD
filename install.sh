@@ -8,7 +8,7 @@
 set -e
 
 echo "========================================="
-echo "===   Instalador de Neo Core   ==="
+echo "===   Instalador de Neo Papaya   ==="
 echo "========================================="
 echo "Este script instalará todo lo necesario para ejecutar la aplicación en modo servicio."
 echo "Se requerirá tu contraseña para instalar paquetes del sistema (sudo)."
