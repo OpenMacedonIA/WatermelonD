@@ -55,14 +55,14 @@ NEOPapaya is a proactive and modular personal assistant designed to run locally 
 **Quick Install (One-line command):**
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/jrodriiguezg/NEOPapaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/neo-papaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
 # Clone the repository
-git clone https://github.com/jrodriiguezg/NEOPapaya.git
+git clone https://github.com/OpenMacedonIA/neo-papaya
 cd NEOPapaya
 
 # Run the installer
@@ -128,13 +128,13 @@ NEOPapaya es un asistente personal proactivo y modular diseñado para ejecutarse
 
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/jrodriiguezg/NEOPapaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/neo-papaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
-git clone https://github.com/jrodriiguezg/NEOPapaya.git
+git clone https://github.com/OpenMacedonIA/neo-papaya
 cd NEOPapaya
 ./install.sh
 ```
