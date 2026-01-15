@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Definition of colors for output
+# setup_distrobox.sh
+# Script de configuración del entorno Distrobox para NeoCore.
+# Ideal para sistemas inmutables (Fedora Atomic/Silverblue) o para aislar dependencias.
+
+# Definición de colores
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -8,7 +12,7 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Configuración de Entorno Distrobox para NeoCore ===${NC}"
 
-# 1. Check Distrobox Installation
+# 1. Comprobar instalación de Distrobox
 if ! command -v distrobox &> /dev/null; then
     echo -e "${YELLOW}Distrobox no detectado. Instalando...${NC}"
     if command -v dnf &> /dev/null; then
@@ -26,7 +30,7 @@ fi
 CONTAINER_NAME="neocore-box"
 IMAGE="debian:12" # Stable Bookworm
 
-# 2. Check/Create Container
+# 2. Comprobar/Crear Contenedor
 echo -e "${YELLOW}Verificando contenedor '${CONTAINER_NAME}'...${NC}"
 if distrobox list | grep -q "$CONTAINER_NAME"; then
     echo -e "${GREEN}El contenedor existe.${NC}"
@@ -35,16 +39,16 @@ else
     distrobox create -n "$CONTAINER_NAME" -i "$IMAGE" -Y
 fi
 
-# 2.5 Ensure Permissions
+# 2.5 Asegurar Permisos
 echo -e "${YELLOW}Asegurando permisos del directorio de trabajo...${NC}"
-# Fix potentially root-owned files from previous sudo runs
+# Arreglar archivos potencialmente propiedad de root de ejecuciones sudo anteriores
 sudo chown -R $(id -u):$(id -g) .
 chmod -R u+rw .
 
-# 3. Enter and Setup
+# 3. Entrar y Configurar
 echo -e "${GREEN}Instalando dependencias dentro de Distrobox...${NC}"
 
-# Script to run INSIDE the container
+# Script para ejecutar DENTRO del contenedor
 SETUP_SCRIPT="
 set -e
 echo 'Actualizando repositorios...'
@@ -66,9 +70,9 @@ source venv_distrobox/bin/activate
 
 echo 'Instalando pip requirements...'
 pip install --upgrade pip wheel setuptools
-# Fix fann2 separately if needed, but lets try direct install first
+# Fix fann2 por separado si es necesario
 if grep -q 'fann2' requirements.txt; then
-    # Clone and build fann first if missing system lib
+    # Clonar y construir fann primero si falta la librería del sistema
     if [ ! -f /usr/lib/libfann.so ] && [ ! -f /usr/local/lib/libfann.so ]; then
        echo 'Compilando libfann C...'
        if [ ! -d \"FANN\" ]; then
@@ -85,28 +89,28 @@ fi
 pip install -r requirements.txt
 
 echo '--- Descargando Modelos AI ---'
-# Create config/models dirs if needed
+# Crear directorios de config/modelos si es necesario
 if [ ! -d "models" ]; then mkdir -p models; fi
 if [ ! -d "vosk-models" ]; then mkdir -p vosk-models; fi
 
-# Run Downloaders using the container's python/venv
+# Ejecutar Descargadores usando el python/venv del contenedor
 echo 'Descargando Gemma...'
 python3 resources/tools/download_model.py
 
-echo 'Descargando Whisper...'
-python3 resources/tools/download_whisper_model.py
+# echo 'Descargando Whisper...'
+# python3 resources/tools/download_whisper_model.py
 
 echo 'Descargando MANGO (T5)...'
-# Defaulting to MANGO (Main/v1) for stability unless specified otherwise
+# Por defecto MANGO (Main/v1) por estabilidad a menos que se especifique otra cosa
 python3 resources/tools/download_mango_model.py --branch main
 
 echo 'Instalación Completada en Distrobox.'
 "
 
-# Execute setup inside distrobox
+# Ejecutar setup dentro de distrobox
 distrobox enter "$CONTAINER_NAME" -- bash -c "$SETUP_SCRIPT"
 
-# 4. Create Launcher Shortcut
+# 4. Crear Lanzador (Acceso directo)
 LAUNCHER_SCRIPT="run_neocore_distrobox.sh"
 echo "#!/bin/bash" > "$LAUNCHER_SCRIPT"
 echo "echo 'Iniciando NeoCore en Distrobox...'" >> "$LAUNCHER_SCRIPT"
@@ -116,7 +120,7 @@ chmod +x "$LAUNCHER_SCRIPT"
 echo -e "${GREEN}==============================================${NC}"
 echo -e "${GREEN}Configuración del contenedor completada.${NC}"
 
-# 5. Host-Side Configuration (Auto-Setup)
+# 5. Configuración del HOST (Auto-Setup)
 echo -e "${YELLOW}Configurando sistema HOST...${NC}"
 
 # 5.1 Config.json
@@ -124,13 +128,13 @@ if [ ! -f "config/config.json" ]; then
     echo "Creando configuración por defecto..."
     if [ ! -d "config" ]; then mkdir -p config; fi
     echo "{}" > config/config.json
-    # We can't easily run the password helper from host if python isn't there, 
-    # but we can try running it via the container!
+    # No podemos ejecutar fácilmente el helper de contraseñas desde el host si no hay python,
+    # ¡pero podemos intentar ejecutarlo vía contenedor!
     echo "Estableciendo contraseña 'admin'..."
     distrobox enter "$CONTAINER_NAME" -- bash -c "cd \"$PWD\" && source venv_distrobox/bin/activate && python3 resources/tools/password_helper.py --user admin --password admin"
 fi
 
-# 5.2 SSL Certs
+# 5.2 Certificados SSL
 CERT_DIR="$(pwd)/config/certs"
 if [ ! -f "$CERT_DIR/neo.key" ]; then
     echo "Generando certificados SSL (Host)..."
@@ -139,15 +143,15 @@ if [ ! -f "$CERT_DIR/neo.key" ]; then
         openssl req -x509 -newkey rsa:4096 -keyout "$CERT_DIR/neo.key" -out "$CERT_DIR/neo.crt" -days 3650 -nodes -subj "/C=ES/ST=Madrid/L=Madrid/O=NeoCore/CN=$(hostname)"
         chmod 600 "$CERT_DIR/neo.key"
         chmod 644 "$CERT_DIR/neo.crt"
-        echo "✅ Certificados generados."
+        echo "Certificados generados."
     else
-        echo "⚠️ OpenSSL no encontrado en host. Se intentará generar dentro del contenedor..."
+        echo "OpenSSL no encontrado en host. Se intentará generar dentro del contenedor..."
          distrobox enter "$CONTAINER_NAME" -- bash -c "mkdir -p config/certs && openssl req -x509 -newkey rsa:4096 -keyout config/certs/neo.key -out config/certs/neo.crt -days 3650 -nodes -subj '/C=ES/ST=Madrid/L=Madrid/O=NeoCore/CN=NeoBox'"
     fi
 fi
 
-# 5.3 Systemd Service (User Mode)
-echo "Configurando servicio systemd (User)..."
+# 5.3 Servicio Systemd (Modo Usuario)
+echo "Configurando servicio systemd (Usuario)..."
 SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SERVICE_DIR"
 SERVICE_FILE="$SERVICE_DIR/neo.service"
@@ -172,7 +176,7 @@ SyslogIdentifier=neo_distrobox
 WantedBy=default.target
 EOT
 
-# Reload and Enable
+# Recargar y Habilitar
 echo "Habilitando servicio..."
 systemctl --user daemon-reload
 systemctl --user enable neo.service

@@ -30,5 +30,37 @@
         "pattern": "sudo: pam_unix(sudo:auth): authentication failure",
         "window_seconds": 300,
         "threshold": 3
+    },
+    {
+        "id": "sql_injection",
+        "name": "Intento de Inyección SQL",
+        "source": "log_auth",
+        "pattern": "UNION SELECT",
+        "window_seconds": 60,
+        "threshold": 3
+    },
+    {
+        "id": "xss_attempt",
+        "name": "Intento de XSS",
+        "source": "log_auth",
+        "pattern": "<script>",
+        "window_seconds": 60,
+        "threshold": 3
+    },
+    {
+        "id": "disk_space_critical",
+        "name": "Espacio en Disco Crítico (>90%)",
+        "source": "system_stats",
+        "metric": "disk_percent",
+        "window_seconds": 300,
+        "threshold": 1
+    },
+    {
+        "id": "port_scan",
+        "name": "Escaneo de Puertos Detectado",
+        "source": "log_auth",
+        "pattern": "Connection closed by [preauth]",
+        "window_seconds": 10,
+        "threshold": 10
     }
 ]

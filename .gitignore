@@ -23,6 +23,7 @@ database/jobs.sqlite
 database/brain.db-shm
 database/brain.db-wal
 training_data/
+
 # init_db.py # Keep this if it's the schema creator
 
 # Configuration & Secrets
@@ -58,8 +59,7 @@ sounds/
 docker/
 .tools/
 MANGOT5/
-MANGOT52.old/
-MANGOT5.old/
+
 config/certs/
 FANN/
 source/
@@ -82,6 +82,6 @@ esp32_cam/
 .vscode/
 .DS_Store
 Thumbs.db
-debug_kiosk.sh
+
 # User Requested Ignore
 # resources/

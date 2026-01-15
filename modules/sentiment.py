@@ -3,7 +3,7 @@ from modules.utils import load_json_data
 
 class SentimentManager:
     def __init__(self):
-        self.data = load_json_data('config/sentiment.json', default={})
+        self.data = load_json_data('resources/nlp/sentiment.json', default={})
         self.positive_words = set(self.data.get('positive', []))
         self.negative_words = set(self.data.get('negative', []))
         self.angry_words = set(self.data.get('angry', []))

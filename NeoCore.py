@@ -18,7 +18,7 @@ from modules.config_manager import ConfigManager
 from modules.skills.system import SystemSkill
 from modules.skills.network import NetworkSkill
 from modules.skills.time_date import TimeDateSkill
-from modules.skills.content import ContentSkill
+
 from modules.skills.media import MediaSkill
 from modules.skills.organizer import OrganizerSkill
 from modules.skills.ssh import SSHSkill
@@ -43,8 +43,8 @@ from modules.biometrics_manager import BiometricsManager
 from modules.mango.engine import MangoManager # MANGO T5
 from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
-import threading
-import time
+from modules.plugin_loader import PluginLoader
+
 
 # --- Módulos Opcionales ---
 try:
@@ -227,16 +227,22 @@ class NeoCore:
         self.skills_network = NetworkSkill(self)
         self.skills_time = TimeDateSkill(self)
         self.skills_media = MediaSkill(self) # Ensure MediaSkill has access to core.cast_manager
-        self.skills_content = ContentSkill(self)
+
         self.skills_organizer = OrganizerSkill(self)
         self.skills_ssh = SSHSkill(self)
         self.skills_files = FilesSkill(self)
         self.skills_docker = DockerSkill(self)
         self.skills_docker = DockerSkill(self)
-        self.skills_diagnosis = DiagnosisSkill(self)
         self.skills_finder = FinderSkill(self)
+
+        # --- Dynamic Plugins (Extensions) ---
+        self.plugin_loader = PluginLoader(self)
+        self.plugin_loader.load_plugins()
         
         self.vlc_instance, self.player = self.setup_vlc()
+        
+        # --- Content Loading (Resources) ---
+        self.load_resources()
         
         # --- Variables de estado ---
         self.consecutive_failures = 0
@@ -262,6 +268,7 @@ class NeoCore:
         self.last_spoken_text = "" 
         self.last_intent_name = None
         self.active_listening_end_time = 0 
+        self.dynamic_actions = {} # Registry for plugin actions 
 
         # --- Thread Handles ---
         self._thread_events = None
@@ -270,6 +277,11 @@ class NeoCore:
 
         self.start_background_tasks()
         
+        # Main loop moved to run()
+
+    def run(self):
+        """Bloqueo principal del servicio."""
+        self.app_logger.info("NeoCore Service Running.")
         try:
             while True:
                 time.sleep(10)
@@ -362,6 +374,8 @@ class NeoCore:
         except Exception as e:
             app_logger.error(f"Error logging to inbox: {e}")
 
+        pass
+
     def setup_vlc(self):
         """Inicializa la instancia de VLC para reproducción de radio."""
         if vlc:
@@ -413,6 +427,112 @@ class NeoCore:
              self.handle_command(command_clean)
              
              self.voice_manager.set_processing(False)
+
+    def _handle_mango_logic(self, command_text):
+        """Procesa comandos de sistema usando MANGO (T5). Retorna True si manejó el comando."""
+        # --- Context Injection (Simplified) ---
+        try:
+            raw_files = os.listdir('.')
+        except:
+            raw_files = []
+            
+        ignored = {'.git', '__pycache__', 'venv', 'env', '.config', 'node_modules', '.gemini'}
+        filtered_files = [
+            f for f in raw_files 
+            if f not in ignored and not f.startswith('.') 
+            and not f.endswith(('.pyc', '.Log'))
+        ]
+        
+        # Truncate if too many files (Top 25)
+        if len(filtered_files) > 25:
+            filtered_files = filtered_files[:25] + ['...']
+            
+        context_str = str(filtered_files)
+        mango_prompt = f"Contexto: {context_str} | Instrucción: {command_text}"
+        
+        self.app_logger.info(f"MANGO Prompt: '{mango_prompt}'")
+        
+        # --- SELF-CORRECTION LOOP ---
+        max_retries = 1
+        attempt = 0
+        command_to_run = None
+        
+        # First attempt
+        mango_cmd, mango_conf = self.mango_manager.infer(mango_prompt)
+        
+        if mango_cmd and mango_conf > 0.85:
+            command_to_run = mango_cmd
+        
+        # GIT Security Filter
+        if command_to_run and command_to_run.strip().startswith('git'):
+            cleaned_cmd = " ".join(command_to_run.strip().split())
+            if not cleaned_cmd.startswith('git push'):
+                self.speak(f"Comando git bloqueado por seguridad: {command_to_run}")
+                self.app_logger.warning(f"BLOCKED Git Command: {command_to_run}")
+                return True # Handled (Blocked)
+
+        if command_to_run:
+            while attempt <= max_retries:
+                 self.app_logger.info(f"MANGO Exec Attempt {attempt+1}: {command_to_run}")
+                 
+                 # 0. Flag Validation
+                 is_valid_cmd, val_msg = self.sysadmin_manager.validate_command_flags(command_to_run)
+                 
+                 if not is_valid_cmd:
+                     self.app_logger.warning(f"MANGO Validation Failed: {val_msg}")
+                     success = False
+                     output = f"Command validation failed: {val_msg}"
+                 else:
+                     # 1. Risk Analysis
+                     risk_level = self.sysadmin_manager.analyze_command_risk(command_to_run)
+                     self.app_logger.info(f"Risk Level for '{command_to_run}': {risk_level.upper()}")
+                     
+                     should_execute = False
+                     
+                     if risk_level == 'safe':
+                         if attempt == 0: self.speak(f"Ejecutando: {command_to_run}")
+                         should_execute = True
+                         
+                     elif risk_level == 'caution':
+                         self.pending_mango_command = command_to_run
+                         self.speak(f"He generado: {command_to_run}. ¿Ejecuto?")
+                         return True # Handled (Waiting confirm)
+                         
+                     elif risk_level == 'danger':
+                         self.pending_mango_command = command_to_run
+                         self.speak(f"¡Atención! {command_to_run} puede ser destructivo. ¿Seguro?")
+                         return True # Handled (Waiting confirm)
+
+                     if should_execute:
+                         success, output = self.sysadmin_manager.run_command(command_to_run)
+                     else:
+                         return True
+
+                 # Result Handling
+                 if success:
+                     self.handle_action_result_with_chat(command_text, output)
+                     return True
+                 else:
+                     error_msg = output
+                     self.app_logger.warning(f"MANGO Command Failed: {error_msg}")
+                     
+                     if attempt < max_retries:
+                         attempt += 1
+                         repair_prompt = f"Previous command '{command_to_run}' failed with error: '{error_msg}'. Fix the command to: {command_text}"
+                         self.app_logger.info(f"MANGO Repair Prompt: {repair_prompt}")
+                         
+                         fixed_cmd, fixed_conf = self.mango_manager.infer(repair_prompt)
+                         if fixed_cmd:
+                             command_to_run = fixed_cmd
+                             self.speak(f"Error detectado. Corrigiendo...")
+                             continue
+                         else:
+                             self.speak("No he podido corregir el error.")
+                             break
+                     else:
+                         self.speak(f"No he podido ejecutarlo. Error: {error_msg}")
+                         return True
+        return False
 
     def handle_command(self, command_text):
         """Procesa el comando de texto."""
@@ -531,142 +651,8 @@ class NeoCore:
 
                 # --- 2. MANGO T5 (SysAdmin AI) - PRIORITY 2 ---
                 # Check this SECOND (Fallback for explicit bash/admin commands)
-                
-                # --- Context Injection (Simplified) ---
-                # User Request: "Contexto: ['archivo1', 'archivo2'] | Instrucción: Borra la foto"
-                # --- Context Optimization ---
-                # Exclude hidden files and common noise
-                try:
-                    raw_files = os.listdir('.')
-                except:
-                    raw_files = []
-                    
-                ignored = {'.git', '__pycache__', 'venv', 'env', '.config', 'node_modules', '.gemini'}
-                
-                filtered_files = [
-                    f for f in raw_files 
-                    if f not in ignored and not f.startswith('.') 
-                    and not f.endswith(('.pyc', '.Log'))
-                ]
-                
-                # Truncate if too many files (Top 25)
-                if len(filtered_files) > 25:
-                    filtered_files = filtered_files[:25] + ['...']
-                    
-                context_str = str(filtered_files)
-                mango_prompt = f"Contexto: {context_str} | Instrucción: {command_text}"
-                
-                app_logger.info(f"MANGO Prompt (Simple): '{mango_prompt}'")
-                
-                # --- SELF-CORRECTION LOOP ---
-                max_retries = 1 # Allow 1 attempt to fix
-                attempt = 0
-                command_to_run = None
-                repair_prompt = None
-                
-                # First attempt: Infer from original prompt
-                mango_cmd, mango_conf = self.mango_manager.infer(mango_prompt)
-                
-                if mango_cmd and mango_conf > 0.85:
-                    command_to_run = mango_cmd
-                
-                # --- GIT FILTER (Security) ---
-                # User Requirement: Block all git commands generated by Mango EXCEPT "git push".
-                if command_to_run and command_to_run.strip().startswith('git'):
-                    # Normalize whitespace for check using simplified strings
-                    cleaned_cmd = " ".join(command_to_run.strip().split())
-                    if not cleaned_cmd.startswith('git push'):
-                        self.speak(f"Lo siento, por seguridad no ejecuto comandos git generados, salvo push. Comando bloqueado: {command_to_run}")
-                        app_logger.warning(f"BLOCKED Git Command: {command_to_run}")
-                        return
-                
-                # If we have a command, enter execution/correction flow
-                if command_to_run:
-                    while attempt <= max_retries:
-                         app_logger.info(f"MANGO Exec Attempt {attempt+1}: {command_to_run}")
-                         
-                         # 0. Flag Validation (RAG for Manuals)
-                         # Validate flags before even asking for permission or executing
-                         is_valid_cmd, val_msg = self.sysadmin_manager.validate_command_flags(command_to_run)
-                         
-                         if not is_valid_cmd:
-                             app_logger.warning(f"MANGO Validation Failed: {val_msg}")
-                             # Treat as failure to trigger self-correction
-                             success = False
-                             output = f"Command validation failed: {val_msg}"
-                             # Skip execution, fall through to correction logic
-                         # 0. Flag Validation (RAG for Manuals)
-                         # Validate flags before even asking for permission or executing
-                         is_valid_cmd, val_msg = self.sysadmin_manager.validate_command_flags(command_to_run)
-                         
-                         if not is_valid_cmd:
-                             app_logger.warning(f"MANGO Validation Failed: {val_msg}")
-                             # Treat as failure to trigger self-correction
-                             success = False
-                             output = f"Command validation failed: {val_msg}"
-                             # Skip execution, fall through to correction logic
-                         else:
-                             # 1. Risk Analysis (Rule-Based Risk Analyzer)
-                             risk_level = self.sysadmin_manager.analyze_command_risk(command_to_run)
-                             app_logger.info(f"Risk Level for '{command_to_run}': {risk_level.upper()}")
-                             
-                             should_execute = False
-                             
-                             if risk_level == 'safe':
-                                 if attempt == 0: self.speak(f"Ejecutando: {command_to_run}")
-                                 else: self.speak(f"Reintentando con: {command_to_run}")
-                                 should_execute = True
-                                 
-                             elif risk_level == 'caution':
-                                 # Caution -> Ask for confirmation (First attempt only)
-                                 # If correcting, maybe we ask again? Let's implement strict confirm for now.
-                                 self.pending_mango_command = command_to_run
-                                 self.speak(f"He generado: {command_to_run}. Es una acción de sistema. ¿Ejecuto?")
-                                 return # Exit loop, wait for user "Sí"
-                                 
-                             elif risk_level == 'danger':
-                                 # Danger -> Strong warning
-                                 self.pending_mango_command = command_to_run
-                                 self.speak(f"¡Atención! El comando {command_to_run} puede ser destructivo. ¿Estás seguro?")
-                                 return # Exit loop, wait for user
-
-                             if should_execute:
-                                 success, output = self.sysadmin_manager.run_command(command_to_run)
-                             else:
-                                 # Should not happen if logic is correct
-                                 return
-
-                         # Common Result Handling (Execution OR Validation Failure)
-
-                         # Common Result Handling (Execution OR Validation Failure)
-                         if success:
-                             # It worked!
-                             self.handle_action_result_with_chat(command_text, output)
-                             return
-                         else:
-                             # It failed (Runtime or Validation)! output contains error
-                             error_msg = output
-                             app_logger.warning(f"MANGO Command Failed: {error_msg}")
-                             
-                             if attempt < max_retries:
-                                 attempt += 1
-                                 # Construct Repair Prompt
-                                 repair_prompt = f"Previous command '{command_to_run}' failed with error: '{error_msg}'. Fix the command to: {command_text}"
-                                 app_logger.info(f"MANGO Repair Prompt: {repair_prompt}")
-                                 
-                                 # Ask MANGO to fix
-                                 fixed_cmd, fixed_conf = self.mango_manager.infer(repair_prompt)
-                                 if fixed_cmd:
-                                     command_to_run = fixed_cmd
-                                     self.speak(f"Detecté un error en el comando. Corrigiendo...")
-                                     continue # Loop again
-                                 else:
-                                     self.speak("No he podido corregir el error.")
-                                     break
-                             else:
-                                 # Out of retries
-                                 self.speak(f"No he podido ejecutarlo. Error: {error_msg}")
-                                 return
+                if self._handle_mango_logic(command_text):
+                    return
 
                 # --- Keyword Router (Legacy Function Calling) ---
                 router_result = self.keyword_router.process(command_text)
@@ -1006,13 +992,13 @@ class NeoCore:
             "cast_video": self.skills_media.cast_video,
             "stop_cast": self.skills_media.stop_cast,
             
-            # --- Content & Fun ---
-            "contar_chiste": self.skills_content.contar_contenido_aleatorio, 
-            "decir_frase_celebre": self.skills_content.decir_frase_celebre,
-            "contar_dato_curioso": self.skills_content.contar_contenido_aleatorio,
-            "aprender_alias": self.skills_content.aprender_alias,
-            "aprender_dato": self.skills_content.aprender_dato,
-            "consultar_dato": self.skills_content.consultar_dato,
+            # --- Content & Fun (Migrated to Plugin) ---
+            # "contar_chiste": self.skills_content.contar_contenido_aleatorio, 
+            # "decir_frase_celebre": self.skills_content.decir_frase_celebre,
+            # "contar_dato_curioso": self.skills_content.contar_contenido_aleatorio,
+            # "aprender_alias": self.skills_content.aprender_alias,
+            # "aprender_dato": self.skills_content.aprender_dato,
+            # "consultar_dato": self.skills_content.consultar_dato,
             
             # --- Network & SSH & Files ---
             "network_scan": self.skills_network.scan,
@@ -1037,6 +1023,10 @@ class NeoCore:
             # --- Generic ---
             "responder_simple": lambda command, response, **kwargs: self.speak(response)
         }
+        
+        # --- Merge Dynamic Plugin Actions ---
+        if hasattr(self, 'dynamic_actions'):
+            action_map.update(self.dynamic_actions)
         
         # --- BRAIN: Store interaction ---
         if self.brain:
@@ -1130,10 +1120,3 @@ class NeoCore:
 if __name__ == "__main__":
     app = NeoCore()
     app.run()
-    
-    # Keep main thread alive for daemons
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        app.on_closing()

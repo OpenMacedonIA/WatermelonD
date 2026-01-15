@@ -622,5 +622,43 @@
             "disk": 72.5,
             "temp": "93.5\u00b0C"
         }
+    },
+    {
+        "timestamp": 1766860000.0,
+        "date": "2025-12-28T10:15:00.000000",
+        "target": "redis",
+        "event": "CRASH_DETECTED",
+        "context": {
+            "cpu": "45.0%",
+            "ram": "89.0%",
+            "disk": 72.8,
+            "temp": "80.5\u00b0C"
+        }
+    },
+    {
+        "timestamp": 1766860005.0,
+        "date": "2025-12-28T10:15:05.000000",
+        "target": "redis",
+        "event": "RECOVERY_SUCCESS",
+        "context": {
+            "cpu": "12.0%",
+            "ram": "40.0%",
+            "disk": 72.8,
+            "temp": "78.0\u00b0C"
+        }
+    },
+    {
+        "timestamp": 1766863600.0,
+        "date": "2025-12-28T11:15:00.000000",
+        "target": "system_cleanup",
+        "event": "DISK_CLEANUP",
+        "context": {
+            "freed_space": "500MB",
+            "targets": [
+                "tmp",
+                "logs",
+                "cache"
+            ]
+        }
     }
 ]

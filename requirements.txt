@@ -19,7 +19,7 @@ llama-cpp-python
 huggingface-hub
 pychromecast
 paho-mqtt
-faster-whisper
+# faster-whisper
 piper-tts
 padatious
 # fann2

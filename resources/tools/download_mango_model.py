@@ -10,7 +10,7 @@ def download_mango():
     args = parser.parse_args()
     
     repo_id = "jrodriiguezg/mango-t5-770m"
-    target_dir = os.path.join(os.getcwd(), "MANGOT5")
+    target_dir = os.path.join(os.getcwd(), "models", "MANGOt5")
     revision = args.branch
     
     print(f"ℹ️  Selected Branch: {revision}")

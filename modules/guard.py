@@ -8,7 +8,7 @@ from collections import deque
 
 logger = logging.getLogger("NeoGuard")
 
-SIGNATURES_FILE = "data/attack_signatures.json"
+SIGNATURES_FILE = "resources/security/attack_signatures.json"
 AUTH_LOG_PATH = "/var/log/auth.log" # Ajustar según distro (auth.log en Debian/Ubuntu)
 
 class Guard:
