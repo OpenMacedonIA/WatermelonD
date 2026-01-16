@@ -54,6 +54,12 @@ def set_audio_status(output_enabled, input_enabled):
 def inject_status():
     return dict(audio_status=AUDIO_STATUS)
 
+@socketio.on('message')
+def handle_message(data):
+    """Relay broadcast messages to all connected clients (Bus)."""
+    # print(f"DEBUG: Broadcasting message: {data}")
+    emit('message', data, broadcast=True)
+
 from modules.bus_client import BusClient
 
 sys_admin = SysAdminManager()

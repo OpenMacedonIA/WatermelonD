@@ -4,7 +4,7 @@ Todas las modificaciones notables en el proyecto **NEOPapaya** se documentarán 
 
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), y este proyecto adhiere a Versionado Semántico.
 
-## [2.6.0-stable] - 2026-01-11 (Routing Logic & SSH Security)
+## [2.6.0-experimental] - 2026-01-11 (Routing Logic & SSH Security)
 
 Mejora crítica en la lógica de decisión del sistema y refactorización de seguridad para la administración remota.
 
