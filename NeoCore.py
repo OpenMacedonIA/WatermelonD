@@ -422,10 +422,17 @@ class NeoCore:
 
     def setup_vlc(self):
         """Inicializa la instancia de VLC para reproducción de radio."""
-        if vlc:
+        audio_enabled = self.config.get('audio', {}).get('enabled', True)
+        if vlc and audio_enabled:
             instance = vlc.Instance()
             return instance, instance.media_player_new()
         return None, None
+
+    def load_resources(self):
+        """Carga recursos iniciales (stub)."""
+        app_logger.info("Cargando recursos del sistema...")
+        # Aquí se podría precargar audio, modelos extra, etc.
+        pass
 
     def on_closing(self):
         """Limpieza al cerrar."""

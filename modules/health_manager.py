@@ -35,7 +35,7 @@ class HealthManager:
             'ssh', 'sshd',                        # Remote Access
             'fail2ban', 'ufw',                    # Security
             'docker',                             # Containers
-            'bluetooth', 'avahi-daemon'           # Hardware/Discovery
+            'avahi-daemon'                        # Hardware/Discovery
         ]
         
         # Historial de incidentes

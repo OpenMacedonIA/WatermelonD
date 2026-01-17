@@ -8,7 +8,7 @@ logger = logging.getLogger("BusClient")
 
 class BusClient:
     def __init__(self, host='localhost', port=5000, name="UnknownClient"):
-        self.sio = socketio.Client()
+        self.sio = socketio.Client(ssl_verify=False)
         self.host = host
         self.port = port
         self.name = name
@@ -78,7 +78,7 @@ class BusClient:
 
     def connect(self):
         """Connect to the bus with retry logic."""
-        url = f"http://{self.host}:{self.port}"
+        url = f"https://{self.host}:{self.port}"
         
         while not self.connected:
             try:
