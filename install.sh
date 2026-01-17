@@ -110,6 +110,13 @@ function install_standard() {
     echo "========================================="
 
     # --- CONFIGURACIÓN DE TMPDIR ---
+    if [ ! -f "web_client/app.py" ] || [ -z "$(ls -A web_client)" ]; then
+        echo "⚠️  Submódulos no detectados o incompletos."
+        echo "Ejecutando: git submodule update --init --recursive"
+        git submodule update --init --recursive || echo "⚠️ Aviso: Falló la actualización de submódulos."
+    fi
+
+    export TMPDIR="$(pwd)/temp_build"
     export TMPDIR="$(pwd)/temp_build"
     mkdir -p "$TMPDIR"
     echo "Directorio temporal: $TMPDIR"
@@ -401,6 +408,12 @@ function install_web_client() {
     if [[ ! "$NEO_IP" =~ ^http ]]; then NEO_IP="http://$NEO_IP"; fi
     
     echo "Instalando dependencias mínimas..."
+    
+    if [ ! -f "web_client/app.py" ]; then
+        echo "Recuperando código del cliente web..."
+        git submodule update --init --recursive
+    fi
+
     if command -v apt-get &> /dev/null; then
         sudo apt-get install -y python3-flask python3-requests python3-flask-wtf
     else

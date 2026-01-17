@@ -12,6 +12,12 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}=== Configuración de Entorno Distrobox para NeoCore ===${NC}"
 
+# 0. Verificar Submódulos (Importante para VM/Clones frescos)
+if [ ! -f "web_client/app.py" ]; then
+    echo -e "${YELLOW}Submódulos faltantes. Intentando actualizar...${NC}"
+    git submodule update --init --recursive
+fi
+
 # 1. Comprobar instalación de Distrobox
 if ! command -v distrobox &> /dev/null; then
     echo -e "${YELLOW}Distrobox no detectado. Instalando...${NC}"
