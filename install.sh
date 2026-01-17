@@ -36,7 +36,7 @@ if [ ! -d ".git" ]; then
     fi
 
     # 2. Definir Directorio de Instalación
-    DEFAULT_DIR="$HOME/COLEGA"
+    DEFAULT_DIR="$HOME/NEOPapaya"
     echo "Directorio de instalación predeterminado: $DEFAULT_DIR"
     read -p "¿Deseas instalar en otro lugar? (Deja vacío para usar predeterminado): " CUSTOM_DIR
     
@@ -46,7 +46,9 @@ if [ ! -d ".git" ]; then
     if [ -d "$TARGET_DIR" ]; then
         if [ -z "$(ls -A $TARGET_DIR)" ]; then
              echo "Directorio vacío detectado. Clonando..."
-             git clone https://github.com/jrodriiguezg/COLEGA.git "$TARGET_DIR"
+             git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+             cd "$TARGET_DIR"
+             git submodule update --init --recursive
         else
              echo "AVISO: El directorio $TARGET_DIR ya existe y no está vacío."
              read -p "¿Continuar y tratar de actualizar/instalar ahí? (s/n): " CONT
@@ -57,7 +59,9 @@ if [ ! -d ".git" ]; then
         fi
     else
         echo "Creando directorio $TARGET_DIR y clonando..."
-        git clone https://github.com/jrodriiguezg/COLEGA.git "$TARGET_DIR"
+        git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+        cd "$TARGET_DIR"
+        git submodule update --init --recursive
     fi
 
     # 4. Traspaso de ejecución
@@ -78,7 +82,7 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
     CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
     
     # Intentar actualizar
-    if git pull; then
+    if git pull && git submodule update --init --recursive; then
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
         if [ "$CURRENT_HASH" != "$NEW_HASH" ]; then
             echo "----------------------------------------------------------------"
