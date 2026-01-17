@@ -104,9 +104,15 @@ def add_security_headers(response):
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
-# --- Finder & Viewer API ---
+@app.before_request
+def auto_login_localhost():
+    """Auto-login for local Kiosk/Display."""
+    if request.remote_addr == '127.0.0.1' and not session.get('logged_in'):
+        session['logged_in'] = True
+        app.logger.info("Localhost auto-login active.")
 
 @app.route('/api/viewer/serve/<encoded_path>')
 def serve_viewer_content(encoded_path):
