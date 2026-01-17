@@ -344,8 +344,8 @@ EOT
     # Recargar y Habilitar
     sudo loginctl enable-linger $USER_NAME
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service neo-web.service
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service neo-web.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
     # --- CONFIGURACIÓN DE KIOSK ---
     if [ "$INSTALL_GUI" = true ]; then
