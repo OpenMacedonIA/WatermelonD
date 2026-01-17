@@ -159,13 +159,13 @@ class Speaker:
                         tts_logger.info(f"Usando audio en caché: {cache_file}")
                         command = f'aplay -q "{cache_file}"'
                         if command:
-                            self.event_queue.put({'type': 'speaker_status', 'status': 'speaking'})
+                            self.event_queue.put({'type': 'speaker_status', 'status': 'speaking', 'text': text})
                             subprocess.run(command, shell=True, capture_output=True, text=True, timeout=15)
                     else:
                         # Generate Audio
 
                         if self.engine == 'piper':
-                            self.event_queue.put({'type': 'speaker_status', 'status': 'speaking'})
+                            self.event_queue.put({'type': 'speaker_status', 'status': 'speaking', 'text': text})
                             
                             if self.voice:
                                 # Python API Mode

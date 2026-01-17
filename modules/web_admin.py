@@ -91,6 +91,35 @@ def on_mic_status(message):
         pass
 
 bus.on('mic:status', on_mic_status)
+
+# --- STT/TTS Forwarding ---
+def on_stt_partial(message):
+    try:
+        text = message.get('data', {}).get('text', '')
+        socketio.emit('stt:partial', text)
+    except: pass
+
+def on_stt_final(message):
+    try:
+        text = message.get('data', {}).get('text', '')
+        socketio.emit('stt:final', text)
+    except: pass
+
+def on_tts_start(message):
+    try:
+        text = message.get('data', {}).get('text', '')
+        socketio.emit('tts:start', text)
+    except: pass
+
+def on_tts_end(message):
+    try:
+        socketio.emit('tts:end', {})
+    except: pass
+
+bus.on('stt:partial', on_stt_partial)
+bus.on('stt:final', on_stt_final)
+bus.on('tts:start', on_tts_start)
+bus.on('tts:end', on_tts_end)
 # bus.connect()  <-- Deadlock Fix: Let run_forever handle it in thread
 # Run bus in background thread
 import threading

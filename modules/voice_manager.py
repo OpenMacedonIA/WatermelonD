@@ -226,16 +226,24 @@ class VoiceManager:
                          result = json.loads(self.recognizer.Result())
                          command = result.get('text', '')
                          if command:
+                             # Emit Final
+                             self.bus.emit('stt:final', {'text': command})
+                             
                              ww = self._check_wake_word(command)
                              self.on_command_detected(command, ww if ww else 'neo')
                      else:
                          # Partial
                          partial = json.loads(self.recognizer.PartialResult())
-                         if partial.get('partial') and self.update_face:
-                             current_time = time.time()
-                             if current_time - last_face_update > 1.5:
-                                 self.update_face('listening')
-                                 last_face_update = current_time
+                         partial_text = partial.get('partial', '')
+                         if partial_text:
+                             # Emit Partial
+                             self.bus.emit('stt:partial', {'text': partial_text})
+                             
+                             if self.update_face:
+                                 current_time = time.time()
+                                 if current_time - last_face_update > 1.5:
+                                     self.update_face('listening')
+                                     last_face_update = current_time
                                  
                  except Exception as e:
                      vosk_logger.error(f"Error reading audio stream: {e}")

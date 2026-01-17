@@ -969,7 +969,16 @@ class NeoCore:
                     self.last_spoken_text = action['text']
                     self.speaker.speak(action['text'])
                 elif action_type == 'speaker_status':
-                    if action['status'] == 'idle':
+                    if action['status'] == 'speaking':
+                         text = action.get('text', '')
+                         if self.web_server:
+                              self.web_server.socketio.emit('tts:start', {'text': text}, namespace='/')
+                         if update_face: update_face('speaking')
+
+                    elif action['status'] == 'idle':
+                        if self.web_server:
+                             self.web_server.socketio.emit('tts:end', {}, namespace='/')
+                        
                         self.is_processing_command = False
                         # Activar ventana de escucha activa (8 segundos)
                         self.active_listening_end_time = time.time() + 8
