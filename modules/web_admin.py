@@ -1172,6 +1172,19 @@ def api_knowledge_delete_doc():
         return jsonify({'success': True})
     return jsonify({'success': False, 'message': 'File not found'})
 
+@app.route('/api/command', methods=['POST'])
+@login_required
+def api_manual_command():
+    """Recibe comando manual de texto (desde la UI)."""
+    data = request.json
+    command = data.get('command')
+    if command:
+        print(f"Manual Command Received: {command}")
+        # Emit to Bus for VoiceManager/NeoCore to pick up
+        bus.emit('manual_command', {'text': command})
+        return jsonify({'success': True})
+    return jsonify({'success': False})
+
 @app.route('/api/config/get', methods=['GET'])
 @login_required
 def api_config_get():

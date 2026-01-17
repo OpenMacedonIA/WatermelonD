@@ -47,6 +47,7 @@ class VoiceManager:
         self.bus.on('recognizer_loop:audio', self.on_audio_data)
         self.bus.on('mic:toggle', self.on_mic_toggle)
         self.bus.on('mic:get_status', self.on_mic_get_status)
+        self.bus.on('manual_command', self.on_manual_command)
         # self.bus.connect() <-- Deadlock Fix: Let run_forever handle it in thread
         # Start bus thread
         threading.Thread(target=self.bus.run_forever, daemon=True).start()
@@ -183,6 +184,14 @@ class VoiceManager:
     def on_mic_get_status(self, message):
         """Emit current status."""
         self.bus.emit('mic:status', {'muted': self.is_muted})
+
+    def on_manual_command(self, message):
+        """Handle manual text command from UI."""
+        text = message.get('data', {}).get('text')
+        if text:
+            app_logger.info(f"Manual Command Processing: {text}")
+            # Bypass wake word check, treat as direct interaction
+            self.on_command_detected(text, 'neo')
 
     def _continuous_voice_listener(self, intents):
         """Bucle principal de escucha de voz (Local PyAudio)."""
