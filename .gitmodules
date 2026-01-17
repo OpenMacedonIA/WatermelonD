@@ -7,3 +7,4 @@
 [submodule "web_client"]
 	path = web_client
 	url = https://github.com/OpenMacedonIA/neo-cereza.git
+
