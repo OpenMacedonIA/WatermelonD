@@ -322,24 +322,24 @@ WantedBy=default.target
 EOT
 
     # Servicio Web
-    cat <<EOT > "$USER_HOME/.config/systemd/user/neo-web.service"
-[Unit]
-Description=Neo Web Client Service
-After=network.target neo.service
-
-[Service]
-Type=simple
-Environment=PYTHONUNBUFFERED=1
-Environment=NEO_API_URL=http://localhost:5000
-WorkingDirectory=$(pwd)
-ExecStart=$(pwd)/venv/bin/python $(pwd)/web_client/app.py
-Restart=always
-RestartSec=5
-SyslogIdentifier=neo_web
-
-[Install]
-WantedBy=default.target
-EOT
+#     cat <<EOT > "$USER_HOME/.config/systemd/user/neo-web.service"
+# [Unit]
+# Description=Neo Web Client Service
+# After=network.target neo.service
+# 
+# [Service]
+# Type=simple
+# Environment=PYTHONUNBUFFERED=1
+# Environment=NEO_API_URL=http://localhost:5000
+# WorkingDirectory=$(pwd)
+# ExecStart=$(pwd)/venv/bin/python $(pwd)/web_client/app.py
+# Restart=always
+# RestartSec=5
+# SyslogIdentifier=neo_web
+# 
+# [Install]
+# WantedBy=default.target
+# EOT
 
     # Recargar y Habilitar
     sudo loginctl enable-linger $USER_NAME
