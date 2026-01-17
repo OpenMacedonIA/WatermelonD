@@ -317,6 +317,10 @@ class VoiceManager:
         is_recording = False
         last_face_update = 0
         
+        # --- Voice Auth Buffer (Rolling 5s) ---
+        from collections import deque
+        rolling_buffer = deque(maxlen=int(16000 / CHUNK * 5)) # 5 seconds
+        
         while self.is_listening:
             try:
                 if self.speaker.is_busy or self.is_processing:
@@ -326,6 +330,9 @@ class VoiceManager:
                 data = stream.read(CHUNK, exception_on_overflow=False)
                 shorts = struct.unpack("%dh" % (len(data) / 2), data)
                 rms = np.sqrt(np.mean(np.square(shorts)))
+                
+                # Update Rolling Buffer (for biometrics)
+                rolling_buffer.append(data)
                 
                 if rms > THRESHOLD:
                     is_recording = True
@@ -357,7 +364,12 @@ class VoiceManager:
                         if text:
                             vosk_logger.info(f"Sherpa escuchó: '{text}'")
                             ww = self._check_wake_word(text)
-                            self.on_command_detected(text, ww if ww else 'neo')
+                            
+                            # Provide context buffer (last 5s + current phrase)
+                            # Actually, audio_buffer contains the phrase. 
+                            # Ideally we pass audio_buffer for biometrics.
+                            
+                            self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
                         
                         audio_buffer = []
                         is_recording = False

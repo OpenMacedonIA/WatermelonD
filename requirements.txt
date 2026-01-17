@@ -27,6 +27,7 @@ speedtest-cli
 
 chromadb
 sherpa-onnx
+pyannote.audio
 sentence-transformers
 Flask-WTF
 transformers

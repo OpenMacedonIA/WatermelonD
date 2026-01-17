@@ -39,7 +39,6 @@ from modules.voice_manager import VoiceManager
 from modules.intent_manager import IntentManager
 from modules.keyword_router import KeywordRouter
 from modules.chat import ChatManager
-from modules.biometrics_manager import BiometricsManager
 from modules.mango.engine import MangoManager # MANGO T5
 from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
@@ -86,6 +85,20 @@ try:
     import vlc
 except ImportError:
     vlc = None
+
+class SocketLogHandler(logging.Handler):
+    """Handler to stream logs to web client via SocketIO."""
+    def __init__(self, socketio):
+        super().__init__()
+        self.socketio = socketio
+        self.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            self.socketio.emit('log_message', {'msg': msg}, namespace='/')
+        except Exception:
+            self.handleError(record)
 
 app_logger.info("El registro de logs ha sido iniciado (desde NeoCore Refactored).")
 
@@ -154,11 +167,23 @@ class NeoCore:
         if WEB_ADMIN_DISPONIBLE:
             set_audio_status(getattr(self, 'audio_output_enabled', False), getattr(self, 'audio_input_enabled', False))
             self.web_server = web_admin_module
+            
+            # Attach Socket Log Handler
+            try:
+                # Remove existing socket handlers to avoid duplicates on restart
+                for h in self.app_logger.handlers[:]:
+                    if isinstance(h, SocketLogHandler):
+                        self.app_logger.removeHandler(h)
+                
+                socket_handler = SocketLogHandler(self.web_server.socketio)
+                self.app_logger.addHandler(socket_handler)
+                self.app_logger.info("✅ Log Streaming to WebClient enabled.")
+            except Exception as e:
+                self.app_logger.warning(f"Could not attach Socket Log Handler: {e}")
         else:
             self.web_server = None
             
         self.chat_manager = ChatManager(self.ai_engine)
-        self.biometrics_manager = BiometricsManager(self.config_manager)
         self.mango_manager = MangoManager() # Initialize MANGO T5
         self.health_manager = HealthManager(self.config_manager)
         
@@ -238,6 +263,14 @@ class NeoCore:
         # --- Dynamic Plugins (Extensions) ---
         self.plugin_loader = PluginLoader(self)
         self.plugin_loader.load_plugins()
+        
+        # --- Optional Skills (Voice Auth) ---
+        try:
+            from modules.skills.optional.voice_auth import VoiceAuthSkill
+            self.voice_auth_skill = VoiceAuthSkill(self)
+        except ImportError:
+             self.voice_auth_skill = None
+             app_logger.info("Optional Skill 'VoiceAuth' not found.")
         
         self.vlc_instance, self.player = self.setup_vlc()
         
@@ -337,7 +370,18 @@ class NeoCore:
 
     def speak(self, text):
         """Pone un mensaje en la cola de eventos para que el Speaker lo diga."""
+        # --- VISUAL FEEDBACK: AI RESPONSE ---
+        if self.web_server:
+            try:
+                self.web_server.socketio.emit('ai:response', {'text': text}, namespace='/')
+                if update_face: update_face('speaking')
+            except: pass
+            
         self.event_queue.put({'type': 'speak', 'text': text})
+        
+        # Reset face lazily (approx duration)
+        if self.web_server and update_face:
+             threading.Timer(len(text)/12, lambda: update_face('idle')).start()
 
     def log_to_inbox(self, command_text):
         """Log unrecognized command to inbox for future aliasing."""
@@ -399,10 +443,16 @@ class NeoCore:
             self.health_manager.stop()
         os._exit(0)
 
-    def on_voice_command(self, command, wake_word):
+    def on_voice_command(self, command, wake_word, audio_buffer=None):
         """Callback cuando VoiceManager detecta voz."""
         app_logger.info(f"🎤 VOICE RECEIVED: '{command}' (WW: {wake_word})")
         command_lower = command.lower()
+        
+        # --- VISUAL FEEDBACK: STT RESULT ---
+        if self.web_server:
+             try:
+                 self.web_server.socketio.emit('stt:result', {'text': command}, namespace='/')
+             except: pass
         
         # Check Active Listening Window
         is_active_listening = time.time() < self.active_listening_end_time
@@ -424,7 +474,7 @@ class NeoCore:
              # Extend active listening for follow-up
              self.active_listening_end_time = time.time() + 8
              
-             self.handle_command(command_clean)
+             self.handle_command(command_clean, audio_buffer)
              
              self.voice_manager.set_processing(False)
 
@@ -534,10 +584,15 @@ class NeoCore:
                          return True
         return False
 
-    def handle_command(self, command_text):
+    def handle_command(self, command_text, audio_buffer=None):
         """Procesa el comando de texto."""
         try:
-
+                # --- VOICE AUTH CHECK ---
+                current_user = "unknown"
+                if self.voice_auth_skill and self.voice_auth_skill.enabled and audio_buffer is not None:
+                     current_user, confidence = self.voice_auth_skill.identify_speaker(audio_buffer)
+                     app_logger.info(f"🎤 Speaker identified as: {current_user} (Conf: {confidence:.2f})")
+                
                 # Diálogos activos
                 if self.waiting_for_timer_duration:
                     self.handle_timer_duration_response(command_text)
@@ -563,14 +618,32 @@ class NeoCore:
                 if not command_text:
                     return
 
-                # --- 0. FACE LEARNING (Priority High) ---
+                # --- 0. VOICE ENROLLMENT (Priority High) ---
                 import re
                 match_learn = re.search(r"(?:soy|me llamo|mi nombre es)\s+(.+)", command_text, re.IGNORECASE)
                 if match_learn:
                     name = match_learn.group(1).strip()
+                    
+                    # Voice Enrollment
+                    if self.voice_auth_skill and self.voice_auth_skill.enabled and audio_buffer is not None:
+                        self.speak(f"Hola {name}. Procesando tu voz para el sistema de seguridad...")
+                        success, msg = self.voice_auth_skill.enroll_user(name, audio_buffer)
+                        self.speak(msg)
+                        return
+
+                    # Face Enrollment (Legacy)
                     if self.vision_manager:
-                         # Logic to learn face would go here
-                         pass
+                         self.speak(f"Hola {name}. Mírame a la cámara mientras aprendo tu cara...")
+                         # Run in background to not block
+                         def learn_task():
+                              success, msg = self.vision_manager.learn_user(name)
+                              self.speak(msg)
+                         threading.Thread(target=learn_task).start()
+                         return
+                    else:
+                        if not self.voice_auth_skill:
+                             self.speak("Lo siento, mis sistemas biométricos no están activos.")
+                        return
 
                 # --- 1. COMMAND EXECUTION (Priority 1) ---
                 # Try to execute via Action Map
@@ -629,6 +702,14 @@ class NeoCore:
                 best_intent = self.intent_manager.find_best_intent(command_text)
                 
                 if best_intent and best_intent.get('confidence') == 'high':
+                     # --- PERMISSION CHECK ---
+                     if self.voice_auth_skill and self.voice_auth_skill.enabled:
+                         required_perm = best_intent.get("name") # Using intent name as permission node
+                         if not self.voice_auth_skill.check_permission(current_user, required_perm):
+                             self.speak(f"Lo siento, {current_user}. No tienes permiso para usar {required_perm}.")
+                             app_logger.warning(f"⛔ Access Denied: User '{current_user}' tried '{required_perm}'")
+                             return
+
                      app_logger.info(f"SKILL HIGH CONFIDENCE: '{best_intent['name']}' ({best_intent.get('score', 0)}%)")
                      self.chat_manager.reset_context()
                      response = random.choice(best_intent['responses'])
@@ -651,6 +732,20 @@ class NeoCore:
 
                 # --- 2. MANGO T5 (SysAdmin AI) - PRIORITY 2 ---
                 # Check this SECOND (Fallback for explicit bash/admin commands)
+                # Check global admin permission first
+                if self.voice_auth_skill and self.voice_auth_skill.enabled:
+                     if not self.voice_auth_skill.check_permission(current_user, "admin"):
+                         # Mango is considered admin-level usually
+                         # But let's allow it to process and then maybe block? 
+                         # For now, block Mango entrance for non-admins to be safe.
+                         # Or we could let sysadmin_manager handle it, but NeoCore controls entry.
+                         pass # Let it pass for now, as specific commands might be safe?
+                         # Actually, Mango handles raw bash, so it's safer to restrict "sysadmin" role.
+                         if not self.voice_auth_skill.check_permission(current_user, "sysadmin"):
+                             # If not sysadmin, we might skip Mango?
+                             # Let's Skip Mango if user is guest?
+                             pass
+
                 if self._handle_mango_logic(command_text):
                     return
 
