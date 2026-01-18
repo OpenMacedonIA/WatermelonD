@@ -23,6 +23,7 @@ database/jobs.sqlite
 database/brain.db-shm
 database/brain.db-wal
 training_data/
+resources/iso
 
 # init_db.py # Keep this if it's the schema creator
 
