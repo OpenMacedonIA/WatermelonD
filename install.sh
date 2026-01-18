@@ -256,8 +256,8 @@ install_standard() {
 
     $VENV_DIR/bin/python resources/tools/install_fann_fix.py
     
-    $VENV_DIR/bin/uv pip install -r requirements.txt
-    $VENV_DIR/bin/uv pip install Flask-WTF eventlet
+    $VENV_DIR/bin/uv pip install -r requirements.txt --python "$VENV_DIR/bin/python"
+    $VENV_DIR/bin/uv pip install Flask-WTF eventlet --python "$VENV_DIR/bin/python"
 
     # --- DIRECTORIOS ---
     DIRS=("logs" "config" "database" "models" "piper/voices" "docs/brain_memory")
