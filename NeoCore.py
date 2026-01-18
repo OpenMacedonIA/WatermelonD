@@ -823,7 +823,7 @@ class NeoCore:
                 # --- MANGO T5 Fallback (Low Confidence System Commands) ---
                 # If IntentManager also failed, check Mango again with lower threshold (e.g. 0.6)
                 # This catches things that look like system commands but Mango wasn't super sure.
-                mango_cmd, mango_conf = self.mango_manager.parse(command_text)
+                mango_cmd, mango_conf = self.mango_manager.infer(command_text)
                 if mango_cmd and mango_conf > 0.6: 
                      # Same logic as above but effectively treating it as "Last Resort" before Chat
                      if mango_cmd.startswith("echo ") or mango_cmd == "ls" or mango_cmd.startswith("ls "):
