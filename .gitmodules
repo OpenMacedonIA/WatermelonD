@@ -8,3 +8,6 @@
 	path = web_client
 	url = https://github.com/OpenMacedonIA/neo-cereza.git
 
+[submodule "modules/extensions"]
+	path = modules/extensions
+	url = https://github.com/OpenMacedonIA/papaya-extra
