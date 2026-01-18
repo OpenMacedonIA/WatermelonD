@@ -509,7 +509,7 @@ class NeoCore:
         context_str = str(filtered_files)
         mango_prompt = f"Contexto: {context_str} | Instrucción: {command_text}"
         
-        self.app_logger.info(f"MANGO Prompt: '{mango_prompt}'")
+        self.app_logger.debug(f"MANGO Prompt: '{mango_prompt}'")
         
         # --- SELF-CORRECTION LOOP ---
         max_retries = 1
