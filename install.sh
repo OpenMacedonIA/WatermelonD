@@ -6,6 +6,12 @@ if [ -z "$BASH_VERSION" ]; then
     exec bash "$0" "$@"
 fi
 
+# Ensure we are running in bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "This script requires Bash. Re-running with bash..."
+    exec bash "$0" "$@"
+fi
+
 # install.sh
 # Script de instalación UNIFICADO para el proyecto Neo Papaya.
 # Soporta Instalación Completa, Cliente Web, Satélites y Herramientas.
