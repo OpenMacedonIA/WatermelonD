@@ -20,8 +20,7 @@ def download_model():
         model_path = hf_hub_download(
             repo_id=REPO_ID,
             filename=FILENAME,
-            local_dir=MODELS_DIR,
-            local_dir_use_symlinks=False
+            local_dir=MODELS_DIR
         )
         print(f"Modelo descargado exitosamente en: {model_path}")
         

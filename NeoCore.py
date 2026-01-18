@@ -256,7 +256,7 @@ class NeoCore:
         self.skills_ssh = SSHSkill(self)
         self.skills_files = FilesSkill(self)
         self.skills_docker = DockerSkill(self)
-        self.skills_docker = DockerSkill(self)
+        self.skills_diagnosis = DiagnosisSkill(self)
         self.skills_finder = FinderSkill(self)
 
         # --- Dynamic Plugins (Extensions) ---

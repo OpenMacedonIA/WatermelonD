@@ -30,8 +30,7 @@ def download_mango():
         path = snapshot_download(
             repo_id=repo_id,
             revision=revision,
-            local_dir=target_dir,
-            local_dir_use_symlinks=False, # We want real files for standalone use
+            local_dir=target_dir, # We want real files for standalone use
             resume_download=True,         # Resume if interrupted
             ignore_patterns=[".gitattributes", "README.md", "*.onnx", "*.tflite"] # Optimize size
         )
