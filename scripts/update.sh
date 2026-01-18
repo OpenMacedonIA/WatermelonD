@@ -50,9 +50,6 @@ else
     echo "ℹ️  No se detectó neo.service activo. Si lo usas manualmente, reinícialo tú."
 fi
 
-# Cliente Web (opcional)
-# systemctl --user restart neo-web.service 2>/dev/null || true
-
 echo "============================================"
 echo "✅ Actualización Completada."
 echo "============================================"
