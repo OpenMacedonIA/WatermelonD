@@ -259,6 +259,9 @@ class NeoCore:
         self.skills_diagnosis = DiagnosisSkill(self)
         self.skills_finder = FinderSkill(self)
 
+        # --- Registry for plugin actions ---
+        self.dynamic_actions = {} 
+
         # --- Dynamic Plugins (Extensions) ---
         self.plugin_loader = PluginLoader(self)
         self.plugin_loader.load_plugins()
@@ -300,7 +303,7 @@ class NeoCore:
         self.last_spoken_text = "" 
         self.last_intent_name = None
         self.active_listening_end_time = 0 
-        self.dynamic_actions = {} # Registry for plugin actions 
+        self.active_listening_end_time = 0 
 
         # --- Thread Handles ---
         self._thread_events = None
@@ -820,6 +823,7 @@ class NeoCore:
                 # --- MANGO T5 Fallback (Low Confidence System Commands) ---
                 # If IntentManager also failed, check Mango again with lower threshold (e.g. 0.6)
                 # This catches things that look like system commands but Mango wasn't super sure.
+                mango_cmd, mango_conf = self.mango_manager.parse(command_text)
                 if mango_cmd and mango_conf > 0.6: 
                      # Same logic as above but effectively treating it as "Last Resort" before Chat
                      if mango_cmd.startswith("echo ") or mango_cmd == "ls" or mango_cmd.startswith("ls "):

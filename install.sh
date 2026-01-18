@@ -405,11 +405,11 @@ xset s off
 xset s noblank
 openbox &
 echo "Esperando backend..."
-while ! curl -s http://localhost:8000 > /dev/null; do sleep 2; done
+while ! curl -s http://localhost:5000 > /dev/null; do sleep 2; done
 CHROMIUM_BIN="chromium"
 command -v chromium-browser &> /dev/null && CHROMIUM_BIN="chromium-browser"
 while true; do
-  \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:8000/face
+  \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:5000/face
   sleep 2
 done
 EOT
