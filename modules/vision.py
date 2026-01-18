@@ -1,5 +1,10 @@
 import cv2
-import face_recognition
+try:
+    import face_recognition
+    FACE_REC_AVAILABLE = True
+except ImportError:
+    FACE_REC_AVAILABLE = False
+    print("Warning: face_recognition not installed. Identification disabled.")
 import json
 import os
 import threading
@@ -145,6 +150,9 @@ class VisionManager:
             time.sleep(0.2)
 
     def _identify_user(self, frame):
+        if not FACE_REC_AVAILABLE:
+            return
+
         # Heavy operation, call sparingly
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(rgb_frame)
@@ -167,6 +175,9 @@ class VisionManager:
         """
         if not self.video_capture or not self.video_capture.isOpened():
             return False, "Cámara no disponible."
+            
+        if not FACE_REC_AVAILABLE:
+            return False, "El módulo de reconocimiento facial no está instalado."
 
         # Capture a fresh frame
         ret, frame = self.video_capture.read()
