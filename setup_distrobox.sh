@@ -75,7 +75,7 @@ fi
 source venv_distrobox/bin/activate
 
 echo 'Instalando pip requirements...'
-pip install --upgrade pip wheel setuptools
+pip install --upgrade pip wheel setuptools uv
 # Fix fann2 por separado si es necesario
 if grep -q 'fann2' requirements.txt; then
     # Clonar y construir fann primero si falta la librería del sistema
@@ -92,7 +92,8 @@ if grep -q 'fann2' requirements.txt; then
     fi
 fi
 
-pip install -r requirements.txt
+echo '⚡ Usando uv para velocidad...'
+uv pip install -r requirements.txt
 
 echo '--- Descargando Modelos AI ---'
 # Crear directorios de config/modelos si es necesario

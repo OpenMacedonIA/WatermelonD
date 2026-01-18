@@ -106,7 +106,7 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
             exec "$0" "$@"
         fi
     else
-        echo "⚠️  Error al actualizar (git pull falló). Continuando con la versión actual..."
+        echo "  Error al actualizar (git pull falló). Continuando con la versión actual..."
     fi
 else
     echo "No se detectó repositorio git o git no está instalado. Saltando actualización."
@@ -125,9 +125,9 @@ install_standard() {
 
     # --- CONFIGURACIÓN DE TMPDIR ---
     if [ ! -f "web_client/app.py" ] || [ -z "$(ls -A web_client)" ]; then
-        echo "⚠️  Submódulos no detectados o incompletos."
+        echo " Submódulos no detectados o incompletos."
         echo "Ejecutando: git submodule update --init --recursive modules/mango modules/skills web_client"
-        git submodule update --init --recursive modules/mango modules/skills web_client || echo "⚠️ Aviso: Falló la actualización de submódulos."
+        git submodule update --init --recursive modules/mango modules/skills web_client || echo " Aviso: Falló la actualización de submódulos."
     fi
 
     export TMPDIR="$(pwd)/temp_build"
@@ -157,7 +157,7 @@ install_standard() {
 
     else
         echo "----------------------------------------------------------------"
-        echo "⚠️  Sistema NO-Debian detectado."
+        echo "  Sistema NO-Debian detectado."
         echo "Para garantizar la compatibilidad, se recomienda usar Distrobox."
         echo "----------------------------------------------------------------"
         chmod +x setup_distrobox.sh
@@ -251,10 +251,13 @@ install_standard() {
     $HOME/.pyenv/versions/$PYTHON_VERSION/bin/python -m venv $VENV_DIR
     
     echo "Instalando dependencias Python..."
-    $VENV_DIR/bin/pip install -U pip --no-cache-dir
+    # Instalar UV para mas velocidad
+    $VENV_DIR/bin/pip install uv
+
     $VENV_DIR/bin/python resources/tools/install_fann_fix.py
-    $VENV_DIR/bin/pip install -r requirements.txt --no-cache-dir
-    $VENV_DIR/bin/pip install Flask-WTF eventlet --no-cache-dir
+    
+    $VENV_DIR/bin/uv pip install -r requirements.txt
+    $VENV_DIR/bin/uv pip install Flask-WTF eventlet
 
     # --- DIRECTORIOS ---
     DIRS=("logs" "config" "database" "models" "piper/voices" "docs/brain_memory")
@@ -424,7 +427,7 @@ EOT
     [ -f "resources/tools/password_helper.py" ] && $VENV_DIR/bin/python resources/tools/password_helper.py --user admin --password admin
 
     echo ""
-    echo "✅ Instalación Completa Finalizada."
+    echo "Instalación Completa Finalizada."
 }
 
 install_web_client() {
@@ -456,7 +459,7 @@ install_web_client() {
     echo "python3 web_client/app.py" >> run_client.sh
     chmod +x run_client.sh
     
-    echo "✅ Listo. Ejecuta ./run_client.sh para iniciar."
+    echo "Listo. Ejecuta ./run_client.sh para iniciar."
 }
 
 install_satellite() {
