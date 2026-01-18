@@ -13,7 +13,6 @@ from functools import lru_cache
 from modules.logger import app_logger
 from modules.speaker import Speaker
 from modules.calendar_manager import CalendarManager
-from modules.alarms import AlarmManager
 from modules.config_manager import ConfigManager
 from modules.skills.system import SystemSkill
 from modules.skills.network import NetworkSkill
@@ -193,7 +192,7 @@ class NeoCore:
 
         # --- Legacy Managers ---
         self.calendar_manager = CalendarManager()
-        self.alarm_manager = AlarmManager()
+        # self.alarm_manager removed (Moved to plugins)
         self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
         self.ssh_manager = SSHManager()
         self.wifi_manager = WifiManager()
@@ -1050,10 +1049,21 @@ class NeoCore:
 
     def _check_frequent_tasks(self):
         """Verifica alarmas y temporizadores."""
-        alarm_actions = self.alarm_manager.check_alarms(datetime.now())
-        for action in alarm_actions:
-            self.event_queue.put(action)
         
+        # --- System Tick for Plugins (New v2.5) ---
+        try:
+            now = datetime.now()
+            if hasattr(self.plugin_loader, 'loaded_plugins'):
+                for plugin_name, plugin in self.plugin_loader.loaded_plugins.items():
+                    if hasattr(plugin, 'on_tick'):
+                         try:
+                             plugin.on_tick(now)
+                         except Exception as e:
+                             self.app_logger.error(f"Plugin Tick Error ({plugin_name}): {e}")
+        except Exception as e:
+             self.app_logger.error(f"Global Tick Error: {e}")
+
+        # Legacy Timer Check (Keep for now or move to plugin later)
         if self.active_timer_end_time and datetime.now() >= self.active_timer_end_time:
             self.event_queue.put({'type': 'speak', 'text': "¡El tiempo del temporizador ha terminado!"})
             self.active_timer_end_time = None
