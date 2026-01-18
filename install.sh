@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Ensure we are running in bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "This script requires Bash. Re-running with bash..."
+    exec bash "$0" "$@"
+fi
+
 # install.sh
 # Script de instalación UNIFICADO para el proyecto Neo Papaya.
 # Soporta Instalación Completa, Cliente Web, Satélites y Herramientas.
@@ -103,7 +109,7 @@ echo ""
 # DEFINICIÓN DE FUNCIONES
 # ==============================================================================
 
-function install_standard() {
+install_standard() {
     echo ""
     echo "========================================="
     echo "===     INSTALACIÓN NODO PRINCIPAL    ==="
@@ -281,10 +287,16 @@ function install_standard() {
     [ "$MANGO_OPT" == "2" ] && BRANCH="MANGO2"
     [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --branch "$BRANCH"
 
-    # Socket.IO
-    mkdir -p "web_client/static/js"
     if [ ! -f "web_client/static/js/socket.io.min.js" ]; then
         wget -q -O "web_client/static/js/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
+    fi
+
+    # Xterm.js
+    mkdir -p "web_client/static/css"
+    if [ ! -f "web_client/static/js/xterm.js" ]; then
+        echo "Descargando xterm.js..."
+        wget -q -O "web_client/static/js/xterm.js" https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js
+        wget -q -O "web_client/static/css/xterm.css" https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css
     fi
 
     # --- SERVICIOS ---
@@ -397,7 +409,7 @@ EOT
     echo "✅ Instalación Completa Finalizada."
 }
 
-function install_web_client() {
+install_web_client() {
     echo "========================================="
     echo "===   Instalación Cliente Web Remoto  ==="
     echo "========================================="
@@ -429,29 +441,29 @@ function install_web_client() {
     echo "✅ Listo. Ejecuta ./run_client.sh para iniciar."
 }
 
-function install_satellite() {
+install_satellite() {
     echo "Lanzando instalador de Network Bros..."
     chmod +x resources/NB/install_nb.sh
     ./resources/NB/install_nb.sh
 }
 
-function install_dev_repos() {
+install_dev_repos() {
     echo "Configurando entorno de desarrollo (Multi-repo)..."
     chmod +x setup_repos.sh
     ./setup_repos.sh
 }
 
-function run_tool_diagnose() {
+run_tool_diagnose() {
     chmod +x resources/tools/diagnose.sh
     ./resources/tools/diagnose.sh
 }
 
-function run_tool_fix_kiosk() {
+run_tool_fix_kiosk() {
     chmod +x resources/tools/fix_kiosk.sh
     ./resources/tools/fix_kiosk.sh
 }
 
-function maintenance_menu() {
+maintenance_menu() {
     while true; do
         echo "========================================="
         echo "===     Herramientas y Mantenimiento  ==="
