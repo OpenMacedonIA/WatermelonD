@@ -1102,11 +1102,12 @@ class NeoCore:
             "decir_dia_semana": self.skills_time.decir_dia_semana,
             
             # --- Organizer (Calendar, Alarms, Timers) ---
+            # --- Organizer (Calendar, Alarms, Timers) ---
             "consultar_citas": self.skills_organizer.consultar_citas,
-            "crear_recordatorio_voz": self.skills_organizer.crear_recordatorio_voz, 
-            "crear_alarma_voz": self.skills_organizer.crear_alarma_voz, 
+            # "crear_recordatorio_voz": self.skills_organizer.crear_recordatorio_voz,  # Migrated to Alarms/Reminders plugin
+            # "crear_alarma_voz": self.skills_organizer.crear_alarma_voz,            # Migrated to Alarms plugin
             "consultar_recordatorios_dia": self.skills_organizer.consultar_recordatorios_dia, 
-            "consultar_alarmas": self.skills_organizer.consultar_alarmas, 
+            # "consultar_alarmas": self.skills_organizer.consultar_alarmas,          # Migrated to Alarms plugin
             "iniciar_dialogo_temporizador": self.skills_organizer.iniciar_dialogo_temporizador, 
             "consultar_temporizador": self.skills_organizer.consultar_temporizador, 
             "crear_temporizador_directo": self.skills_organizer.crear_temporizador_directo,
