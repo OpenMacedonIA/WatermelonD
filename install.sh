@@ -55,7 +55,8 @@ if [ ! -d ".git" ]; then
              echo "Directorio vacío detectado. Clonando..."
              git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
              cd "$TARGET_DIR"
-             git submodule update --init --recursive
+             # Inicializar solo módulos CORE (Sin extensions/papaya-extra por defecto)
+             git submodule update --init --recursive modules/mango modules/skills web_client
         else
              echo "AVISO: El directorio $TARGET_DIR ya existe y no está vacío."
              read -p "¿Continuar y tratar de actualizar/instalar ahí? (s/n): " CONT
@@ -68,7 +69,8 @@ if [ ! -d ".git" ]; then
         echo "Creando directorio $TARGET_DIR y clonando..."
         git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
         cd "$TARGET_DIR"
-        git submodule update --init --recursive
+        # Inicializar solo módulos CORE
+        git submodule update --init --recursive modules/mango modules/skills web_client
     fi
 
     # 4. Traspaso de ejecución
@@ -88,8 +90,13 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
     # Guardar el hash actual
     CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
     
-    # Intentar actualizar
-    if git pull && git submodule update --init --recursive; then
+    # Intentar actualizar (Solo Core primero)
+    if git pull && git submodule update --init --recursive modules/mango modules/skills web_client; then
+        # Actualizar extensiones SOLO si ya están inicializadas
+        if [ -d "modules/extensions/.git" ] || [ -f "modules/extensions/.git" ]; then
+             git submodule update --init --recursive modules/extensions
+        fi
+
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
         if [ "$CURRENT_HASH" != "$NEW_HASH" ]; then
             echo "----------------------------------------------------------------"
@@ -119,11 +126,10 @@ install_standard() {
     # --- CONFIGURACIÓN DE TMPDIR ---
     if [ ! -f "web_client/app.py" ] || [ -z "$(ls -A web_client)" ]; then
         echo "⚠️  Submódulos no detectados o incompletos."
-        echo "Ejecutando: git submodule update --init --recursive"
-        git submodule update --init --recursive || echo "⚠️ Aviso: Falló la actualización de submódulos."
+        echo "Ejecutando: git submodule update --init --recursive modules/mango modules/skills web_client"
+        git submodule update --init --recursive modules/mango modules/skills web_client || echo "⚠️ Aviso: Falló la actualización de submódulos."
     fi
 
-    export TMPDIR="$(pwd)/temp_build"
     export TMPDIR="$(pwd)/temp_build"
     mkdir -p "$TMPDIR"
     echo "Directorio temporal: $TMPDIR"
@@ -191,6 +197,17 @@ install_standard() {
         sudo apt-get purge -y libreoffice* aisleriot gnomine mahjongg quadrapassel *sudoku* || true
         sudo apt-get autoremove -y
     fi
+
+    # Extensiones Opcionales (Papaya Extra)
+    echo ""
+    read -p "¿Instalar Extensiones Extra (Papaya Extra, Plugins de comunidad)? (s/n) [n]: " EXTENSIONS_OPT
+    EXTENSIONS_OPT=${EXTENSIONS_OPT:-n}
+    
+    if [[ "$EXTENSIONS_OPT" =~ ^[Ss]$ ]]; then
+        echo "-> Se instalarán extensiones adicionales."
+        git submodule update --init --recursive modules/extensions
+    fi
+
     echo "----------------------------------------------------------------"
     
     # Instalar Dependencias
