@@ -5,29 +5,29 @@ set -e
 git config --global user.name "Neo Agent" || true
 git config --global user.email "neo@colega.ai" || true
 
-# 1. UVAS (Skills)
-echo "Configurando neo-uvas..."
-cd ../neo-uvas
+# 1. SKILLS (BlueberrySkills)
+echo "Configurando BlueberrySkills..."
+cd ../BlueberrySkills
 git init
 git add .
-git commit -m "Initial commit: Extracted Skills from NEOPapaya"
+git commit -m "Initial commit: Extracted Skills from WatermelonD"
 git branch -M main
-git remote add origin https://github.com/OpenMacedonIA/neo-uvas.git
-echo "neo-uvas listo."
+git remote add origin https://github.com/OpenMacedonIA/BlueberrySkills
+echo "BlueberrySkills listo."
 
-# 2. CEREZA (Web Client)
-echo "Configurando neo-cereza..."
-cd ../neo-cereza
+# 2. WEB (TangerineUI)
+echo "Configurando TangerineUI..."
+cd ../TangerineUI
 git init
 git add .
-git commit -m "Initial commit: Extracted Web Client from NEOPapaya"
+git commit -m "Initial commit: Extracted Web Client from WatermelonD"
 git branch -M main
-git remote add origin https://github.com/OpenMacedonIA/neo-cereza.git
-echo "neo-cereza listo."
+git remote add origin https://github.com/OpenMacedonIA/TangerineUI
+echo "TangerineUI listo."
 
-# 3. MANGO (AI Engine)
-echo "Configurando neo-mango..."
-cd ../neo-mango
+# 3. AI (BrainNut)
+echo "Configurando BrainNut..."
+cd ../BrainNut
 # Cear gitignore para evitar subir modelos gigantes
 echo "MANGOT5/" > .gitignore
 echo "__pycache__/" >> .gitignore
@@ -36,7 +36,7 @@ echo "*.bin" >> .gitignore
 
 git init
 git add .
-git commit -m "Initial commit: Extracted AI Engine from NEOPapaya"
+git commit -m "Initial commit: Extracted AI Engine from WatermelonD"
 git branch -M main
-git remote add origin https://github.com/OpenMacedonIA/neo-mango.git
-echo "neo-mango listo."
+git remote add origin https://github.com/OpenMacedonIA/BrainNut
+echo "BrainNut listo."

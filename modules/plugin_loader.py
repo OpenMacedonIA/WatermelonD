@@ -6,7 +6,7 @@ from modules.logger import app_logger
 class PluginLoader:
     def __init__(self, core):
         self.core = core
-        self.extensions_dir = os.path.join(os.path.dirname(__file__), 'extensions')
+        self.extensions_dir = os.path.join(os.path.dirname(__file__), 'Watermelon-extras')
         self.loaded_plugins = {}
 
     def load_plugins(self):

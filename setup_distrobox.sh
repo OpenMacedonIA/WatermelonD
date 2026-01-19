@@ -15,7 +15,7 @@ echo -e "${GREEN}=== Configuración de Entorno Distrobox para NeoCore ===${NC}"
 # 0. Verificar Submódulos (Importante para VM/Clones frescos)
 if [ ! -f "web_client/app.py" ]; then
     echo -e "${YELLOW}Submódulos faltantes. Intentando actualizar...${NC}"
-    git submodule update --init --recursive modules/mango modules/skills web_client
+    git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI
 fi
 
 # 1. Comprobar instalación de Distrobox
