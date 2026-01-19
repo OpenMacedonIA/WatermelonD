@@ -1,13 +1,12 @@
-[submodule "modules/mango"]
-	path = modules/mango
-	url = https://github.com/OpenMacedonIA/neo-mango.git
-[submodule "modules/skills"]
-	path = modules/skills
-	url = https://github.com/OpenMacedonIA/neo-uvas.git
-[submodule "web_client"]
-	path = web_client
-	url = https://github.com/OpenMacedonIA/neo-cereza.git
-
-[submodule "modules/extensions"]
-	path = modules/extensions
-	url = https://github.com/OpenMacedonIA/papaya-extra
+[submodule "modules/BrainNut"]
+	path = modules/BrainNut
+	url = https://github.com/OpenMacedonIA/BrainNut
+[submodule "modules/BlueberrySkills"]
+	path = modules/BlueberrySkills
+	url = https://github.com/OpenMacedonIA/BlueberrySkills
+[submodule "TangerineUI"]
+	path = TangerineUI
+	url = https://github.com/OpenMacedonIA/TangerineUI
+[submodule "modules/Watermelon-extras"]
+	path = modules/Watermelon-extras
+	url = https://github.com/OpenMacedonIA/Watermelon-extras
