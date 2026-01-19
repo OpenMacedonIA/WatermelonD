@@ -464,8 +464,9 @@ install_web_client() {
 
 install_satellite() {
     echo "Lanzando instalador de Network Bros..."
-    chmod +x resources/NB/install_nb.sh
-    ./resources/NB/install_nb.sh
+    # chmod +x resources/NB/install_nb.sh
+    # ./resources/NB/install_nb.sh
+    echo "Satellite installer (Network Bros) is currently under maintenance or moved."
 }
 
 install_dev_repos() {

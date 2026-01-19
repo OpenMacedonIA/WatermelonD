@@ -1,4 +1,4 @@
-# NEOPapaya (v2.5.0-Experimental)
+# WatermelonD (v3.0.0-Beta)
 
 [🇺🇸 English](#english) | [🇪🇸 Español](#español)
 
@@ -7,63 +7,55 @@
 ## English
 
 > [!WARNING]
-> **Beta Stability**: This release (v2.5.0) is on the `main` branch but is considered **Experimental**. While feature-complete, you may encounter bugs or instability as we optimize the new Core V2.5 architecture. Report issues on GitHub!
+> **Beta Stability**: This release (v3.0.0) is on the `main` branch. While feature-complete, you may encounter bugs or instability as we optimize the new WatermelonD architecture. Report issues on GitHub!
 
-
-
-NEOPapaya is a proactive and modular personal assistant designed to run locally on modest hardware. It combines the efficiency of a rule-based system for system control and home automation with the intelligence of a local LLM (**Gemma 2B**) for natural conversations and reasoning.
+**WatermelonD** (formerly NEOPapaya) is a proactive and modular personal assistant designed to run locally on modest hardware. It combines the efficiency of a rule-based system for system control and home automation with the intelligence of a local LLM (**Gemma 2B**) for natural conversations and reasoning.
 
 ![Status](https://img.shields.io/badge/Status-Beta-yellow)
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-green)
 
-### 🌟 New in v2.5.0 (Experimental)
+### 🌟 Project Structure (The Fruit Bowl)
 
-* **⚡ Core V2.5 (Optimization)**: Deep internal optimization for dual-core CPUs (i3).
-  * **Thread Watchdog**: Self-healing for internal processes (Voice, Events).
-  * **Resource Tuning**: Strict PyTorch threading limits to prevent audio stuttering.
-* **🖥️ Web Interface V3**:
-  * **Drag-and-Drop Dashboard**: Customize your workspace with persistent layouts.
-  * **Unified Notifications**: Replaced browser alerts with a modern Toast system + Desktop Notifications.
-  * **Connection Monitor**: Full-screen overlay that automatically detects system restarts/outages.
-  * **About & Updates**: Dedicated section for version management.
-* **🥭 SysAdmin AI ([MANGOT5](https://huggingface.co/jrodriiguezg/mango-t5-770m))**: Robust translation of natural language to Bash commands.
+* **🍉 WatermelonD (Core)**: The main container. A heavy, solid shell that holds everything else together.
+* **🧠 BrainNut (AI)**: The brain. Hard shell on the outside, complex logic and memory on the inside.
+* **🍊 TangerineUI (Web)**: The peel (shell). Easy to peel, bright, segmented, and user-friendly.
+* **🫐 BlueberrySkills (Skills)**: Small, powerful, and numerous. Atomic functions scattered throughout the system.
+* **🍒 Watermelon-extras (Plugins)**: "The cherry on top." Custom extras and final touches added by the user.
 
 ### 🚀 Key Features
 
 #### 🧠 Hybrid Intelligence
 
 * **Local LLM**: Integration with **Gemma 2B** (4-bit) for fluid conversations.
-* **SysAdmin AI**: **MANGO T5** model for robust Natural Language to Bash translation.
-* **Memory (Brain)**: Long-term memory system and alias learning.
+* **BrainNut AI**: **MANGO T5** model for robust Natural Language to Bash translation.
+* **Memory**: Long-term memory system and alias learning.
 * **RAG (Retrieval-Augmented Generation)**: Query local documents.
 
 #### 🗣️ Natural Interaction
 
-* **Visual Interface**: Reactive "Face" (Web UI) showing states (listening, thinking, speaking).
+* **TangerineUI**: Reactive "Face" (Web UI) showing states (listening, thinking, speaking).
 * **Speech**: Natural synthesis with **Piper TTS** and offline recognition (Vosk/Whisper).
 
-#### 🛡️ Security & Maintenance (Advanced)
+#### 🛡️ Security & Maintenance
 
-* **NEOPapayaGuard**: IDS (Intrusion Detection System) that monitors logs (`auth.log`) and resources to detect brute-force attacks or anomalies.
-* **Auto-Diagnosis**: NEOPapaya can read its own logs, find errors, and use AI to explain what is failing and how to fix it.
-
-
+* **WatermelonGuard**: IDS (Intrusion Detection System) that monitors logs and resources.
+* **Auto-Diagnosis**: WatermelonD can read its own logs, find errors, and use AI to explain what is failing.
 
 ### 🔧 Installation
 
 **Quick Install (One-line command):**
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/neo-papaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
 # Clone the repository
-git clone https://github.com/OpenMacedonIA/neo-papaya
-cd NEOPapaya
+git clone https://github.com/OpenMacedonIA/WatermelonD
+cd WatermelonD
 
 # Run the installer
 ./install.sh
@@ -79,63 +71,54 @@ Access the Web Interface at `http://localhost:5000`.
 ## Español
 
 > [!WARNING]
-> **Estabilidad Beta**: Esta versión (v2.5.0) está en la rama `main` pero se considera **Experimental**. Aunque es funcional, puedes encontrar errores mientras pulimos la nueva arquitectura del Core V2,5. ¡Reporta fallos en GitHub!
+> **Estabilidad Beta**: Esta versión (v3.0.0) está en la rama `main`. Aunque es funcional, puedes encontrar errores mientras pulimos la nueva arquitectura de WatermelonD. ¡Reporta fallos en GitHub!
 
-
-NEOPapaya es un asistente personal proactivo y modular diseñado para ejecutarse localmente.
+**WatermelonD** (antes NEOPapaya) es un asistente personal proactivo y modular diseñado para ejecutarse localmente.
 
 ![Status](https://img.shields.io/badge/Status-Beta-yellow)
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-green)
 
-### 🌟 Novedades en v2.5.0 (Experimental)
+### 🌟 Estructura del Proyecto (El Frutero)
 
-* **⚡ Core V2.5 (Optimización)**: Optimización interna profunda para CPUs de doble núcleo (i3).
-  * **Thread Watchdog**: Sistema de "autocuración" para procesos internos (Voz, Eventos).
-  * **Ajuste de Recursos**: Limitación estricta de hilos PyTorch para evitar cortes de audio.
-* **🖥️ Interfaz Web V2.2**:
-  * **Dashboard Personalizable**: Organiza los widgets con **Drag-and-Drop** (se guarda solo).
-  * **Notificaciones Unificadas**: Sistema de Toasts moderno + Notificaciones de Escritorio.
-  * **Monitor de Conexión**: Overlay a pantalla completa que detecta reinicios del servidor automáticamente.
-  * **Actualizaciones**: Nueva sección "About" para gestión de versiones.
-* **🥭 SysAdmin AI (MANGO T5)**: Traducción robusta de comandos.
+* **🍉 WatermelonD (Core)**: El contenedor principal.
+* **🧠 BrainNut (AI)**: El cerebro. Lógica compleja en el interior.
+* **🍊 TangerineUI (Web)**: La cáscara. Interfaz amigable y segmentada.
+* **🫐 BlueberrySkills (Skills)**: Funciones atómicas dispersas por el sistema.
+* **🍒 Watermelon-extras (Plugins)**: "La guinda del pastel". Extras personalizados.
 
 ### 🚀 Características Principales
 
 #### 🧠 Inteligencia Híbrida
 
 * **LLM Local**: **Gemma 2B** para conversaciones.
-* **SysAdmin AI**: **MANGO T5** para comandos Bash.
-* **Memoria (Brain)**: Memoria a largo plazo y RAG.
+* **BrainNut AI**: **MANGO T5** para comandos Bash.
+* **Memoria**: Memoria a largo plazo y RAG.
 
 #### 🗣️ Interacción Natural
 
 * **Voz**: Reconocimiento offline con **Vosk** o **Whisper**.
 * **Habla**: Síntesis natural con **Piper TTS**.
-* **Interfaz Visual**: "Cara" reactiva que muestra estados del asistente.
+* **TangerineUI**: Interfaz visual reactiva.
 
-#### 🛡️ Advanced Capabilities
+#### 🛡️ Capacidades Avanzadas
 
-* **NEOPapayaGuard**: Monitor de seguridad en tiempo real.
+* **WatermelonGuard**: Monitor de seguridad en tiempo real.
 * **Auto-Diagnóstico**: Análisis de logs asistido por IA.
-* **Multi-Room**: Control de dispositivos Cast.
-
-#### 🛠️ Administración de Sistemas & Redes
 
 ### 🔧 Instalación
 
 **Instalación Rápida (Comando único):**
 
-
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/neo-papaya/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
-**Manual Installation:**
+**Instalación Manual:**
 
 ```bash
-git clone https://github.com/OpenMacedonIA/neo-papaya
-cd NEOPapaya
+git clone https://github.com/OpenMacedonIA/WatermelonD
+cd WatermelonD
 ./install.sh
 ```
 
