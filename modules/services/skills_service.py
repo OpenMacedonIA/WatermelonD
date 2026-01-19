@@ -47,16 +47,16 @@ except ImportError:
     Sherlock = None
 
 # Skills
-from modules.skills.system import SystemSkill
-from modules.skills.network import NetworkSkill
-from modules.skills.time_date import TimeDateSkill
-from modules.skills.content import ContentSkill
-from modules.skills.media import MediaSkill
-from modules.skills.organizer import OrganizerSkill
-from modules.skills.ssh import SSHSkill
-from modules.skills.files import FilesSkill
-from modules.skills.files import FilesSkill
-from modules.skills.visual import VisualSkill
+from modules.BlueberrySkills.system import SystemSkill
+from modules.BlueberrySkills.network import NetworkSkill
+from modules.BlueberrySkills.time_date import TimeDateSkill
+from modules.BlueberrySkills.content import ContentSkill
+from modules.BlueberrySkills.media import MediaSkill
+from modules.BlueberrySkills.organizer import OrganizerSkill
+from modules.BlueberrySkills.ssh import SSHSkill
+from modules.BlueberrySkills.files import FilesSkill
+from modules.BlueberrySkills.visual import VisualSkill
+
 
 # Mango (NL2Bash)
 try:
