@@ -7,7 +7,7 @@ echo "🔧 Iniciando reparación de Kiosk y Dependencias..."
 # 1. Definir directorios
 BASE_DIR="$(pwd)"
 VENV_DIR="$BASE_DIR/venv"
-STATIC_JS_DIR="$BASE_DIR/web_client/static/js"
+STATIC_JS_DIR="$BASE_DIR/TangerineUI/static/js"
 
 # 2. Instalar dependencias faltantes de Python
 if [ -d "$VENV_DIR" ]; then

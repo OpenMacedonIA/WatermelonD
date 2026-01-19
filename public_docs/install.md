@@ -74,7 +74,7 @@ Si prefiere la instalación manual o necesita depurar, estos son los scripts sub
 - `install_wizard.sh`: Menú principal. Es el punto de entrada recomendado.
 - `setup_distrobox.sh`: Script de bajo nivel que crea el contenedor Debian y configura el entorno virtual `venv`. Usado por las opciones 1 y 2.
 - `run_neocore_distrobox.sh`: Lanzador del Nodo Principal. Entra en el contenedor y ejecuta el sistema.
-- `web_client/app.py`: El código de la interfaz remota (usado por la opción 3).
+- `TangerineUI/app.py`: El código de la interfaz remota (usado por la opción 3).
 
 ## Solución de Problemas Comunes
 
