@@ -1,4 +1,4 @@
-# WatermelonD (v3.0.0-Beta)
+# WatermelonD (v3.0.0-Experimental)
 
 [🇺🇸 English](#english) | [🇪🇸 Español](#español)
 
