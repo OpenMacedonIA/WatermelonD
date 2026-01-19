@@ -67,10 +67,10 @@ if [ ! -d ".git" ]; then
         fi
     else
         echo "Creando directorio $TARGET_DIR y clonando..."
-        git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+        git clone https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
         cd "$TARGET_DIR"
         # Inicializar solo módulos CORE
-        git submodule update --init --recursive modules/mango modules/skills web_client
+        git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI
     fi
 
     # 4. Traspaso de ejecución
