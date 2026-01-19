@@ -5,7 +5,7 @@ echo "    Actualizador de Sistema WatermelonD"
 echo "============================================"
 
 # Diretorio base
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$BASE_DIR"
 
 echo "📂 Directorio: $BASE_DIR"
