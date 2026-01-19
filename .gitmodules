@@ -10,3 +10,6 @@
 [submodule "modules/Watermelon-extras"]
 	path = modules/Watermelon-extras
 	url = https://github.com/OpenMacedonIA/Watermelon-extras
+[submodule "modules/BerryConnect"]
+	path = modules/BerryConnect
+	url = https://github.com/OpenMacedonIA/BerryConnect.git
