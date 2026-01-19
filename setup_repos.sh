@@ -40,3 +40,13 @@ git commit -m "Initial commit: Extracted AI Engine from WatermelonD"
 git branch -M main
 git remote add origin https://github.com/OpenMacedonIA/BrainNut
 echo "BrainNut listo."
+
+# 4. NETWORK (BerryConnect)
+echo "Configurando BerryConnect..."
+cd ../BerryConnect
+git init
+git add .
+git commit -m "Initial commit: Extracted Network Layer from WatermelonD"
+git branch -M main
+git remote add origin https://github.com/OpenMacedonIA/BerryConnect.git
+echo "BerryConnect listo."

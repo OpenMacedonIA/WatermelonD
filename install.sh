@@ -7,9 +7,7 @@ if [ -z "$BASH_VERSION" ]; then
 fi
 
 
-# install.sh
-# Script de instalación UNIFICADO para el proyecto Neo Papaya.
-# Soporta Instalación Completa, Cliente Web, Satélites y Herramientas.
+
 
 # Detiene el script si algún comando falla
 set -e
@@ -127,7 +125,7 @@ install_standard() {
     if [ ! -f "TangerineUI/app.py" ] || [ -z "$(ls -A TangerineUI)" ]; then
         echo " Submódulos no detectados o incompletos."
         echo "Ejecutando: git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI"
-        git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI || echo " Aviso: Falló la actualización de submódulos."
+        git submodule update --init --recursive modules/BrainNut modules/BrainNut modules/BlueberrySkills TangerineUI || echo " Aviso: Falló la actualización de submódulos."
     fi
 
     export TMPDIR="$(pwd)/temp_build"
@@ -185,22 +183,21 @@ install_standard() {
     fi
 
     # Minimal / Optimize (Mínimo / Optimizar)
-    read -p "¿Aplicar optimizaciones de sistema (hostname COLEGA, limpiar bloatware)? (s/n) [n]: " OPTIMIZE_OPT
+    read -p "¿Aplicar optimizaciones de sistema (hostname MacedoniA, limpiar bloatware)? (s/n) [n]: " OPTIMIZE_OPT
     OPTIMIZE_OPT=${OPTIMIZE_OPT:-n}
 
     if [[ "$OPTIMIZE_OPT" =~ ^[Ss]$ ]]; then
         echo "-> Se aplicarán optimizaciones."
-        sudo hostnamectl set-hostname COLEGA
-        if ! grep -q "127.0.1.1.*COLEGA" /etc/hosts; then
-            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tCOLEGA/g' /etc/hosts
+        sudo hostnamectl set-hostname MacedoniA
+        if ! grep -q "127.0.1.1.*MacedoniA" /etc/hosts; then
+            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tMacedoniA/g' /etc/hosts
         fi
         sudo apt-get purge -y libreoffice* aisleriot gnomine mahjongg quadrapassel *sudoku* || true
         sudo apt-get autoremove -y
     fi
 
-    # Extensiones Opcionales (Papaya Extra)
-    echo ""
-    read -p "¿Instalar Extensiones Extra (Papaya Extra, Plugins de comunidad)? (s/n) [n]: " EXTENSIONS_OPT
+    # Extensiones Opcionales 
+    read -p "¿Instalar Extensiones Extra (Watermelon-extra, Plugins de comunidad)? (s/n) [n]: " EXTENSIONS_OPT
     EXTENSIONS_OPT=${EXTENSIONS_OPT:-n}
     
     if [[ "$EXTENSIONS_OPT" =~ ^[Ss]$ ]]; then
@@ -269,7 +266,6 @@ install_standard() {
 
     # --- INICIALIZACIÓN BD ---
     echo "[PASO 3.2/6] Inicializando BD..."
-    # (Autocuración eliminada por brevedad, asumiendo que el archivo existe o el usuario lo restaura)
     export PYTHONPATH=$(pwd)
     $VENV_DIR/bin/python database/init_db.py
 
@@ -336,9 +332,9 @@ install_standard() {
     mkdir -p "$USER_HOME/.config/systemd/user"
     
     # Servicio Core
-    cat <<EOT > "$USER_HOME/.config/systemd/user/neo.service"
+    cat <<EOT > "$USER_HOME/.config/systemd/user/watermelon.service"
 [Unit]
-Description=Neo Core Backend Service
+Description=Watermelon Backend Service
 After=network.target sound.target
 
 [Service]
@@ -348,7 +344,7 @@ WorkingDirectory=$(pwd)
 ExecStart=$(pwd)/venv/bin/python $(pwd)/NeoCore.py
 Restart=always
 RestartSec=5
-SyslogIdentifier=neo_core
+SyslogIdentifier=watermelon_core
 
 [Install]
 WantedBy=default.target
@@ -377,8 +373,8 @@ EOT
     # Recargar y Habilitar
     sudo loginctl enable-linger $USER_NAME
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable watermelon.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart watermelon.service
 
     # --- CONFIGURACIÓN DE KIOSK ---
     if [ "$INSTALL_GUI" = true ]; then
@@ -418,9 +414,9 @@ EOT
 
     # SSL y Seguridad
     mkdir -p config/certs
-    if command -v openssl >/dev/null 2>&1 && [ ! -f "config/certs/neo.key" ]; then
-        openssl req -x509 -newkey rsa:4096 -keyout "config/certs/neo.key" -out "config/certs/neo.crt" -days 3650 -nodes -subj "/CN=$(hostname)"
-        chmod 600 config/certs/neo.key
+    if command -v openssl >/dev/null 2>&1 && [ ! -f "config/certs/watermelon.key" ]; then
+        openssl req -x509 -newkey rsa:4096 -keyout "config/certs/watermelon.key" -out "config/certs/watermelon.crt" -days 3650 -nodes -subj "/CN=$(hostname)"
+        chmod 600 config/certs/watermelon.key
     fi
 
     # Contraseña
@@ -463,10 +459,12 @@ install_web_client() {
 }
 
 install_satellite() {
-    echo "Lanzando instalador de Network Bros..."
-    # chmod +x resources/NB/install_nb.sh
-    # ./resources/NB/install_nb.sh
-    echo "Satellite installer (Network Bros) is currently under maintenance or moved."
+    echo "Inicializando módulo BerryConnect..."
+    git submodule update --init --recursive modules/BerryConnect
+    
+    echo "Lanzando instalador de BerryConnect (Network Bros)..."
+    chmod +x modules/BerryConnect/PiZero/install.sh
+    ./modules/BerryConnect/PiZero/install.sh
 }
 
 install_dev_repos() {
@@ -519,7 +517,7 @@ maintenance_menu() {
 while true; do
     clear
     echo "========================================="
-    echo "===   Instalador Unificado Neo Papaya ==="
+    echo "===   Instalador WatermelonD    ========"
     echo "========================================="
     echo "Seleccione una opción de instalación:"
     echo ""
@@ -533,7 +531,7 @@ while true; do
     echo "     Configura dispositivo como sensor/extensión de red."
     echo ""
     echo "  4) Configuración Developer (Split Repos)"
-    echo "     Configura ramas git para uvas, cereza, mango."
+    echo "     Configura ramas git para tangerine, berryconnect, core."
     echo ""
     echo "  5) Herramientas / Mantenimiento"
     echo "     Diagnostico, reparar Kiosk, etc."

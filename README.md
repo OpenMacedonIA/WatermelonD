@@ -21,6 +21,7 @@
 * **🧠 BrainNut (AI)**: The brain. Hard shell on the outside, complex logic and memory on the inside.
 * **🍊 TangerineUI (Web)**: The peel (shell). Easy to peel, bright, segmented, and user-friendly.
 * **🫐 BlueberrySkills (Skills)**: Small, powerful, and numerous. Atomic functions scattered throughout the system.
+* **🍇 BerryConnect (Network)**: Interconnected druplets. Mesh, nodes, and strong connections.
 * **🍒 Watermelon-extras (Plugins)**: "The cherry on top." Custom extras and final touches added by the user.
 
 ### 🚀 Key Features
@@ -85,6 +86,7 @@ Access the Web Interface at `http://localhost:5000`.
 * **🧠 BrainNut (AI)**: El cerebro. Lógica compleja en el interior.
 * **🍊 TangerineUI (Web)**: La cáscara. Interfaz amigable y segmentada.
 * **🫐 BlueberrySkills (Skills)**: Funciones atómicas dispersas por el sistema.
+* **🍇 BerryConnect (Network)**: Red conectada. Malla, nodos y conexiones fuertes.
 * **🍒 Watermelon-extras (Plugins)**: "La guinda del pastel". Extras personalizados.
 
 ### 🚀 Características Principales
