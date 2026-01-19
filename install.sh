@@ -43,7 +43,7 @@ if [ ! -d ".git" ]; then
     fi
 
     # 2. Definir Directorio de Instalación
-    DEFAULT_DIR="$HOME/NEOPapaya"
+    DEFAULT_DIR="$HOME/WatermelonD"
     echo "Directorio de instalación predeterminado: $DEFAULT_DIR"
     read -p "¿Deseas instalar en otro lugar? (Deja vacío para usar predeterminado): " CUSTOM_DIR
     
