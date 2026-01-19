@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "============================================"
-echo "    Actualizador de Sistema NEOPapaya"
+echo "    Actualizador de Sistema WatermelonD"
 echo "============================================"
 
 # Diretorio base
@@ -30,12 +30,12 @@ if [ -d "venv" ]; then
     fi
     
     # Dependencias de extensiones
-    if [ -f "modules/extensions/requirements.txt" ]; then
+    if [ -f "modules/Watermelon-extras/requirements.txt" ]; then
         echo "🔌 Actualizando dependencias de extensiones..."
         if command -v uv &> /dev/null; then
-            uv pip install -r modules/extensions/requirements.txt
+            uv pip install -r modules/Watermelon-extras/requirements.txt
         else
-            pip install -r modules/extensions/requirements.txt
+            pip install -r modules/Watermelon-extras/requirements.txt
         fi
     fi
 fi
@@ -43,11 +43,11 @@ fi
 # 4. Reiniciar servicios
 echo "🔄 Reiniciando servicios..."
 # Detectar si es usuario normal o root (systemd --user vs system)
-if systemctl --user is-active --quiet neo.service; then
-    systemctl --user restart neo.service
-    echo "✅ Servicio 'neo.service' (Usuario) reiniciado."
+if systemctl --user is-active --quiet watermelon.service; then
+    systemctl --user restart watermelon.service
+    echo "✅ Servicio 'watermelon.service' (Usuario) reiniciado."
 else
-    echo "ℹ️  No se detectó neo.service activo. Si lo usas manualmente, reinícialo tú."
+    echo "ℹ️  No se detectó watermelon.service activo. Si lo usas manualmente, reinícialo tú."
 fi
 
 echo "============================================"
