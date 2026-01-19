@@ -53,10 +53,10 @@ if [ ! -d ".git" ]; then
     if [ -d "$TARGET_DIR" ]; then
         if [ -z "$(ls -A $TARGET_DIR)" ]; then
              echo "Directorio vacío detectado. Clonando..."
-             git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+             git clone https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
              cd "$TARGET_DIR"
-             # Inicializar solo módulos CORE (Sin extensions/papaya-extra por defecto)
-             git submodule update --init --recursive modules/mango modules/skills web_client
+             # Inicializar solo módulos CORE (Sin extensions/Watermelon-extras por defecto)
+             git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI
         else
              echo "AVISO: El directorio $TARGET_DIR ya existe y no está vacío."
              read -p "¿Continuar y tratar de actualizar/instalar ahí? (s/n): " CONT
@@ -91,10 +91,10 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
     CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
     
     # Intentar actualizar (Solo Core primero)
-    if git pull && git submodule update --init --recursive modules/mango modules/skills web_client; then
+    if git pull && git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI; then
         # Actualizar extensiones SOLO si ya están inicializadas
-        if [ -d "modules/extensions/.git" ] || [ -f "modules/extensions/.git" ]; then
-             git submodule update --init --recursive modules/extensions
+        if [ -d "modules/Watermelon-extras/.git" ] || [ -f "modules/Watermelon-extras/.git" ]; then
+             git submodule update --init --recursive modules/Watermelon-extras
         fi
 
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
@@ -124,10 +124,10 @@ install_standard() {
     echo "========================================="
 
     # --- CONFIGURACIÓN DE TMPDIR ---
-    if [ ! -f "web_client/app.py" ] || [ -z "$(ls -A web_client)" ]; then
+    if [ ! -f "TangerineUI/app.py" ] || [ -z "$(ls -A TangerineUI)" ]; then
         echo " Submódulos no detectados o incompletos."
-        echo "Ejecutando: git submodule update --init --recursive modules/mango modules/skills web_client"
-        git submodule update --init --recursive modules/mango modules/skills web_client || echo " Aviso: Falló la actualización de submódulos."
+        echo "Ejecutando: git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI"
+        git submodule update --init --recursive modules/BrainNut modules/BlueberrySkills TangerineUI || echo " Aviso: Falló la actualización de submódulos."
     fi
 
     export TMPDIR="$(pwd)/temp_build"
@@ -205,7 +205,7 @@ install_standard() {
     
     if [[ "$EXTENSIONS_OPT" =~ ^[Ss]$ ]]; then
         echo "-> Se instalarán extensiones adicionales."
-        git submodule update --init --recursive modules/extensions
+        git submodule update --init --recursive modules/Watermelon-extras
     fi
 
     echo "----------------------------------------------------------------"
@@ -308,16 +308,16 @@ install_standard() {
     [ "$MANGO_OPT" == "2" ] && BRANCH="MANGO2"
     [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --branch "$BRANCH"
 
-    if [ ! -f "web_client/static/js/socket.io.min.js" ]; then
-        wget -q -O "web_client/static/js/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
+    if [ ! -f "TangerineUI/static/js/socket.io.min.js" ]; then
+        wget -q -O "TangerineUI/static/js/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
     fi
 
     # Xterm.js
-    mkdir -p "web_client/static/css"
-    if [ ! -f "web_client/static/js/xterm.js" ]; then
+    mkdir -p "TangerineUI/static/css"
+    if [ ! -f "TangerineUI/static/js/xterm.js" ]; then
         echo "Descargando xterm.js..."
-        wget -q -O "web_client/static/js/xterm.js" https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js
-        wget -q -O "web_client/static/css/xterm.css" https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css
+        wget -q -O "TangerineUI/static/js/xterm.js" https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js
+        wget -q -O "TangerineUI/static/css/xterm.css" https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css
     fi
 
     # --- SERVICIOS ---
@@ -442,7 +442,7 @@ install_web_client() {
     
     echo "Instalando dependencias mínimas..."
     
-    if [ ! -f "web_client/app.py" ]; then
+    if [ ! -f "TangerineUI/app.py" ]; then
         echo "Recuperando código del cliente web..."
         git submodule update --init --recursive
     fi
@@ -456,7 +456,7 @@ install_web_client() {
     echo "Creando lanzador run_client.sh..."
     echo "#!/bin/bash" > run_client.sh
     echo "export NEO_API_URL='$NEO_IP'" >> run_client.sh
-    echo "python3 web_client/app.py" >> run_client.sh
+    echo "python3 TangerineUI/app.py" >> run_client.sh
     chmod +x run_client.sh
     
     echo "Listo. Ejecuta ./run_client.sh para iniciar."
