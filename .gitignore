@@ -51,7 +51,6 @@ tts_cache/
 *.pt
 *.safetensors
 docsMD/
-docsMD/
 
 # Experiments & Notebooks
 NB/
