@@ -50,6 +50,8 @@ tts_cache/
 *.bin
 *.pt
 *.safetensors
+docsMD/
+docsMD/
 
 # Experiments & Notebooks
 NB/
