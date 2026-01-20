@@ -1,9 +1,9 @@
 # ANEXO I: MANUAL DE USUARIO Y ADMINISTRACIÓN
-# PROYECTO NEOPapaya
+# PROYECTO WatermelonD
 
 **Versión del Documento:** 1.2
 **Fecha:** 02/12/2025
-**Proyecto:** NEOPapaya (Copiloto de Lenguaje para Entornos de Grupo y Administración)
+**Proyecto:** WatermelonD (Copiloto de Lenguaje para Entornos de Grupo y Administración)
 
 ---
 
@@ -85,7 +85,7 @@
 ## 1. INTRODUCCIÓN
 
 ### 1.1. Propósito del Documento
-El presente documento, **ANEXO I: Manual de Usuario y Administración**, tiene como objetivo proporcionar una guía exhaustiva y detallada para la instalación, configuración, uso y administración del sistema **NEOPapaya**. Este manual sirve como referencia tanto para usuarios finales que interactúan con el asistente como para administradores de sistemas encargados de su despliegue y mantenimiento.
+El presente documento, **ANEXO I: Manual de Usuario y Administración**, tiene como objetivo proporcionar una guía exhaustiva y detallada para la instalación, configuración, uso y administración del sistema **WatermelonD**. Este manual sirve como referencia tanto para usuarios finales que interactúan con el asistente como para administradores de sistemas encargados de su despliegue y mantenimiento.
 
 ### 1.2. Audiencia Objetivo
 Este manual está dirigido a dos tipos de usuarios principales:
@@ -94,13 +94,13 @@ Este manual está dirigido a dos tipos de usuarios principales:
 * **Desarrolladores:** Programadores que deseen extender la funcionalidad del asistente mediante nuevos módulos o "Skills".
 
 ### 1.3. Alcance del Sistema
-NEOPapaya es un asistente personal híbrido que combina:
+WatermelonD es un asistente personal híbrido que combina:
 * **Control Determinista:** Ejecución precisa de comandos para tareas críticas (apagar sistema, conectar SSH, gestionar archivos).
 * **Inteligencia Generativa:** Uso de un LLM local (Gemma 2B) para mantener conversaciones naturales, responder preguntas complejas y ofrecer una personalidad definida.
 * **Gestión de Infraestructura:** Herramientas integradas para el escaneo de redes, gestión de servidores remotos y monitorización de servicios.
 
 ### 1.4. Glosario de Términos
-* **Wake Word:** Palabra clave que activa la escucha del asistente (ej. "Colega", "Tío").
+* **Wake Word:** Palabra clave que activa la escucha del asistente (ej. "WatermelonD", "Tío").
 * **LLM (Large Language Model):** Modelo de lenguaje grande (Gemma 2B) utilizado para generar texto.
 * **STT (Speech-to-Text):** Tecnología de reconocimiento de voz (Vosk/Whisper).
 * **TTS (Text-to-Speech):** Tecnología de síntesis de voz (Piper).
@@ -157,13 +157,13 @@ Antes de iniciar la instalación, asegúrese de que el sistema esté actualizado
  Descargue el código fuente en el directorio de usuario (se recomienda no usar `root` para la descarga).
  ```bash
  cd ~
- git clone https://github.com/jrodriiguezg/NEOPapaya.git
- cd NEOPapaya
+ git clone https://github.com/jrodriiguezg/WatermelonD.git
+ cd WatermelonD
  ```
 
 ### 2.3. Proceso de Instalación Automatizada
 
-NEOPapaya incluye un script `install.sh` que automatiza la configuración. Este script realiza las siguientes acciones:
+WatermelonD incluye un script `install.sh` que automatiza la configuración. Este script realiza las siguientes acciones:
 1. Detecta el gestor de paquetes (`apt` o `dnf`).
 2. Instala dependencias del sistema (compiladores, librerías de audio, herramientas de red).
 3. Instala y configura **Pyenv** para gestionar la versión de Python.
@@ -197,7 +197,7 @@ Una vez finalizado el script, verifique que todo esté correcto:
  ```bash
  journalctl --user -u neo.service -f
  ```
- Busque mensajes como "NEOPapaya Core iniciado", "Modelos cargados correctamente".
+ Busque mensajes como "WatermelonD Core iniciado", "Modelos cargados correctamente".
 
 3. **Prueba de Audio:**
  El sistema debería emitir un sonido de inicio o un saludo verbal si los altavoces están configurados correctamente.
@@ -256,7 +256,7 @@ Para cambiar el nombre al que responde el asistente:
 1. Edite `config/config.json`.
 2. Modifique el valor de `"wake_word"`. Puede ser una lista de palabras.
  ```json
- "wake_word": ["colega", "tío", "robot"]
+ "wake_word": ["WatermelonD", "tío", "robot"]
  ```
 3. Reinicie el servicio:
  ```bash
@@ -270,7 +270,7 @@ Para cambiar el nombre al que responde el asistente:
 
 ### 3.4. Configuración de Red y MQTT
 
-NEOPapaya utiliza MQTT para comunicarse con otros dispositivos ("Network Bros").
+WatermelonD utiliza MQTT para comunicarse con otros dispositivos ("Network Bros").
 * **Broker:** Por defecto usa `localhost`. Si tiene un broker central en la red, cambie `"broker": "IP_DEL_BROKER"`.
 * **Topic Base:** Los agentes publican en `home/agents/{hostname}/...`.
 
@@ -288,15 +288,15 @@ El asistente se ejecuta en el espacio de usuario (User Mode). Esto es más segur
 La forma principal de interactuar es mediante la voz. Diga la palabra de activación seguida del comando.
 
 #### 4.1.1. Comandos de Sistema
-* **Apagar/Reiniciar:** "Colega, apaga el sistema", "Colega, reinicia el ordenador".
-* **Estado:** "Colega, ¿cómo estás?", "Colega, dame un diagnóstico del sistema".
-* **Volumen:** "Colega, sube el volumen", "Colega, silencio".
+* **Apagar/Reiniciar:** "WatermelonD, apaga el sistema", "WatermelonD, reinicia el ordenador".
+* **Estado:** "WatermelonD, ¿cómo estás?", "WatermelonD, dame un diagnóstico del sistema".
+* **Volumen:** "WatermelonD, sube el volumen", "WatermelonD, silencio".
 
 #### 4.1.2. Comandos de Red y SSH
-* **IP Pública:** "Colega, ¿cuál es mi IP pública?".
-* **Escaneo de Red:** "Colega, escanea la red en busca de intrusos".
-* **Ping:** "Colega, haz un ping a google.com".
-* **SSH:** "Colega, conéctate al servidor principal", "Colega, ejecuta 'ls -la' en el servidor".
+* **IP Pública:** "WatermelonD, ¿cuál es mi IP pública?".
+* **Escaneo de Red:** "WatermelonD, escanea la red en busca de intrusos".
+* **Ping:** "WatermelonD, haz un ping a google.com".
+* **SSH:** "WatermelonD, conéctate al servidor principal", "WatermelonD, ejecuta 'ls -la' en el servidor".
 
 #### 4.1.3. Comandos de Organización
 * **Hora/Fecha:** "¿Qué hora es?", "¿Qué día es hoy?".
@@ -316,14 +316,14 @@ Ahora potenciados por **MANGO T5**, lo que permite una mayor flexibilidad en el 
  * *Nota:* Comandos críticos requerirán confirmación ("¿Seguro que quieres reiniciar...?").
 
 #### 4.1.6. Filtrado Inteligente de Salida (Smart Output)
-NEOPapaya procesa inteligentemente las respuestas largas de comandos para no saturar el canal de voz:
+WatermelonD procesa inteligentemente las respuestas largas de comandos para no saturar el canal de voz:
 * **Listas (`ls`):** Si hay muchos archivos, dirá el total y leerá solo los primeros 3.
 * **Logs:** Leerá solo las últimas 2 líneas para dar el contexto más reciente.
 * **Salidas Extensas:** Si el resultado supera los 400 caracteres, lo guardará automáticamente en un archivo de texto y te avisará de su ubicación, en lugar de leerlo entero.
 
 ### 4.2. Interacción Conversacional (Gemma 2B)
 
-Si el comando no coincide con una instrucción predefinida, NEOPapaya usará su "cerebro" (Gemma 2B) para responder.
+Si el comando no coincide con una instrucción predefinida, WatermelonD usará su "cerebro" (Gemma 2B) para responder.
 * **Preguntas generales:** "¿Quién fue Nikola Tesla?", "¿Cuál es la capital de Australia?".
 * **Conversación:** "Hola, ¿qué tal te sientes hoy?", "Cuéntame un chiste".
 * **Razonamiento:** "Tengo tres manzanas y me como una, ¿cuántas quedan?".
@@ -348,12 +348,12 @@ Las alertas del sistema (ej. "CPU caliente", "Intruso detectado en red") aparece
 
 ### 4.4. Uso del Explorador de Archivos
 
-NEOPapaya permite buscar archivos localmente.
+WatermelonD permite buscar archivos localmente.
 * **Búsqueda:** "Busca el archivo 'presupuesto.pdf'".
 * **Lectura:** "Léeme el archivo 'notas.txt'".
 
 ### 4.5. Gestión del Conocimiento (RAG)
-NEOPapaya puede aprender de tus documentos.
+WatermelonD puede aprender de tus documentos.
 1. Ve a la web `http://localhost:5000/knowledge`.
 2. Arrastra archivos `.pdf`, `.txt` o `.md` al área de subida.
 3. Pulsa el botón **"Entrenar / Re-indexar"**.
@@ -382,7 +382,7 @@ Los logs son vitales para el diagnóstico. Se almacenan en `logs/` y en el journ
 ### 5.3. Gestión de Redes (Network Bros)
 
 El módulo `NetworkManager` y `MQTTManager` permiten la interoperabilidad.
-* **Añadir nuevos agentes:** Simplemente configure otro dispositivo con un cliente MQTT que publique en el topic `home/agents/NUEVO_AGENTE/status`. NEOPapaya lo detectará automáticamente.
+* **Añadir nuevos agentes:** Simplemente configure otro dispositivo con un cliente MQTT que publique en el topic `home/agents/NUEVO_AGENTE/status`. WatermelonD lo detectará automáticamente.
 * **Seguridad:** Revise `modules/guard.py` para configurar reglas de bloqueo de IPs o alertas de escaneo de puertos.
 
 ### 5.4. Administración Remota (SSH Manager)
@@ -407,11 +407,11 @@ En `http://localhost:5000/docker` encontrará un panel dedicado:
 
 #### Opción A: Desde la Web (Recomendado)
 1. Vaya a la sección **Acciones** de la interfaz web.
-2. Pulse el botón **"Actualizar NEOPapaya"**.
+2. Pulse el botón **"Actualizar WatermelonD"**.
 3. El sistema descargará los cambios (`git pull`) y se reiniciará automáticamente.
 
 #### Opción B: Manual (Terminal)
-1. Vaya al directorio del proyecto: `cd ~/NEOPapaya`
+1. Vaya al directorio del proyecto: `cd ~/WatermelonD`
 2. Descargue cambios: `git pull`
 3. Si hay cambios en dependencias: `source venv/bin/activate && pip install -r requirements.txt`
 4. Reinicie el servicio: `systemctl --user restart neo.service`
@@ -459,7 +459,7 @@ Algunos parámetros no están en `config.json` por defecto pero pueden añadirse
 
 ### 9.1. Hardening del Sistema Operativo
 
-Dado que NEOPapaya tiene capacidades de administración (SSH, apagado), es crucial asegurar el host.
+Dado que WatermelonD tiene capacidades de administración (SSH, apagado), es crucial asegurar el host.
 1. **Deshabilitar Root SSH:** Edite `/etc/ssh/sshd_config` y establezca `PermitRootLogin no`.
 2. **Actualizaciones Automáticas:** Instale `unattended-upgrades` para parches de seguridad.
  ```bash
@@ -484,7 +484,7 @@ sudo ufw enable
 Revise regularmente quién accede al sistema.
 * Comando `last`: Muestra los últimos inicios de sesión.
 * Comando `lastb`: Muestra intentos de inicio de sesión fallidos.
-* El módulo `Guard` de NEOPapaya automatiza parte de esto, pero la revisión manual es insustituible.
+* El módulo `Guard` de WatermelonD automatiza parte de esto, pero la revisión manual es insustituible.
 
 ---
 
@@ -515,7 +515,7 @@ Revise regularmente quién accede al sistema.
 Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0 (GPLv3)**. Esto garantiza que el software sea libre para usar, estudiar, compartir y modificar.
 
 ### 11.2. Librerías Open Source Utilizadas
-NEOPapaya es posible gracias al gigante ecosistema de código abierto:
+WatermelonD es posible gracias al gigante ecosistema de código abierto:
 * **Vosk:** Reconocimiento de voz offline.
 * **Piper:** Síntesis de voz neuronal rápida.
 * **Llama.cpp / Python-llama-cpp:** Inferencia eficiente de LLMs.
@@ -545,7 +545,7 @@ NEOPapaya es posible gracias al gigante ecosistema de código abierto:
 
 ### 12.2. Estructura de Directorios
 
-* `~/NEOPapaya/`
+* `~/WatermelonD/`
  * `WatermelonD.py`: Archivo principal.
  * `config/`:
  * `config.json`: Configuración general.

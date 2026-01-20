@@ -1,4 +1,4 @@
-# Resumen del Proyecto NEOPapaya Nano
+# Resumen del Proyecto WatermelonD Nano
 
 ## Estructura del Proyecto
 ```
@@ -51,7 +51,7 @@ TIO_AI/
  test_conversation_flow.py
  download_vosk_model.py
  analyze_code.py
- check_neocore.py
+ check_WatermelonD.py
  start_face.sh
  install_piper.py
  optimize_whisper.py
@@ -288,7 +288,7 @@ TIO_AI/
 ### modules/BrainNut.py
 - **Líneas:** 183
 - **Clases:** 1
- - `class Brain`
+ - `class BrainNut`
 - **Funciones:** 10
  - `def __init__`
  - `def set_ai_engine`
@@ -1073,7 +1073,7 @@ TIO_AI/
 
 ---
 
-### resources/tools/check_neocore.py
+### resources/tools/check_WatermelonD.py
 - **Líneas:** 15
 - **Clases:** 0
 - **Funciones:** 0

@@ -1,6 +1,6 @@
-# Documentación de Refactorización: NEOPapaya (SysAdmin Edition)
+# Documentación de Refactorización: WatermelonD (SysAdmin Edition)
 
-Este documento detalla el proceso completo de refactorización llevado a cabo para transformar el proyecto **NEOPapaya** de un Asistente de Cuidado de Mayores a un **Asistente de Administración de Sistemas (SysAdmin)**.
+Este documento detalla el proceso completo de refactorización llevado a cabo para transformar el proyecto **WatermelonD** de un Asistente de Cuidado de Mayores a un **Asistente de Administración de Sistemas (SysAdmin)**.
 
 ## 1. Visión General del Cambio
 
@@ -86,4 +86,4 @@ El sistema ahora ejecuta múltiples procesos ligeros en paralelo:
 
 ## 5. Conclusión
 
-La refactorización ha transformado NEOPapaya en una herramienta robusta y profesional. El código es ahora más modular, fácil de mantener y eficiente, adecuado para su despliegue en entornos de producción o laboratorios domésticos (Homelab).
+La refactorización ha transformado WatermelonD en una herramienta robusta y profesional. El código es ahora más modular, fácil de mantener y eficiente, adecuado para su despliegue en entornos de producción o laboratorios domésticos (Homelab).

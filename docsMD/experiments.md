@@ -6,7 +6,7 @@ Este documento recopila ideas, propuestas y funcionalidades experimentales plani
 
 ## 1. Clonación de Voz y TTS Personalizado
 **Estado:** Propuesta
-**Objetivo:** Permitir que NEOPapaya hable con voces personalizadas o clonadas en local, sin depender de modelos pre-entrenados genéricos.
+**Objetivo:** Permitir que WatermelonD hable con voces personalizadas o clonadas en local, sin depender de modelos pre-entrenados genéricos.
 **Implementación Potencial:**
 * Integrar **Coqui TTS** o **Tortoise TTS** para generación offline de alta calidad.
 * Crear un script de "grabación de muestras" donde el usuario lee frases para entrenar un *embed* de su propia voz.
@@ -14,7 +14,7 @@ Este documento recopila ideas, propuestas y funcionalidades experimentales plani
 
 ## 2. Audio Multi-Habitación (Sincronización)
 **Estado:** Propuesta
-**Objetivo:** Reproducir música o TTS perfectamente sincronizado en múltiples dispositivos "Micro NEOPapaya Brain" (ESP32 o Pi Zero) distribuidos por la casa.
+**Objetivo:** Reproducir música o TTS perfectamente sincronizado en múltiples dispositivos "Micro WatermelonD BrainNut" (ESP32 o Pi Zero) distribuidos por la casa.
 **Implementación Potencial:**
 * Implementar un servidor **Snapcast** en el núcleo.
 * Configurar los satélites como clientes Snapcast.
@@ -45,7 +45,7 @@ Este documento recopila ideas, propuestas y funcionalidades experimentales plani
 
 ## 6. Inteligencia Emocional Adaptativa
 **Estado:** Propuesta
-**Objetivo:** Que NEOPapaya detecte el estado de ánimo tu voz y adapte su respuesta (tono, brevedad).
+**Objetivo:** Que WatermelonD detecte el estado de ánimo tu voz y adapte su respuesta (tono, brevedad).
 **Implementación Potencial:**
 * Analizar prosodia (tono, velocidad) del audio de entrada.
 * Si el usuario suena estresado/urgente -> Respuestas cortas y directas ("Hecho.").

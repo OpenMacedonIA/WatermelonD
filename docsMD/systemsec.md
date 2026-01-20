@@ -1,4 +1,4 @@
-# Documentación de Seguridad Integral del Proyecto NEOPapaya (WatermelonD)
+# Documentación de Seguridad Integral del Proyecto WatermelonD (WatermelonD)
 
 Esta guía detalla exhaustivamente las medidas de seguridad implementadas en el sistema WatermelonD, abarcando desde la protección a nivel de aplicación web hasta el endurecimiento (hardening) del sistema operativo subyacente.
 
@@ -7,7 +7,7 @@ Esta guía detalla exhaustivamente las medidas de seguridad implementadas en el 
 ## Tabla de Contenidos
 
 1. [Introducción y Filosofía de Seguridad](#1-introducción-y-filosofía-de-seguridad)
-2. [Seguridad en la Aplicación Web (NEOPapaya Web Admin)](#2-seguridad-en-la-aplicación-web-neo-web-admin)
+2. [Seguridad en la Aplicación Web (WatermelonD Web Admin)](#2-seguridad-en-la-aplicación-web-neo-web-admin)
  * 2.1. Autenticación Robusta y Hashing
  * 2.2. Encriptación HTTPS (SSL/TLS)
  * 2.3. Protección CSRF
@@ -36,7 +36,7 @@ Nuestro enfoque de seguridad se basa en **"Defensa en Profundidad"**:
 
 ---
 
-## 2. Seguridad en la Aplicación Web (NEOPapaya Web Admin)
+## 2. Seguridad en la Aplicación Web (WatermelonD Web Admin)
 
 El módulo `web_admin.py` ha sido fortificado significativamente para proteger el acceso al panel de control.
 
@@ -104,7 +104,7 @@ Usamos **UFW (Uncomplicated Firewall)** para cerrar el dispositivo al mundo exte
 
 **Política por Defecto:**
 * Entrante (`Incoming`): **DENEGAR** (Bloquea todo por defecto).
-* Saliente (`Outgoing`): **PERMITIR** (NEOPapaya puede acceder a internet para APIs, actualizaciones, etc.).
+* Saliente (`Outgoing`): **PERMITIR** (WatermelonD puede acceder a internet para APIs, actualizaciones, etc.).
 
 **Reglas de Permitir (Allow):**
 1. **Puerto 22 (SSH)**: Esencial para la administración remota. *Riesgo*: Si se bloquea este puerto y UFW se activa, perderá acceso remoto.
@@ -134,7 +134,7 @@ El principio de "mínimo privilegio" se aplica a los archivos sensibles del proy
  * Directorio: `config/`
  * Archivos: `config.json`, `skills.json`, `*.json`
  * **Permiso**: `600` (Solo lectura/escritura para el propietario).
- * **Propietario**: El usuario que ejecuta el servicio NEOPapaya (ej: `pi`, `usuario`).
+ * **Propietario**: El usuario que ejecuta el servicio WatermelonD (ej: `pi`, `usuario`).
  * **Efecto**: Otros usuarios del sistema (invitados o comprometidos) no pueden leer las claves API o hashes de contraseñas.
 
 * **Base de Datos**:
@@ -196,7 +196,7 @@ sudo ./resources/tools/secure_system.sh
 1. **Vía Web**: Ir a `Ajustes` > `Seguridad`. Introducir la nueva contraseña. El sistema gestionará el hash.
 2. **Vía Terminal** (si olvidó la clave):
  ```bash
- cd ~/NEOPapaya
+ cd ~/WatermelonD
  source venv/bin/activate
  python3 resources/tools/password_helper.py --user admin
 # Siga las instrucciones

@@ -13,7 +13,7 @@ Este documento detalla el proceso para realizar una instalación mínima y optim
 1.  **Boot**: Inicia desde el USB.
 2.  **Installer Menu**: Selecciona "Install" (o "Graphical Install" si prefieres ratón, pero el modo texto es más rápido y "auténtico").
 3.  **Language/Location**: Selecciona idioma (recomendado English para servidores, o Español si prefieres), ubicación y teclado.
-4.  **Hostname**: Asigna un nombre (ej. `neocore-server`).
+4.  **Hostname**: Asigna un nombre (ej. `WatermelonD-server`).
 5.  **Domain**: Déjalo vacío si no tienes dominio.
 6.  **Root Password**: **IMPORTANTE**: Si dejas esto en blanco, el instalador configurará `sudo` automáticamente para el primer usuario que crees. *Recomendación: Déjalo en blanco para un setup más moderno tipo Ubuntu.*
 7.  **User Account**: Crea tu usuario principal (ej. `admin` o tu nombre).
@@ -66,7 +66,7 @@ sudo sysctl -p
 
 ## 4. Software Esencial Recomendado
 
-Para tener un entorno de terminal robusto y listo para desplegar aplicaciones (como NEOPapaya/WatermelonD), instala este pack básico:
+Para tener un entorno de terminal robusto y listo para desplegar aplicaciones (como WatermelonD/WatermelonD), instala este pack básico:
 
 ```bash
 sudo apt update && sudo apt install -y \
@@ -104,8 +104,8 @@ Una vez tengas el sistema base listo:
 
 1.  Clona tu repositorio:
     ```bash
-    git clone https://github.com/tu_usuario/NEOPapaya.git
-    cd NEOPapaya
+    git clone https://github.com/tu_usuario/WatermelonD.git
+    cd WatermelonD
     ```
 2.  Ejecuta el script de instalación del proyecto (que se encargará de dependencias específicas, Python, Docker, etc.):
     ```bash

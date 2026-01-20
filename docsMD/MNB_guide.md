@@ -1,6 +1,6 @@
 # Guía de Mini Network Bros (MNB)
 
-Un "Mini Network Bro" (MNB) es un microcontrolador (ESP32, RP2040) que actúa como sensor o actuador en el ecosistema NEOPapaya/Colega. Se comunica principalmente vía WiFi (MQTT), pero puede usar Bluetooth como respaldo si la red cae.
+Un "Mini Network Bro" (MNB) es un microcontrolador (ESP32, RP2040) que actúa como sensor o actuador en el ecosistema WatermelonD/WatermelonD. Se comunica principalmente vía WiFi (MQTT), pero puede usar Bluetooth como respaldo si la red cae.
 
 ## Requisitos
 - **Hardware**: ESP32 (DevKit V1), ESP32-CAM (para visión), o Raspberry Pi Pico W.

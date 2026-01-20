@@ -1,6 +1,6 @@
 # ANEXO VIII: PRUEBAS DE VALIDACIÓN Y RENDIMIENTO
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 06/12/2025
 **Versión del Documento:** 1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. INTRODUCCIÓN
 
-Este documento detalla la batería de pruebas realizadas para validar la funcionalidad, estabilidad y rendimiento del sistema NEOPapaya Se incluyen pruebas unitarias de componentes críticos, pruebas de integración del pipeline completo y pruebas de estrés/rendimiento en hardware objetivo (Raspberry Pi 4/5).
+Este documento detalla la batería de pruebas realizadas para validar la funcionalidad, estabilidad y rendimiento del sistema WatermelonD Se incluyen pruebas unitarias de componentes críticos, pruebas de integración del pipeline completo y pruebas de estrés/rendimiento en hardware objetivo (Raspberry Pi 4/5).
 
 ---
 
@@ -72,7 +72,7 @@ Este documento detalla la batería de pruebas realizadas para validar la funcion
 * **Escenario:**
 
 1. El asistente comienza a leer un texto largo.
-2. El usuario dice "Colega, para".
+2. El usuario dice "WatermelonD, para".
 
 * **Resultados:**
 * El módulo de audio detecta energía (VAD) durante el estado `SPEAKING`.

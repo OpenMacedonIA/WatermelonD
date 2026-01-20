@@ -1,4 +1,4 @@
-# Estructura del Proyecto NEOPapaya (WatermelonD)
+# Estructura del Proyecto WatermelonD (WatermelonD)
 
 Este documento detalla la estructura de archivos del proyecto y la finalidad de cada uno.
 
@@ -21,8 +21,8 @@ Este documento detalla la estructura de archivos del proyecto y la finalidad de 
 ├── resources/# Recursos externos, scripts de herramientas y tests
 │ ├── esp32_cam/# Firmware para cámaras ESP32
 │ ├── experiments/# Scripts experimentales y datasets
-│ ├── MNB/# Micro NEOPapaya Brain (Agentes ligeros)
-│ ├── NB/# NEOPapaya Brain (Agentes intermedios)
+│ ├── MNB/# Micro WatermelonD BrainNut (Agentes ligeros)
+│ ├── NB/# WatermelonD BrainNut (Agentes intermedios)
 │ ├── sounds/# Archivos de audio (efectos, fillers)
 │ ├── tests/# Tests unitarios e integración
 │ └── tools/# Scripts de utilidad y mantenimiento
@@ -32,7 +32,7 @@ Este documento detalla la estructura de archivos del proyecto y la finalidad de 
 ├── WatermelonD.py# **Punto de Entrada Principal** de la aplicación
 ├── install.sh# Script de instalación para Debian/Ubuntu
 ├── requirements.txt# Dependencias de Python
-├── run_neocore_distrobox.sh# Launcher para entorno aislado en Fedora
+├── run_WatermelonD_distrobox.sh# Launcher para entorno aislado en Fedora
 ├── setup_distrobox.sh# instalador robusto para Fedora (vía Distrobox)
 └── start.sh# Script de inicio (detecta entorno virtual)
 ```
@@ -40,11 +40,11 @@ Este documento detalla la estructura de archivos del proyecto y la finalidad de 
 ## Descripción Detallada de Archivos
 
 ### Raíz del Proyecto
-* **`WatermelonD.py`**: El corazón del sistema. Inicializa todos los gestores (`VoiceManager`, `Brain`, `WebAdmin`, etc.), arranca los hilos de ejecución y gestiona el bucle principal de la aplicación.
+* **`WatermelonD.py`**: El corazón del sistema. Inicializa todos los gestores (`VoiceManager`, `BrainNut`, `WebAdmin`, etc.), arranca los hilos de ejecución y gestiona el bucle principal de la aplicación.
 * **`start.sh`**: Script facilitador para iniciar la aplicación. Detecta automáticamente si se debe usar el entorno virtual estándar (`venv`) o el de Distrobox (`venv_distrobox`) y lanza `WatermelonD.py`.
 * **`install.sh`**: Script de instalación "clásico" pensado para sistemas Debian/Ubuntu. Instala paquetes del sistema con `apt` y dependencias de Python.
 * **`setup_distrobox.sh`**: Script de instalación avanzado para sistemas inmutables o incompatibles (como Fedora moderno). Crea un contenedor Debian aislado, instala todo dentro y prepara el entorno.
-* **`run_neocore_distrobox.sh`**: Script generado por `setup_distrobox.sh`. Sirve para lanzar la aplicación directamente dentro del contenedor sin tener que entrar manualmente.
+* **`run_WatermelonD_distrobox.sh`**: Script generado por `setup_distrobox.sh`. Sirve para lanzar la aplicación directamente dentro del contenedor sin tener que entrar manualmente.
 * **`requirements.txt`**: Lista de todas las librerías de Python necesarias (`flask`, `vosk`, `opencv`, etc.) para que pip las instale.
 * **`debug_kiosk.sh`**: Script auxiliar para depurar la interfaz gráfica en modo kiosco (pantalla completa).
 

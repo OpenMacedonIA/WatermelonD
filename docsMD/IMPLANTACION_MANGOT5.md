@@ -2,11 +2,11 @@
 
 **Versión:** 1.0
 **Fecha:** 18/12/2025
-**Proyecto:** NEOPapaya - Sysadmin AI
+**Proyecto:** WatermelonD - Sysadmin AI
 
 ## 1. Introducción
 
-Este documento detalla la integración del modelo **MANGO T5** (Fine-Tuned for Bash) en la arquitectura del sistema NEOPapaya. Esta actualización introduce una capacidad especializada de "Natural Language to Bash" (NL2Bash), permitiendo al asistente ejecutar comandos de sistema complejos con alta precisión sintáctica, algo que los modelos de chat generalistas (Llama/Qwen) no logran de forma fiable.
+Este documento detalla la integración del modelo **MANGO T5** (Fine-Tuned for Bash) en la arquitectura del sistema WatermelonD. Esta actualización introduce una capacidad especializada de "Natural Language to Bash" (NL2Bash), permitiendo al asistente ejecutar comandos de sistema complejos con alta precisión sintáctica, algo que los modelos de chat generalistas (Llama/Qwen) no logran de forma fiable.
 
 ## 2. Arquitectura Implementada
 
@@ -46,7 +46,7 @@ El usuario puede pedir información de lectura segura:
 ### 4.2 Comandos Críticos
 Para acciones de modificación:
 > *"Reinicia el servicio nginx"* -> MANGO genera `systemctl restart nginx`.
-> **NEOPapaya**: *"He generado el comando: systemctl restart nginx. ¿Quieres que lo ejecute?"*
+> **WatermelonD**: *"He generado el comando: systemctl restart nginx. ¿Quieres que lo ejecute?"*
 > **Usuario**: *"Sí"* -> Se ejecuta.
 
 ## 5. Mantenimiento y Optimización

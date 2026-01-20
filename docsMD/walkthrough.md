@@ -1,11 +1,11 @@
-# NEOPapaya Face: Interfaz Visual Reactiva y Automatización
+# WatermelonD Face: Interfaz Visual Reactiva y Automatización
 
-Hemos dotado a NEOPapaya de una "cara" digital estilo Robot/Emo, automatizado el arranque y optimizado el rendimiento.
+Hemos dotado a WatermelonD de una "cara" digital estilo Robot/Emo, automatizado el arranque y optimizado el rendimiento.
 
-## ¿Qué es NEOPapaya Face?
+## ¿Qué es WatermelonD Face?
 Es una interfaz web minimalista que muestra unos ojos digitales estilo OLED/Robot. Estos ojos reaccionan en tiempo real al estado del asistente:
 - **Azul (Idle)**: Parpadean y miran alrededor aleatoriamente.
-- **Verde (Escuchando)**: Se abren más y brillan intensamente cuando detectan la palabra clave ("NEOPapaya"/"Tío").
+- **Verde (Escuchando)**: Se abren más y brillan intensamente cuando detectan la palabra clave ("WatermelonD"/"Tío").
 - **Morado (Pensando)**: Se contraen y pulsan mientras procesan tu comando.
 - **Cyan (Hablando)**: Vibran al ritmo de la respuesta.
 
@@ -29,7 +29,7 @@ Hemos creado un "Script Maestro" que se encarga de todo: limpiar procesos antigu
  ```
 
 2. **¿Qué verás?**
- - Se abrirá el navegador en pantalla completa con los ojos de NEOPapaya.
+ - Se abrirá el navegador en pantalla completa con los ojos de WatermelonD.
  - En la terminal, verás los **logs avanzados en tiempo real** con colores.
 
 ## Solución de Problemas

@@ -1,6 +1,6 @@
-# Base de Datos de Firmas de Ataque (NEOPapaya Guard)
+# Base de Datos de Firmas de Ataque (WatermelonD Guard)
 
-NEOPapaya Guard utiliza un sistema de detección basado en firmas y anomalías. Este documento explica cómo funciona la base de datos `data/attack_signatures.json` y cómo añadir nuevas reglas.
+WatermelonD Guard utiliza un sistema de detección basado en firmas y anomalías. Este documento explica cómo funciona la base de datos `data/attack_signatures.json` y cómo añadir nuevas reglas.
 
 ## Estructura de una Firma
 
@@ -45,7 +45,7 @@ El motor `modules/guard.py` sigue este proceso:
  * Se eliminan marcas más antiguas que `window_seconds`.
 4. **Decisión**:
  * ¿Cantidad de marcas en ventana >= `threshold`?
- * **SÍ**: ¡ALERTA! (NEOPapaya habla y loguea).
+ * **SÍ**: ¡ALERTA! (WatermelonD habla y loguea).
  * **NO**: Esperar.
 
 ## Ejemplos de Reglas

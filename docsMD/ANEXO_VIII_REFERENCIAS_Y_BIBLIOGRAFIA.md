@@ -1,6 +1,6 @@
 # ANEXO VI: REFERENCIAS Y BIBLIOGRAFÍA
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 06/12/2025
 **Versión del Documento:** 1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. LIBRERÍAS Y SOFTWARE OPEN SOURCE
 
-El proyecto NEOPapaya se construye sobre hombros de gigantes. Agradecemos y referenciamos los siguientes proyectos de código abierto:
+El proyecto WatermelonD se construye sobre hombros de gigantes. Agradecemos y referenciamos los siguientes proyectos de código abierto:
 
 ### 1.1. Inteligencia Artificial y Procesamiento
 

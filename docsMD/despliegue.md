@@ -1,6 +1,6 @@
-# Guía de Despliegue: NEOPapaya Nano
+# Guía de Despliegue: WatermelonD Nano
 
-Esta guía detalla el proceso completo para desplegar **NEOPapaya Nano** en un entorno Linux (Raspberry Pi OS, Debian, Ubuntu o Fedora).
+Esta guía detalla el proceso completo para desplegar **WatermelonD Nano** en un entorno Linux (Raspberry Pi OS, Debian, Ubuntu o Fedora).
 
 ## 1. Requisitos Previos
 
@@ -10,7 +10,7 @@ Esta guía detalla el proceso completo para desplegar **NEOPapaya Nano** en un e
 * **Periféricos**:
  * Micrófono USB (Recomendado: ReSpeaker o Webcam USB con mic).
  * Altavoces (Jack 3.5mm o HDMI).
- * Webcam (Opcional, para NEOPapaya Vision).
+ * Webcam (Opcional, para WatermelonD Vision).
 
 ### Software Base
 * **Sistema Operativo**:
@@ -30,8 +30,8 @@ Abre una terminal y ejecuta:
 
 ```bash
 cd ~
-git clone https://github.com/jrodriiguezg/NEOPapaya_nano.git
-cd NEOPapaya_nano
+git clone https://github.com/jrodriiguezg/WatermelonD_nano.git
+cd WatermelonD_nano
 ```
 
 ### Paso 2.2: Ejecutar el Instalador
@@ -56,7 +56,7 @@ chmod +x install.sh
  * Descarga el modelo de voz **Vosk** (Español).
  * Descarga el modelo LLM **Gemma 2B** (GGUF).
  * Descarga/Configura **Piper TTS** para síntesis de voz.
-6. **Servicio Systemd**: Configura NEOPapaya para arrancar automáticamente al inicio como servicio de usuario (`neo.service`).
+6. **Servicio Systemd**: Configura WatermelonD para arrancar automáticamente al inicio como servicio de usuario (`neo.service`).
 
 ## 3. Configuración Post-Instalación
 
@@ -83,7 +83,7 @@ Si deseas usar servicios externos (como clima o noticias), añade tus claves en 
 
 ## 4. Gestión del Servicio
 
-NEOPapaya se ejecuta como un servicio de usuario de systemd.
+WatermelonD se ejecuta como un servicio de usuario de systemd.
 
 * **Iniciar manualmente**:
  ```bash
@@ -106,8 +106,8 @@ NEOPapaya se ejecuta como un servicio de usuario de systemd.
 
 1. Reinicia el sistema: `sudo reboot`.
 2. Espera unos 30-60 segundos tras el inicio.
-3. Deberías escuchar un sonido de inicio o un saludo ("Sistema NEOPapaya Online").
-4. Prueba decir: *"NEOPapaya, ¿qué hora es?"*.
+3. Deberías escuchar un sonido de inicio o un saludo ("Sistema WatermelonD Online").
+4. Prueba decir: *"WatermelonD, ¿qué hora es?"*.
 5. Accede a la interfaz web: `http://<IP-DE-TU-RASPBERRY>:5000`.
 
 ## 6. Solución de Problemas Comunes
@@ -119,7 +119,7 @@ El entorno virtual no se activó correctamente. Asegúrate de usar el python del
 ```
 
 ### Error: "ALSA lib pcm.c... Device or resource busy"
-Otro proceso está usando el micrófono. Cierra navegadores o grabadoras. NEOPapaya intenta gestionar esto, pero a veces el bloqueo es a nivel de sistema.
+Otro proceso está usando el micrófono. Cierra navegadores o grabadoras. WatermelonD intenta gestionar esto, pero a veces el bloqueo es a nivel de sistema.
 
 ### El reconocimiento es muy lento
 * Verifica que no estás usando una Raspberry Pi 3 o inferior (falta de RAM/CPU).

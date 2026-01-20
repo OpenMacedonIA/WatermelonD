@@ -1,6 +1,6 @@
 # ANEXO V: PROGRAMACIÓN Y CREACIÓN DE SKILLS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Fecha:** 04/12/2025 
 **Versión del Documento:** 1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. INTRODUCCIÓN
 
-Este documento es una guía técnica detallada para desarrolladores que deseen extender la funcionalidad de NEOPapaya mediante la creación de nuevos módulos o "Skills".
+Este documento es una guía técnica detallada para desarrolladores que deseen extender la funcionalidad de WatermelonD mediante la creación de nuevos módulos o "Skills".
 
 ---
 
@@ -77,7 +77,7 @@ Si el trigger contiene `{param}`, el sistema extraerá esa parte de la frase y l
 
 ---
 
-## 4. ACCESO AL NÚCLEO (NEOCORE)
+## 4. ACCESO AL NÚCLEO (WatermelonD)
 
 La instancia `self.core` proporciona acceso a todos los subsistemas críticos:
 

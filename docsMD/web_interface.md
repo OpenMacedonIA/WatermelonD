@@ -1,6 +1,6 @@
-# NEOPapaya Web Interface (v3.0)
+# WatermelonD Web Interface (v3.0)
 
-La interfaz web de **NEOPapaya v3.0** ha sido rediseñada para ser **independiente**, **robusta** y **personalizable**. Funciona como un cliente separado que se conecta a la API de `WatermelonD`.
+La interfaz web de **WatermelonD v3.0** ha sido rediseñada para ser **independiente**, **robusta** y **personalizable**. Funciona como un cliente separado que se conecta a la API de `WatermelonD`.
 
 ## Características Generales
 
@@ -25,15 +25,15 @@ Una consola completa en tu navegador.
 
 ### 3. Ajustes (`/settings`)
 Configuración del sistema.
-- **Actualizaciones**: Botón para comprobar y descargar la última versión de NEOPapaya desde GitHub.
+- **Actualizaciones**: Botón para comprobar y descargar la última versión de WatermelonD desde GitHub.
 - **Personalización**: Editor CSS integrado para cambiar colores o estilos.
 - **Preferencias de Voz**: Selector de voz TTS (Piper) y modelo de IA.
 - **Acerca de**: Información detallada de la versión y estado del sistema.
 
 ### 4. Sistema de Notificaciones
-NEOPapaya v2.2 introduce un sistema de notificaciones unificado:
+WatermelonD v2.2 introduce un sistema de notificaciones unificado:
 - **In-App Toasts**: Avisos visuales no intrusivos en la esquina inferior derecha.
-- **Desktop Notifications**: Si das permiso, NEOPapaya te enviará notificaciones nativas a tu escritorio (útil si tienes la pestaña en segundo plano).
+- **Desktop Notifications**: Si das permiso, WatermelonD te enviará notificaciones nativas a tu escritorio (útil si tienes la pestaña en segundo plano).
 
 ## Monitor de Conexión
 La interfaz sondea continuamente el estado de `WatermelonD`.

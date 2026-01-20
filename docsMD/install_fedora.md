@@ -1,6 +1,6 @@
 # Guía de Instalación en Fedora (x86_64)
 
-Esta guía detalla los pasos para instalar NEOPapaya Nano en un PC con Fedora 43 (Intel i3, 8GB RAM).
+Esta guía detalla los pasos para instalar WatermelonD Nano en un PC con Fedora 43 (Intel i3, 8GB RAM).
 
 ## 1. Preparación del Sistema
 
@@ -19,8 +19,8 @@ sudo dnf install -y git python3 python3-pip
 ## 2. Clonar el Repositorio
 
 ```bash
-git clone <URL_DEL_REPO> NEOPapaya_nano
-cd NEOPapaya_nano
+git clone <URL_DEL_REPO> WatermelonD_nano
+cd WatermelonD_nano
 ```
 
 ## 3. Ejecutar el Instalador
@@ -71,11 +71,11 @@ Verifica los logs:
 journalctl -u neo.service -f
 ```
 
-## 6. Interfaz Visual (NEOPapaya Face)
+## 6. Interfaz Visual (WatermelonD Face)
 
-Si tu dispositivo tiene pantalla (como tu convertible), puedes activar los "ojos" de NEOPapaya.
+Si tu dispositivo tiene pantalla (como tu convertible), puedes activar los "ojos" de WatermelonD.
 
-1. **Iniciar NEOPapaya Core**:
+1. **Iniciar WatermelonD Core**:
  ```bash
  python3 WatermelonD.py
  ```

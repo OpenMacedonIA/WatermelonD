@@ -1,18 +1,18 @@
 # GLOSARIO DE TÉRMINOS TÉCNICOS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Versión del Documento:** 1.0 
 **Fecha:** 03/12/2025 
 **Referencia:** Anexos I, II y III
 
 ---
 
-Este documento recopila y define los términos técnicos, acrónimos y conceptos avanzados utilizados en la documentación del sistema NEOPapaya, abarcando administración de sistemas, DevOps, arquitectura de software e Inteligencia Artificial.
+Este documento recopila y define los términos técnicos, acrónimos y conceptos avanzados utilizados en la documentación del sistema WatermelonD, abarcando administración de sistemas, DevOps, arquitectura de software e Inteligencia Artificial.
 
 ## A
 
 ### ALSA (Advanced Linux Sound Architecture)
-Componente del kernel de Linux que proporciona controladores de dispositivo para tarjetas de sonido. En NEOPapaya, se utiliza para la captura de audio de baja latencia, evitando capas intermedias como PulseAudio cuando es posible para reducir el retardo en el VAD.
+Componente del kernel de Linux que proporciona controladores de dispositivo para tarjetas de sonido. En WatermelonD, se utiliza para la captura de audio de baja latencia, evitando capas intermedias como PulseAudio cuando es posible para reducir el retardo en el VAD.
 
 ### AppArmor
 Módulo de seguridad del kernel de Linux que permite al administrador restringir las capacidades de un programa mediante perfiles. Se utiliza para "enjaular" los procesos del asistente, limitando su acceso al sistema de archivos y red.
@@ -37,7 +37,7 @@ Técnica de optimización en inferencia de LLMs que consiste en procesar múltip
 Técnica de ingeniería de prompts que induce al LLM a descomponer problemas complejos en pasos intermedios de razonamiento antes de dar la respuesta final. Mejora significativamente el rendimiento en tareas de lógica y matemáticas.
 
 ### CI/CD (Continuous Integration / Continuous Deployment)
-Práctica de desarrollo de software donde los cambios en el código se construyen, prueban y despliegan automáticamente. NEOPapaya utiliza GitHub Actions para validar cada commit y generar imágenes Docker.
+Práctica de desarrollo de software donde los cambios en el código se construyen, prueban y despliegan automáticamente. WatermelonD utiliza GitHub Actions para validar cada commit y generar imágenes Docker.
 
 ### Context Window (Ventana de Contexto)
 El límite máximo de tokens (texto) que un LLM puede procesar en una sola interacción, incluyendo el prompt del sistema, el historial de la conversación y la nueva consulta del usuario. Para Gemma-2B, es de 2048 tokens.
@@ -73,7 +73,7 @@ Algoritmo matemático que transforma una señal del dominio del tiempo (audio cr
 Proceso de tomar un modelo pre-entrenado (como Llama-3) y entrenarlo adicionalmente con un conjunto de datos específico de un dominio (ej. administración de sistemas) para mejorar su desempeño en esa área.
 
 ### Fuzzy Logic (Lógica Difusa)
-En el contexto de NEOPapaya, se refiere al uso de algoritmos de coincidencia de cadenas aproximada (como Levenshtein) para entender comandos de usuario que pueden contener errores tipográficos o variaciones ligeras.
+En el contexto de WatermelonD, se refiere al uso de algoritmos de coincidencia de cadenas aproximada (como Levenshtein) para entender comandos de usuario que pueden contener errores tipográficos o variaciones ligeras.
 
 ## G
 
@@ -102,7 +102,7 @@ En NLU, representa lo que el usuario quiere conseguir con su frase. Por ejemplo,
 ## K
 
 ### Kubernetes (K8s)
-Sistema de orquestación de contenedores de código abierto para automatizar el despliegue, el escalado y la gestión de aplicaciones en contenedores. Utilizado en despliegues de alta disponibilidad de NEOPapaya
+Sistema de orquestación de contenedores de código abierto para automatizar el despliegue, el escalado y la gestión de aplicaciones en contenedores. Utilizado en despliegues de alta disponibilidad de WatermelonD
 
 ### KV Cache (Key-Value Cache)
 Técnica de optimización en Transformers que almacena los vectores de claves y valores de tokens anteriores para no tener que recalcularlos en cada paso de generación, acelerando drásticamente la inferencia.
@@ -127,7 +127,7 @@ Técnica eficiente de fine-tuning que congela los pesos del modelo pre-entrenado
 Representación del espectro de potencia a corto plazo de un sonido, basada en una transformación lineal de coseno de un espectro de potencia logarítmico en una escala de frecuencia mel no lineal. Es la característica estándar para reconocimiento de voz.
 
 ### MQTT (Message Queuing Telemetry Transport)
-Protocolo de mensajería ligero basado en el modelo publicación-suscripción, ideal para conectar dispositivos remotos con una huella de código pequeña y ancho de banda de red mínimo. Es la "columna vertebral" de comunicación de NEOPapaya
+Protocolo de mensajería ligero basado en el modelo publicación-suscripción, ideal para conectar dispositivos remotos con una huella de código pequeña y ancho de banda de red mínimo. Es la "columna vertebral" de comunicación de WatermelonD
 
 ## N
 
@@ -169,7 +169,7 @@ Paradigma donde el LLM genera trazas de razonamiento y acciones específicas de 
 ## S
 
 ### STT (Speech-to-Text) / ASR (Automatic Speech Recognition)
-Tecnología que convierte el lenguaje hablado en texto escrito. NEOPapaya utiliza Vosk (offline) o Whisper para esta tarea.
+Tecnología que convierte el lenguaje hablado en texto escrito. WatermelonD utiliza Vosk (offline) o Whisper para esta tarea.
 
 ### Swappiness
 Parámetro del kernel de Linux que controla la agresividad con la que el sistema mueve procesos de la memoria física (RAM) al espacio de intercambio (Swap).
@@ -202,7 +202,7 @@ Base de datos optimizada para almacenar y consultar vectores (embeddings). Permi
 ## W
 
 ### Wake Word (Palabra de Activación)
-Palabra o frase clave (ej. "Oye Colega") que activa el asistente desde un estado de reposo de bajo consumo a un estado de escucha activa.
+Palabra o frase clave (ej. "Oye WatermelonD") que activa el asistente desde un estado de reposo de bajo consumo a un estado de escucha activa.
 
 ### WAL (Write-Ahead Logging)
 Modo de journal de SQLite que mejora significativamente la concurrencia, permitiendo que los lectores no bloqueen a los escritores y viceversa. Esencial para el rendimiento de la memoria a largo plazo.

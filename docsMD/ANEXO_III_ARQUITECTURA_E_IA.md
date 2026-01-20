@@ -1,6 +1,6 @@
 # ANEXO III: ARQUITECTURA INTERNA E INTELIGENCIA ARTIFICIAL
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Versión del Documento:** 1.9 (Versión Completa Definitiva) 
 **Fecha:** 03/12/2025 
 **Estado:** Release Candidate 
@@ -63,7 +63,7 @@
 ## 1. INTRODUCCIÓN A LA COGNICIÓN ARTIFICIAL
 
 ### 1.1. Filosofía de Diseño: Híbrido Determinista-Generativo
-NEOPapaya representa un cambio de paradigma respecto a los asistentes virtuales tradicionales. No es un simple chatbot basado en reglas ni una "caja negra" puramente generativa. Su arquitectura implementa un enfoque **híbrido** que combina la precisión quirúrgica de los sistemas deterministas con la flexibilidad creativa de los Modelos de Lenguaje Grande (LLM).
+WatermelonD representa un cambio de paradigma respecto a los asistentes virtuales tradicionales. No es un simple chatbot basado en reglas ni una "caja negra" puramente generativa. Su arquitectura implementa un enfoque **híbrido** que combina la precisión quirúrgica de los sistemas deterministas con la flexibilidad creativa de los Modelos de Lenguaje Grande (LLM).
 
 * **Capa Determinista (Fast System - Sistema 1):** Responsable de acciones críticas, comandos de sistema y respuestas inmediatas. Prioriza la velocidad, la seguridad y la exactitud. Si el usuario dice "Apagar sistema", el sistema *debe* obedecer inmediatamente, sin "alucinar" una respuesta filosófica o dudar. Esta capa opera en el orden de los milisegundos (<50ms).
 * **Capa Generativa (Slow System - Sistema 2):** Responsable de la interacción social, el razonamiento complejo, la síntesis de información y el manejo de consultas no estructuradas. Utiliza modelos cuantizados como Gemma-2B o Llama-3-8B para generar respuestas creativas y contextuales. Esta capa opera en el orden de los segundos (1-5s).
@@ -185,7 +185,7 @@ El sistema implementa un mecanismo de atención básico:
 ## 3. COMPRENSIÓN DEL LENGUAJE NATURAL (NLU)
 
 ### 3.1. Enfoque Híbrido: Fuzzy Logic vs Neural Networks
-NEOPapaya utiliza dos mecanismos paralelos y complementarios.
+WatermelonD utiliza dos mecanismos paralelos y complementarios.
 
 1. **RapidFuzz (Lógica Difusa):**
  * **Uso:** Comandos de sistema, control de hardware.
@@ -549,7 +549,7 @@ Conectar el LLM a la documentación técnica local (man pages, wikis) mediante u
 5. *llama.cpp: Port of Facebook's LLaMA model in C/C++* (Georgi Gerganov).
 
 ### 15.5. Licencia y Derechos de Uso
-Este documento técnico y la arquitectura descrita son propiedad intelectual del proyecto NEOPapaya Se permite su uso, modificación y distribución bajo los términos de la licencia MIT, siempre que se mantenga la atribución original. El uso de los modelos de IA (Gemma, Llama) está sujeto a sus respectivas licencias de uso.
+Este documento técnico y la arquitectura descrita son propiedad intelectual del proyecto WatermelonD Se permite su uso, modificación y distribución bajo los términos de la licencia MIT, siempre que se mantenga la atribución original. El uso de los modelos de IA (Gemma, Llama) está sujeto a sus respectivas licencias de uso.
 
 ---
 **Fin del Documento de Arquitectura e Inteligencia Artificial**

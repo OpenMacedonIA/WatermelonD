@@ -1,6 +1,6 @@
 **Proyecto Fin de Ciclo:**
 
-**NEOPapaya**
+**WatermelonD**
 **(COpiloto  Local para Entornos de Grupo y Administración)**
 
 **Índice**
@@ -243,12 +243,12 @@
 
 1. # **Objetivo principal de tu proyecto**
 
-   Desarrollar un asistente inteligente modular (NEOPapaya: Copiloto de Lenguaje para Entornos de Grupo y Administración) diseñado específicamente para optimizar tareas de administración de sistemas y gestión de infraestructuras IT, operando de forma 100% local para garantizar la soberanía de los datos.
+   Desarrollar un asistente inteligente modular (WatermelonD: Copiloto de Lenguaje para Entornos de Grupo y Administración) diseñado específicamente para optimizar tareas de administración de sistemas y gestión de infraestructuras IT, operando de forma 100% local para garantizar la soberanía de los datos.
 
-   El proyecto aborda la necesidad de una automatización inteligente capaz de ejecutar comandos complejos (Shell/Bash) mediante lenguaje natural, sin depender de APIs de terceros ni conexión a internet. A diferencia de los asistentes comerciales genéricos, NEOPapaya combina:
+   El proyecto aborda la necesidad de una automatización inteligente capaz de ejecutar comandos complejos (Shell/Bash) mediante lenguaje natural, sin depender de APIs de terceros ni conexión a internet. A diferencia de los asistentes comerciales genéricos, WatermelonD combina:
 
 * **Inteligencia Híbrida:** Un motor de reglas determinista para acciones críticas (start/stop servicios) junto con Modelos de Lenguaje Pequeños (SLMs como Gemma 2B y MANGO T5) para razonamiento y comprensión contextual.
-* **Seguridad Proactiva:** Módulos integrados (NEOPapayaGuard) para la detección de intrusiones y monitorización de anomalías en tiempo real.
+* **Seguridad Proactiva:** Módulos integrados (WatermelonDGuard) para la detección de intrusiones y monitorización de anomalías en tiempo real.
 * **Eficiencia en Recursos:** Optimización profunda para hardware de consumo (doble núcleo, 8GB RAM), permitiendo su despliegue en servidores perimetrales o estaciones de trabajo estándar.
 
 Este enfoque permite a las empresas y administradores reducir la carga cognitiva en tareas repetitivas, mantener un control estricto sobre la privacidad de la información y disponer de una interfaz de operación multimodal (Voz, Web, Terminal) altamente personalizable.
@@ -270,17 +270,17 @@ Este enfoque permite a las empresas y administradores reducir la carga cognitiva
 
 # **2\. Descripción del proyecto**
 
-NEOPapaya nace de la necesidad de un asistente personal, privado y autónomo, centrado en la administración de sistemas. La idea principal de su diseño es eliminar cualquier dependencia de la nube, garantizando que los datos pertenecen exclusivamente al usuario.
+WatermelonD nace de la necesidad de un asistente personal, privado y autónomo, centrado en la administración de sistemas. La idea principal de su diseño es eliminar cualquier dependencia de la nube, garantizando que los datos pertenecen exclusivamente al usuario.
 
 El desarrollo se fundamenta en tres pilares clave:
 
-* **Privacidad y Soberanía:** A diferencia de los asistentes comerciales, NEOPapaya se ejecuta 100% en local. No hay envío de audio ni telemetría externa.
+* **Privacidad y Soberanía:** A diferencia de los asistentes comerciales, WatermelonD se ejecuta 100% en local. No hay envío de audio ni telemetría externa.
 * **Eficiencia:** Diseñado para hardware modesto (desde Raspberry Pi hasta estaciones de trabajo), optimizando el uso de recursos para democratizar el acceso a asistentes inteligentes sin requerir GPUs costosas.
 * **Modularidad:** Arquitectura abierta basada en Python que permite ampliar funciones fácilmente.
 
 **Evolución del Proyecto:**
 
-Inicialmente concebido como *NEOPapaya* (un asistente para el cuidado de mayores), el proyecto pivotó hacia una herramienta técnica para administradores de sistemas (*SysAdmin AI*), refactorizando el código para eliminar dependencias gráficas (GUI) y centrarse en la operación "headless" y por consola. En la fase actual, se ha integrado inteligencia generativa local (Gemma y MANGO) para potenciar sus capacidades.
+Inicialmente concebido como *WatermelonD* (un asistente para el cuidado de mayores), el proyecto pivotó hacia una herramienta técnica para administradores de sistemas (*SysAdmin AI*), refactorizando el código para eliminar dependencias gráficas (GUI) y centrarse en la operación "headless" y por consola. En la fase actual, se ha integrado inteligencia generativa local (Gemma y MANGO) para potenciar sus capacidades.
 
 # **3. Descripción del Entorno de Desarrollo y Despliegue**
 
@@ -317,7 +317,7 @@ La arquitectura del proyecto es híbrida y distribuida, utilizando tres nodos pr
 
 # **4. Estudio de Necesidades y Requisitos Funcionales**
 
-NEOPapaya se posiciona como una herramienta de apoyo ("Copiloto") para administradores de sistemas, cubriendo el nicho de la automatización por voz segura y desconectada.
+WatermelonD se posiciona como una herramienta de apoyo ("Copiloto") para administradores de sistemas, cubriendo el nicho de la automatización por voz segura y desconectada.
 
 **Necesidades que cubre:**
 
@@ -334,7 +334,7 @@ NEOPapaya se posiciona como una herramienta de apoyo ("Copiloto") para administr
    * **Ejecución de Comandos:** Capacidad de entender y ejecutar órdenes de Bash complejas.
    * **Monitorización:** Lectura de logs en tiempo real y métricas de vitalidad (CPU/RAM).
    * **Red:** Diagnóstico mediante herramientas estándar (`ping`, `nmap`, `dig`).
-3. **Seguridad (NEOPapayaGuard):**
+3. **Seguridad (WatermelonDGuard):**
    * Detección pasiva de intentos de intrusión (análisis de `auth.log`).
    * Alertas de voz ante anomalías críticas.
 
@@ -353,7 +353,7 @@ Los recursos de hardware son los descritos en el apartado 3.2. A nivel de recurs
 
 1. **Fase 1 (Completada):** Prototipo funcional, reconocimiento de voz y ejecución de comandos básicos.
 2. **Fase 2 (Completada):** Modularización (WatermelonD), integración de LLM (Gemma) y Web UI v2.
-3. **Fase 3 (Actual):** Implementación de **Mango T5** (NL2Bash), seguridad con **NEOPapayaGuard** y optimización de hilos (Core v4).
+3. **Fase 3 (Actual):** Implementación de **Mango T5** (NL2Bash), seguridad con **WatermelonDGuard** y optimización de hilos (Core v4).
 4. **Fase 4 (Futura):** Interfaz Web Reactiva v3 y soporte completo para clústeres MNB (Mango Node Bros).
 
 ## **5.2 Identificación y gestión de riesgos**
@@ -364,7 +364,7 @@ Los recursos de hardware son los descritos en el apartado 3.2. A nivel de recurs
 
 # **6. Propuesta Técnica**
 
-NEOPapaya (v3.0 / Core v4) implementa una arquitectura modular dirigida por eventos, diseñada para desacoplar la percepción (sensores) de la cognición (IA) y la acción (actuadores).
+WatermelonD (v3.0 / Core v4) implementa una arquitectura modular dirigida por eventos, diseñada para desacoplar la percepción (sensores) de la cognición (IA) y la acción (actuadores).
 
 El núcleo, **WatermelonD**, actúa como un bus de mensajes local de baja latencia.
 
@@ -378,7 +378,7 @@ El núcleo, **WatermelonD**, actúa como un bus de mensajes local de baja latenc
 * **Intent Manager:** Clasificador de reglas difusas (`RapidFuzz`) para comandos deterministas inmediatos.
 * **AI Engine (Gemma):** Modelo Generativo (SLM) de 2B parámetros para mantener conversaciones fluidas y proporcionar respuestas de conocimiento general.
 * **Mango Manager (T5):** Modelo especializado (Fine-Tuned) para la traducción de Lenguaje Natural a Comandos Bash (`NL2Bash`), el corazón de la propuesta SysAdmin.
-* **Brain:** Memoria episódica persistente (SQLite) que almacena alias, historial y preferencias del usuario.
+* **BrainNut:** Memoria episódica persistente (SQLite) que almacena alias, historial y preferencias del usuario.
 
 ## **6.3 Capa de Acción y Gestión (Outputs)**
 
@@ -433,9 +433,9 @@ Para dotar al proyecto de un marco realista, se plantea su desarrollo e implanta
 
 * **Misión:** Proveer herramientas de automatización seguras y privadas que reduzcan la carga de trabajo repetitiva de los administradores de sistemas.
 * **Modelo de Negocio:**
-  * **Consultoría e Implantación:** Despliegue de asistentes NEOPapaya personalizados en la infraestructura del cliente (On-Premise).
+  * **Consultoría e Implantación:** Despliegue de asistentes WatermelonD personalizados en la infraestructura del cliente (On-Premise).
   * **Soporte Técnico:** Mantenimiento, actualización de modelos y resolución de incidencias.
-  * **Personalización:** Desarrollo de "Skills" a medida para integrar NEOPapaya con CRMs, ERPs o herramientas de monitorización específicas (Zabbix, Prometheus).
+  * **Personalización:** Desarrollo de "Skills" a medida para integrar WatermelonD con CRMs, ERPs o herramientas de monitorización específicas (Zabbix, Prometheus).
 
 ## **9.2 Estudio de Viabilidad Económica (Presupuesto)**
 
@@ -480,11 +480,11 @@ Este presupuesto refleja un proyecto de bajo coste de capital (CAPEX) gracias al
 
 # ANEXO I: MANUAL DE USUARIO Y ADMINISTRACIÓN
 
-# PROYECTO NEOPapaya
+# PROYECTO WatermelonD
 
 **Versión del Documento:** 1.2
 **Fecha:** 02/12/2025
-**Proyecto:** NEOPapaya (Copiloto de Lenguaje para Entornos de Grupo y Administración)
+**Proyecto:** WatermelonD (Copiloto de Lenguaje para Entornos de Grupo y Administración)
 
 ---
 
@@ -556,7 +556,7 @@ Este presupuesto refleja un proyecto de bajo coste de capital (CAPEX) gracias al
 
 ### 1.1. Propósito del Documento
 
-El presente documento, **ANEXO I: Manual de Usuario y Administración**, tiene como objetivo proporcionar una guía exhaustiva y detallada para la instalación, configuración, uso y administración del sistema **NEOPapaya**. Este manual sirve como referencia tanto para usuarios finales que interactúan con el asistente como para administradores de sistemas encargados de su despliegue y mantenimiento.
+El presente documento, **ANEXO I: Manual de Usuario y Administración**, tiene como objetivo proporcionar una guía exhaustiva y detallada para la instalación, configuración, uso y administración del sistema **WatermelonD**. Este manual sirve como referencia tanto para usuarios finales que interactúan con el asistente como para administradores de sistemas encargados de su despliegue y mantenimiento.
 
 ### 1.2. Audiencia Objetivo
 
@@ -568,7 +568,7 @@ Este manual está dirigido a dos tipos de usuarios principales:
 
 ### 1.3. Alcance del Sistema
 
-NEOPapaya es un asistente personal híbrido que combina:
+WatermelonD es un asistente personal híbrido que combina:
 
 * **Control Determinista:** Ejecución precisa de comandos para tareas críticas (apagar sistema, conectar SSH, gestionar archivos).
 * **Inteligencia Generativa:** Uso de un LLM local (Gemma 2B) para mantener conversaciones naturales, responder preguntas complejas y ofrecer una personalidad definida.
@@ -576,7 +576,7 @@ NEOPapaya es un asistente personal híbrido que combina:
 
 ### 1.4. Glosario de Términos
 
-* **Wake Word:** Palabra clave que activa la escucha del asistente (ej. "Colega", "Tío").
+* **Wake Word:** Palabra clave que activa la escucha del asistente (ej. "WatermelonD", "Tío").
 * **LLM (Large Language Model):** Modelo de lenguaje grande (Gemma 2B) utilizado para generar texto.
 * **STT (Speech-to-Text):** Tecnología de reconocimiento de voz (Vosk/Whisper).
 * **TTS (Text-to-Speech):** Tecnología de síntesis de voz (Piper).
@@ -638,13 +638,13 @@ Antes de iniciar la instalación, asegúrese de que el sistema esté actualizado
 
 ```bash
  cd ~
- git clone https://github.com/jrodriiguezg/NEOPapaya.git
- cd NEOPapaya
+ git clone https://github.com/jrodriiguezg/WatermelonD.git
+ cd WatermelonD
 ```
 
 ### 2.3. Proceso de Instalación Automatizada
 
-NEOPapaya incluye un script `install.sh` que automatiza la configuración. Este script realiza las siguientes acciones:
+WatermelonD incluye un script `install.sh` que automatiza la configuración. Este script realiza las siguientes acciones:
 
 1. Detecta el gestor de paquetes (`apt` o `dnf`).
 2. Instala dependencias del sistema (compiladores, librerías de audio, herramientas de red).
@@ -687,7 +687,7 @@ Una vez finalizado el script, verifique que todo esté correcto:
  journalctl --user -u neo.service -f
 ```
 
- Busque mensajes como "NEOPapaya Core iniciado", "Modelos cargados correctamente".
+ Busque mensajes como "WatermelonD Core iniciado", "Modelos cargados correctamente".
 
 3. **Prueba de Audio:**
    El sistema debería emitir un sonido de inicio o un saludo verbal si los altavoces están configurados correctamente.
@@ -749,7 +749,7 @@ Para cambiar el nombre al que responde el asistente:
 1. Edite `config/config.json`.
 2. Modifique el valor de `"wake_word"`. Puede ser una lista de palabras.
  ```json
- "wake_word": ["colega", "tío", "robot"]
+ "wake_word": ["WatermelonD", "tío", "robot"]
 ```
 
 3. Reinicie el servicio:
@@ -765,7 +765,7 @@ Para cambiar el nombre al que responde el asistente:
 
 ### 3.4. Configuración de Red y MQTT
 
-NEOPapaya utiliza MQTT para comunicarse con otros dispositivos ("Network Bros").
+WatermelonD utiliza MQTT para comunicarse con otros dispositivos ("Network Bros").
 
 * **Broker:** Por defecto usa `localhost`. Si tiene un broker central en la red, cambie `"broker": "IP_DEL_BROKER"`.
 * **Topic Base:** Los agentes publican en `home/agents/{hostname}/...`.
@@ -786,16 +786,16 @@ La forma principal de interactuar es mediante la voz. Diga la palabra de activac
 
 #### 4.1.1. Comandos de Sistema
 
-* **Apagar/Reiniciar:** "Colega, apaga el sistema", "Colega, reinicia el ordenador".
-* **Estado:** "Colega, ¿cómo estás?", "Colega, dame un diagnóstico del sistema".
-* **Volumen:** "Colega, sube el volumen", "Colega, silencio".
+* **Apagar/Reiniciar:** "WatermelonD, apaga el sistema", "WatermelonD, reinicia el ordenador".
+* **Estado:** "WatermelonD, ¿cómo estás?", "WatermelonD, dame un diagnóstico del sistema".
+* **Volumen:** "WatermelonD, sube el volumen", "WatermelonD, silencio".
 
 #### 4.1.2. Comandos de Red y SSH
 
-* **IP Pública:** "Colega, ¿cuál es mi IP pública?".
-* **Escaneo de Red:** "Colega, escanea la red en busca de intrusos".
-* **Ping:** "Colega, haz un ping a google.com".
-* **SSH:** "Colega, conéctate al servidor principal", "Colega, ejecuta 'ls -la' en el servidor".
+* **IP Pública:** "WatermelonD, ¿cuál es mi IP pública?".
+* **Escaneo de Red:** "WatermelonD, escanea la red en busca de intrusos".
+* **Ping:** "WatermelonD, haz un ping a google.com".
+* **SSH:** "WatermelonD, conéctate al servidor principal", "WatermelonD, ejecuta 'ls -la' en el servidor".
 
 #### 4.1.3. Comandos de Organización
 
@@ -820,7 +820,7 @@ Ahora potenciados por **MANGO T5**, lo que permite una mayor flexibilidad en el 
 
 #### 4.1.6. Filtrado Inteligente de Salida (Smart Output)
 
-NEOPapaya procesa inteligentemente las respuestas largas de comandos para no saturar el canal de voz:
+WatermelonD procesa inteligentemente las respuestas largas de comandos para no saturar el canal de voz:
 
 * **Listas (`ls`):** Si hay muchos archivos, dirá el total y leerá solo los primeros 3.
 * **Logs:** Leerá solo las últimas 2 líneas para dar el contexto más reciente.
@@ -828,7 +828,7 @@ NEOPapaya procesa inteligentemente las respuestas largas de comandos para no sat
 
 ### 4.2. Interacción Conversacional (Gemma 2B)
 
-Si el comando no coincide con una instrucción predefinida, NEOPapaya usará su "cerebro" (Gemma 2B) para responder.
+Si el comando no coincide con una instrucción predefinida, WatermelonD usará su "cerebro" (Gemma 2B) para responder.
 
 * **Preguntas generales:** "¿Quién fue Nikola Tesla?", "¿Cuál es la capital de Australia?".
 * **Conversación:** "Hola, ¿qué tal te sientes hoy?", "Cuéntame un chiste".
@@ -856,14 +856,14 @@ Las alertas del sistema (ej. "CPU caliente", "Intruso detectado en red") aparece
 
 ### 4.4. Uso del Explorador de Archivos
 
-NEOPapaya permite buscar archivos localmente.
+WatermelonD permite buscar archivos localmente.
 
 * **Búsqueda:** "Busca el archivo 'presupuesto.pdf'".
 * **Lectura:** "Léeme el archivo 'notas.txt'".
 
 ### 4.5. Gestión del Conocimiento (RAG)
 
-NEOPapaya puede aprender de tus documentos.
+WatermelonD puede aprender de tus documentos.
 
 1. Ve a la web `http://localhost:5000/knowledge`.
 2. Arrastra archivos `.pdf`, `.txt` o `.md` al área de subida.
@@ -895,7 +895,7 @@ Los logs son vitales para el diagnóstico. Se almacenan en `logs/` y en el journ
 
 El módulo `NetworkManager` y `MQTTManager` permiten la interoperabilidad.
 
-* **Añadir nuevos agentes:** Simplemente configure otro dispositivo con un cliente MQTT que publique en el topic `home/agents/NUEVO_AGENTE/status`. NEOPapaya lo detectará automáticamente.
+* **Añadir nuevos agentes:** Simplemente configure otro dispositivo con un cliente MQTT que publique en el topic `home/agents/NUEVO_AGENTE/status`. WatermelonD lo detectará automáticamente.
 * **Seguridad:** Revise `modules/guard.py` para configurar reglas de bloqueo de IPs o alertas de escaneo de puertos.
 
 ### 5.4. Administración Remota (SSH Manager)
@@ -925,12 +925,12 @@ En `http://localhost:5000/docker` encontrará un panel dedicado:
 #### Opción A: Desde la Web (Recomendado)
 
 1. Vaya a la sección **Acciones** de la interfaz web.
-2. Pulse el botón **"Actualizar NEOPapaya"**.
+2. Pulse el botón **"Actualizar WatermelonD"**.
 3. El sistema descargará los cambios (`git pull`) y se reiniciará automáticamente.
 
 #### Opción B: Manual (Terminal)
 
-1. Vaya al directorio del proyecto: `cd ~/NEOPapaya`
+1. Vaya al directorio del proyecto: `cd ~/WatermelonD`
 2. Descargue cambios: `git pull`
 3. Si hay cambios en dependencias: `source venv/bin/activate && pip install -r requirements.txt`
 4. Reinicie el servicio: `systemctl --user restart neo.service`
@@ -981,7 +981,7 @@ Algunos parámetros no están en `config.json` por defecto pero pueden añadirse
 
 ### 9.1. Hardening del Sistema Operativo
 
-Dado que NEOPapaya tiene capacidades de administración (SSH, apagado), es crucial asegurar el host.
+Dado que WatermelonD tiene capacidades de administración (SSH, apagado), es crucial asegurar el host.
 
 1. **Deshabilitar Root SSH:** Edite `/etc/ssh/sshd_config` y establezca `PermitRootLogin no`.
 2. **Actualizaciones Automáticas:** Instale `unattended-upgrades` para parches de seguridad.
@@ -1010,7 +1010,7 @@ Revise regularmente quién accede al sistema.
 
 * Comando `last`: Muestra los últimos inicios de sesión.
 * Comando `lastb`: Muestra intentos de inicio de sesión fallidos.
-* El módulo `Guard` de NEOPapaya automatiza parte de esto, pero la revisión manual es insustituible.
+* El módulo `Guard` de WatermelonD automatiza parte de esto, pero la revisión manual es insustituible.
 
 ---
 
@@ -1046,7 +1046,7 @@ Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0 (
 
 ### 11.2. Librerías Open Source Utilizadas
 
-NEOPapaya es posible gracias al gigante ecosistema de código abierto:
+WatermelonD es posible gracias al gigante ecosistema de código abierto:
 
 * **Vosk:** Reconocimiento de voz offline.
 * **Piper:** Síntesis de voz neuronal rápida.
@@ -1077,7 +1077,7 @@ NEOPapaya es posible gracias al gigante ecosistema de código abierto:
 
 ### 12.2. Estructura de Directorios
 
-* `~/NEOPapaya/`
+* `~/WatermelonD/`
 * `WatermelonD.py`: Archivo principal.
 * `config/`:
 * `config.json`: Configuración general.
@@ -1100,7 +1100,7 @@ NEOPapaya es posible gracias al gigante ecosistema de código abierto:
 
 # ANEXO II: MANUAL TÉCNICO DE DESPLIEGUE (INGENIERÍA)
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Versión del Documento:** 2.1 (Revisión Técnica Extendida)
 **Fecha:** 03/12/2025
 **Estado:** Release Candidate
@@ -1175,7 +1175,7 @@ El sistema se construye sobre un stack moderno y eficiente, priorizando el rendi
 
 ### 1.3. Filosofía de Diseño (Edge Computing)
 
-NEOPapaya sigue una filosofía "Local-First".
+WatermelonD sigue una filosofía "Local-First".
 
 * **Privacidad:** Ningún dato de voz o texto sale de la red local.
 * **Latencia:** El procesamiento en el borde (Edge) elimina la latencia de red hacia la nube.
@@ -1340,7 +1340,7 @@ CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python --force-reinstall --no-
 
 Se recomienda el uso de `venv` estándar por su estabilidad, pero asegurando aislamiento total de `site-packages` del sistema para evitar conflictos con librerías de la distribución (ej. `python3-numpy` de apt vs `numpy` de pip).
 
-* **Path:** `/home/usuario/NEOPapaya/venv`
+* **Path:** `/home/usuario/WatermelonD/venv`
 * **Pip.conf:** Configurar `global.index-url` si se usa un mirror corporativo o caché local (ej. `devpi`) para acelerar despliegues repetitivos.
 
 ### 3.3. Despliegue de Modelos (GGUF & ONNX)
@@ -1482,7 +1482,7 @@ version: '3.8'
 services:
  neo-core:
  build: .
- image: colega-core:latest
+ image: WatermelonD-core:latest
  container_name: neo_core
  restart: unless-stopped
  devices:
@@ -1533,7 +1533,7 @@ spec:
  spec:
  containers:
  - name: neo
- image: colega-core:arm64-v2.1
+ image: WatermelonD-core:arm64-v2.1
  resources:
  requests:
  memory: "512Mi"
@@ -1640,7 +1640,7 @@ Si se ejecuta con Systemd nativo, se pueden usar las directivas de sandboxing pa
 [Service]
 # Solo permitir acceso a red, no a /home (excepto RW paths explícitos)
 ProtectHome=read-only
-ReadWritePaths=/home/usuario/NEOPapaya/database /home/usuario/NEOPapaya/logs
+ReadWritePaths=/home/usuario/WatermelonD/database /home/usuario/WatermelonD/logs
 # Aislar /tmp (crea un /tmp privado para el proceso)
 PrivateTmp=true
 # Prohibir escalada de privilegios (sudo, suid)
@@ -1662,7 +1662,7 @@ Para entornos de alta seguridad (ej. oficinas gubernamentales), se debe generar 
 ```apparmor
 #include <tunables/global>
 
-profile neo /home/usuario/NEOPapaya/venv/bin/python3 {
+profile neo /home/usuario/WatermelonD/venv/bin/python3 {
 #include <abstractions/base>
 #include <abstractions/python>
 #include <abstractions/audio>
@@ -1672,11 +1672,11 @@ profile neo /home/usuario/NEOPapaya/venv/bin/python3 {
  network inet udp,
 
 # Read project files
- /home/usuario/NEOPapaya/** r,
+ /home/usuario/WatermelonD/** r,
  
 # Write logs and db
- /home/usuario/NEOPapaya/logs/** rw,
- /home/usuario/NEOPapaya/database/** rw,
+ /home/usuario/WatermelonD/logs/** rw,
+ /home/usuario/WatermelonD/database/** rw,
  
 # Deny execution of other binaries
  deny /bin/bash x,
@@ -1742,7 +1742,7 @@ Estimación de consumo en reposo vs carga máxima.
 
 # ANEXO III: ARQUITECTURA INTERNA E INTELIGENCIA ARTIFICIAL
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Versión del Documento:** 1.9 (Versión Completa Definitiva)
 **Fecha:** 03/12/2025
 **Estado:** Release Candidate
@@ -1806,7 +1806,7 @@ Estimación de consumo en reposo vs carga máxima.
 
 ### 1.1. Filosofía de Diseño: Híbrido Determinista-Generativo
 
-NEOPapaya representa un cambio de paradigma respecto a los asistentes virtuales tradicionales. No es un simple chatbot basado en reglas ni una "caja negra" puramente generativa. Su arquitectura implementa un enfoque **híbrido** que combina la precisión quirúrgica de los sistemas deterministas con la flexibilidad creativa de los Modelos de Lenguaje Grande (LLM).
+WatermelonD representa un cambio de paradigma respecto a los asistentes virtuales tradicionales. No es un simple chatbot basado en reglas ni una "caja negra" puramente generativa. Su arquitectura implementa un enfoque **híbrido** que combina la precisión quirúrgica de los sistemas deterministas con la flexibilidad creativa de los Modelos de Lenguaje Grande (LLM).
 
 * **Capa Determinista (Fast System - Sistema 1):** Responsable de acciones críticas, comandos de sistema y respuestas inmediatas. Prioriza la velocidad, la seguridad y la exactitud. Si el usuario dice "Apagar sistema", el sistema *debe* obedecer inmediatamente, sin "alucinar" una respuesta filosófica o dudar. Esta capa opera en el orden de los milisegundos (<50ms).
 * **Capa Generativa (Slow System - Sistema 2):** Responsable de la interacción social, el razonamiento complejo, la síntesis de información y el manejo de consultas no estructuradas. Utiliza modelos cuantizados como Gemma-2B o Llama-3-8B para generar respuestas creativas y contextuales. Esta capa opera en el orden de los segundos (1-5s).
@@ -1948,7 +1948,7 @@ El sistema implementa un mecanismo de atención básico:
 
 ### 3.1. Enfoque Híbrido: Fuzzy Logic vs Neural Networks
 
-NEOPapaya utiliza dos mecanismos paralelos y complementarios.
+WatermelonD utiliza dos mecanismos paralelos y complementarios.
 
 1. **RapidFuzz (Lógica Difusa):**
 
@@ -2376,7 +2376,7 @@ Conectar el LLM a la documentación técnica local (man pages, wikis) mediante u
 
 ### 15.5. Licencia y Derechos de Uso
 
-Este documento técnico y la arquitectura descrita son propiedad intelectual del proyecto NEOPapaya Se permite su uso, modificación y distribución bajo los términos de la licencia MIT, siempre que se mantenga la atribución original. El uso de los modelos de IA (Gemma, Llama) está sujeto a sus respectivas licencias de uso.
+Este documento técnico y la arquitectura descrita son propiedad intelectual del proyecto WatermelonD Se permite su uso, modificación y distribución bajo los términos de la licencia MIT, siempre que se mantenga la atribución original. El uso de los modelos de IA (Gemma, Llama) está sujeto a sus respectivas licencias de uso.
 
 ---
 
@@ -2384,7 +2384,7 @@ Este documento técnico y la arquitectura descrita son propiedad intelectual del
 
 # ANEXO IV: RESOLUCIÓN DE PROBLEMAS (TROUBLESHOOTING)
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 04/12/2025
 **Versión del Documento:** 1.0
 
@@ -2392,7 +2392,7 @@ Este documento técnico y la arquitectura descrita son propiedad intelectual del
 
 ## 1. INTRODUCCIÓN
 
-Este documento consolida todas las guías de solución de problemas, códigos de error y procedimientos de depuración para el sistema NEOPapaya, abarcando desde problemas de usuario final hasta depuración de bajo nivel.
+Este documento consolida todas las guías de solución de problemas, códigos de error y procedimientos de depuración para el sistema WatermelonD, abarcando desde problemas de usuario final hasta depuración de bajo nivel.
 
 ---
 
@@ -2501,7 +2501,7 @@ Códigos estandarizados para logs y alertas MQTT.
 
 # ANEXO V: PROGRAMACIÓN Y CREACIÓN DE SKILLS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 04/12/2025
 **Versión del Documento:** 1.0
 
@@ -2509,7 +2509,7 @@ Códigos estandarizados para logs y alertas MQTT.
 
 ## 1. INTRODUCCIÓN
 
-Este documento es una guía técnica detallada para desarrolladores que deseen extender la funcionalidad de NEOPapaya mediante la creación de nuevos módulos o "Skills".
+Este documento es una guía técnica detallada para desarrolladores que deseen extender la funcionalidad de WatermelonD mediante la creación de nuevos módulos o "Skills".
 
 ---
 
@@ -2582,7 +2582,7 @@ Si el trigger contiene `{param}`, el sistema extraerá esa parte de la frase y l
 
 ---
 
-## 4. ACCESO AL NÚCLEO (NEOCORE)
+## 4. ACCESO AL NÚCLEO (WatermelonD)
 
 La instancia `self.core` proporciona acceso a todos los subsistemas críticos:
 
@@ -2661,7 +2661,7 @@ class WeatherSkill(BaseSkill):
 
 # ANEXO VI: PRUEBAS DE VALIDACIÓN Y RENDIMIENTO
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 06/12/2025
 **Versión del Documento:** 1.0
 
@@ -2669,7 +2669,7 @@ class WeatherSkill(BaseSkill):
 
 ## 1. INTRODUCCIÓN
 
-Este documento detalla la batería de pruebas realizadas para validar la funcionalidad, estabilidad y rendimiento del sistema NEOPapaya Se incluyen pruebas unitarias de componentes críticos, pruebas de integración del pipeline completo y pruebas de estrés/rendimiento en hardware objetivo (Raspberry Pi 4/5).
+Este documento detalla la batería de pruebas realizadas para validar la funcionalidad, estabilidad y rendimiento del sistema WatermelonD Se incluyen pruebas unitarias de componentes críticos, pruebas de integración del pipeline completo y pruebas de estrés/rendimiento en hardware objetivo (Raspberry Pi 4/5).
 
 ---
 
@@ -2733,7 +2733,7 @@ Este documento detalla la batería de pruebas realizadas para validar la funcion
 * **Escenario:**
 
 1. El asistente comienza a leer un texto largo.
-2. El usuario dice "Colega, para".
+2. El usuario dice "WatermelonD, para".
 
 * **Resultados:**
 * El módulo de audio detecta energía (VAD) durante el estado `SPEAKING`.
@@ -2785,7 +2785,7 @@ Desglose del tiempo de respuesta para una consulta simple ("Hola").
 
 # ANEXO VII: RETOS DE DESARROLLO Y SOLUCIONES ADOPTADAS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 06/12/2025
 **Versión del Documento:** 1.0
 
@@ -2793,7 +2793,7 @@ Desglose del tiempo de respuesta para una consulta simple ("Hola").
 
 ## 1. INTRODUCCIÓN
 
-Este anexo documenta los principales obstáculos técnicos encontrados durante el ciclo de desarrollo del proyecto NEOPapaya, así como las soluciones de ingeniería implementadas para superarlos. A diferencia del *Anexo IV (Troubleshooting)*, que se centra en el usuario final, este documento se centra en las decisiones de arquitectura y optimización de bajo nivel.
+Este anexo documenta los principales obstáculos técnicos encontrados durante el ciclo de desarrollo del proyecto WatermelonD, así como las soluciones de ingeniería implementadas para superarlos. A diferencia del *Anexo IV (Troubleshooting)*, que se centra en el usuario final, este documento se centra en las decisiones de arquitectura y optimización de bajo nivel.
 
 ---
 
@@ -2862,11 +2862,11 @@ Este anexo documenta los principales obstáculos técnicos encontrados durante e
 
 ## 5. CONCLUSIÓN
 
-El desarrollo de NEOPapaya ha demostrado que es posible ejecutar IA generativa moderna en hardware de bajo coste (Edge AI), siempre y cuando se apliquen optimizaciones agresivas a nivel de sistema operativo y se elijan las arquitecturas de modelos adecuadas (SLMs vs LLMs).
+El desarrollo de WatermelonD ha demostrado que es posible ejecutar IA generativa moderna en hardware de bajo coste (Edge AI), siempre y cuando se apliquen optimizaciones agresivas a nivel de sistema operativo y se elijan las arquitecturas de modelos adecuadas (SLMs vs LLMs).
 
 # ANEXO VIII: REFERENCIAS Y BIBLIOGRAFÍA
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 06/12/2025
 **Versión del Documento:** 1.0
 
@@ -2874,7 +2874,7 @@ El desarrollo de NEOPapaya ha demostrado que es posible ejecutar IA generativa m
 
 ## 1. LIBRERÍAS Y SOFTWARE OPEN SOURCE
 
-El proyecto NEOPapaya se construye sobre hombros de gigantes. Agradecemos y referenciamos los siguientes proyectos de código abierto:
+El proyecto WatermelonD se construye sobre hombros de gigantes. Agradecemos y referenciamos los siguientes proyectos de código abierto:
 
 ### 1.1. Inteligencia Artificial y Procesamiento
 

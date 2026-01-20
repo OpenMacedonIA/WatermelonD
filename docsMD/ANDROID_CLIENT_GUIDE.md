@@ -1,6 +1,6 @@
 # Guía de Despliegue de WebUI en Android (Termux)
 
-Esta guía te permitirá ejecutar la interfaz web de NEOPapaya en una tablet o teléfono Android utilizando Termux. De esta forma, puedes usar tu dispositivo móvil como un panel de control dedicado, mientras el núcleo del sistema (WatermelonD) se ejecuta en tu PC o Raspberry Pi.
+Esta guía te permitirá ejecutar la interfaz web de WatermelonD en una tablet o teléfono Android utilizando Termux. De esta forma, puedes usar tu dispositivo móvil como un panel de control dedicado, mientras el núcleo del sistema (WatermelonD) se ejecuta en tu PC o Raspberry Pi.
 
 ## Prerrequisitos
 
@@ -24,11 +24,11 @@ pkg install nano -y
 
 ## Paso 2: Obtener el Código
 
-Clona el repositorio de NEOPapaya en tu dispositivo:
+Clona el repositorio de WatermelonD en tu dispositivo:
 
 ```bash
-git clone https://github.com/jrodriiguezg/NEOPapaya.git
-cd NEOPapaya
+git clone https://github.com/jrodriiguezg/WatermelonD.git
+cd WatermelonD
 ```
 
 ## Paso 3: Instalación de Dependencias del Cliente
@@ -62,7 +62,7 @@ python TangerineUI/app.py
 
 Verás un mensaje como este:
 ```
- NEOPapaya Headless Client starting...
+ WatermelonD Headless Client starting...
  Connected to WatermelonD at: http://192.168.1.50:5000
  Web Interface at: http://0.0.0.0:8000
 ```
@@ -70,7 +70,7 @@ Verás un mensaje como este:
 Ahora, abre tu navegador favorito en Android (Chrome, Firefox) y ve a:
 `http://localhost:8000`
 
-¡Listo! Deberías ver la interfaz de control de NEOPapaya.
+¡Listo! Deberías ver la interfaz de control de WatermelonD.
 
 ---
 
@@ -83,9 +83,9 @@ Para no tener que escribir los comandos cada vez, puedes crear un pequeño scrip
  cd ~
  ```
 
-2. Crea un archivo llamado `iniciar_colega.sh`:
+2. Crea un archivo llamado `iniciar_WatermelonD.sh`:
  ```bash
- nano iniciar_colega.sh
+ nano iniciar_WatermelonD.sh
  ```
 
 3. Pega el siguiente contenido (ajustando la IP):
@@ -95,9 +95,9 @@ Para no tener que escribir los comandos cada vez, puedes crear un pequeño scrip
 # CAMBIA ESTO POR LA IP DE TU PC
  SERVER_IP="192.168.1.50"
  
- echo " Conectando a NEOPapaya en $SERVER_IP..."
+ echo " Conectando a WatermelonD en $SERVER_IP..."
  
- cd ~/NEOPapaya
+ cd ~/WatermelonD
  export NEO_API_URL="http://$SERVER_IP:5000"
  python TangerineUI/app.py
  ```
@@ -106,10 +106,10 @@ Para no tener que escribir los comandos cada vez, puedes crear un pequeño scrip
 
 5. Dale permisos de ejecución:
  ```bash
- chmod +x iniciar_colega.sh
+ chmod +x iniciar_WatermelonD.sh
  ```
 
 6. Ahora, cada vez que abras Termux, solo escribe:
  ```bash
- ./iniciar_colega.sh
+ ./iniciar_WatermelonD.sh
  ```

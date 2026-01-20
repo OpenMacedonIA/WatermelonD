@@ -1,6 +1,6 @@
 # ANEXO VII: RETOS DE DESARROLLO Y SOLUCIONES ADOPTADAS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Fecha:** 06/12/2025 
 **Versión del Documento:** 1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. INTRODUCCIÓN
 
-Este anexo documenta los principales obstáculos técnicos encontrados durante el ciclo de desarrollo del proyecto NEOPapaya, así como las soluciones de ingeniería implementadas para superarlos. A diferencia del *Anexo IV (Troubleshooting)*, que se centra en el usuario final, este documento se centra en las decisiones de arquitectura y optimización de bajo nivel.
+Este anexo documenta los principales obstáculos técnicos encontrados durante el ciclo de desarrollo del proyecto WatermelonD, así como las soluciones de ingeniería implementadas para superarlos. A diferencia del *Anexo IV (Troubleshooting)*, que se centra en el usuario final, este documento se centra en las decisiones de arquitectura y optimización de bajo nivel.
 
 ---
 
@@ -65,4 +65,4 @@ Este anexo documenta los principales obstáculos técnicos encontrados durante e
 
 ## 5. CONCLUSIÓN
 
-El desarrollo de NEOPapaya ha demostrado que es posible ejecutar IA generativa moderna en hardware de bajo coste (Edge AI), siempre y cuando se apliquen optimizaciones agresivas a nivel de sistema operativo y se elijan las arquitecturas de modelos adecuadas (SLMs vs LLMs).
+El desarrollo de WatermelonD ha demostrado que es posible ejecutar IA generativa moderna en hardware de bajo coste (Edge AI), siempre y cuando se apliquen optimizaciones agresivas a nivel de sistema operativo y se elijan las arquitecturas de modelos adecuadas (SLMs vs LLMs).

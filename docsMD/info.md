@@ -1,17 +1,17 @@
-# NEOPapaya - Asistente de Administración de Sistemas
+# WatermelonD - Asistente de Administración de Sistemas
 
 ## Descripción General
-**NEOPapaya** ha evolucionado. Lo que comenzó como un asistente para el cuidado de mayores se ha transformado en una potente herramienta **Headless** (sin monitor) para **Administradores de Sistemas**.
+**WatermelonD** ha evolucionado. Lo que comenzó como un asistente para el cuidado de mayores se ha transformado en una potente herramienta **Headless** (sin monitor) para **Administradores de Sistemas**.
 
-Diseñado para ejecutarse en dispositivos ligeros como la **Raspberry Pi** o en estaciones de trabajo Linux (**Fedora/Debian**), NEOPapaya actúa como tu compañero de laboratorio. Puedes pedirle el estado del servidor por voz mientras trabajas en hardware, o gestionar servicios y terminales desde su panel web profesional desde cualquier dispositivo de la red.
+Diseñado para ejecutarse en dispositivos ligeros como la **Raspberry Pi** o en estaciones de trabajo Linux (**Fedora/Debian**), WatermelonD actúa como tu compañero de laboratorio. Puedes pedirle el estado del servidor por voz mientras trabajas en hardware, o gestionar servicios y terminales desde su panel web profesional desde cualquier dispositivo de la red.
 
 ## Características Principales
 
 ### ️ Control por Voz (Offline)
 * **Privacidad Total**: Todo el reconocimiento de voz se realiza en local usando **Vosk**. Nada se envía a la nube.
-* **Cerebro (Brain)**: Aprende alias y datos ("Aprende que X es Y").
+* **Cerebro (BrainNut)**: Aprende alias y datos ("Aprende que X es Y").
 * **Seguridad de Red**: Escanea la red local, hace pings y consultas WHOIS ("Escanea mi red", "Ping a google").
-* **Monitorización**: "NEOPapaya, ¿cómo está la CPU?", "NEOPapaya, reinicia la red".
+* **Monitorización**: "WatermelonD, ¿cómo está la CPU?", "WatermelonD, reinicia la red".
 * **Personalidad Tech**: Respuestas ajustadas al contexto técnico.
 
 ### Consola de Administración Web (Pro)
@@ -73,8 +73,8 @@ El sistema detecta automáticamente si estás en Debian (Raspberry Pi OS) o Fedo
 
 ### Vía Voz
 1. Asegúrate de tener un micrófono conectado.
-2. Di **"NEOPapaya"** (o tu palabra clave configurada).
-3. Espera el sonido de escucha o di el comando directamente: *"NEOPapaya, dame un reporte de estado"*.
+2. Di **"WatermelonD"** (o tu palabra clave configurada).
+3. Espera el sonido de escucha o di el comando directamente: *"WatermelonD, dame un reporte de estado"*.
 
 ### Vía Web
 1. Abre un navegador en tu PC o Móvil.

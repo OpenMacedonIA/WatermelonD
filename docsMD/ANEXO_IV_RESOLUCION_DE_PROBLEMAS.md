@@ -1,6 +1,6 @@
 # ANEXO IV: RESOLUCIÓN DE PROBLEMAS (TROUBLESHOOTING)
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Fecha:** 04/12/2025 
 **Versión del Documento:** 1.0
 
@@ -8,7 +8,7 @@
 
 ## 1. INTRODUCCIÓN
 
-Este documento consolida todas las guías de solución de problemas, códigos de error y procedimientos de depuración para el sistema NEOPapaya, abarcando desde problemas de usuario final hasta depuración de bajo nivel.
+Este documento consolida todas las guías de solución de problemas, códigos de error y procedimientos de depuración para el sistema WatermelonD, abarcando desde problemas de usuario final hasta depuración de bajo nivel.
 
 ---
 

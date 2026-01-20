@@ -1,7 +1,7 @@
 # Manual de Gestión de Conocimiento (Knowledge Base)
 
 ## Introducción
-El módulo de **Conocimiento** permite a NEOPapaya almacenar y recuperar información clave-valor de manera persistente. Esto es útil para que el asistente "recuerde" datos específicos, preferencias de usuario o configuraciones personalizadas que no están cubiertas por los intents estándar.
+El módulo de **Conocimiento** permite a WatermelonD almacenar y recuperar información clave-valor de manera persistente. Esto es útil para que el asistente "recuerde" datos específicos, preferencias de usuario o configuraciones personalizadas que no están cubiertas por los intents estándar.
 
 ## Acceso
 Para acceder al gestor de conocimiento:

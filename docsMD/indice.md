@@ -5,11 +5,11 @@ Este índice sigue estrictamente el **GUION PROYECTO 25-26** proporcionado. Util
 ---
 
 ## 1. Objetivo principal de tu proyecto
-**Objetivo:** Desarrollar un asistente inteligente modular (NEOPapaya: Copiloto de Lenguaje para Entornos de Grupo y Administración) diseñado específicamente para optimizar tareas de administración de sistemas y gestión de infraestructuras IT, operando de forma 100% local para garantizar la soberanía de los datos.
+**Objetivo:** Desarrollar un asistente inteligente modular (WatermelonD: Copiloto de Lenguaje para Entornos de Grupo y Administración) diseñado específicamente para optimizar tareas de administración de sistemas y gestión de infraestructuras IT, operando de forma 100% local para garantizar la soberanía de los datos.
 
-El proyecto aborda la necesidad de una automatización inteligente capaz de ejecutar comandos complejos (Shell/Bash) mediante lenguaje natural, sin depender de APIs de terceros ni conexión a internet. A diferencia de los asistentes comerciales genéricos, NEOPapaya combina:
+El proyecto aborda la necesidad de una automatización inteligente capaz de ejecutar comandos complejos (Shell/Bash) mediante lenguaje natural, sin depender de APIs de terceros ni conexión a internet. A diferencia de los asistentes comerciales genéricos, WatermelonD combina:
 1.  **Inteligencia Híbrida:** Un motor de reglas determinista para acciones críticas (start/stop servicios) junto con Modelos de Lenguaje Pequeños (SLMs como Gemma 2B y MANGO T5) para razonamiento y comprensión contextual.
-2.  **Seguridad Proactiva:** Módulos integrados (NEOPapayaGuard) para la detección de intrusiones y monitorización de anomalías en tiempo real.
+2.  **Seguridad Proactiva:** Módulos integrados (WatermelonDGuard) para la detección de intrusiones y monitorización de anomalías en tiempo real.
 3.  **Eficiencia en Recursos:** Optimización profunda para hardware de consumo (doble núcleo, 8GB RAM), permitiendo su despliegue en servidores perimetrales o estaciones de trabajo estándar.
 
 Este enfoque permite a las empresas y administradores reducir la carga cognitiva en tareas repetitivas, mantener un control estricto sobre la privacidad de la información y disponer de una interfaz de operación multimodal (Voz, Web, Terminal) altamente personalizable.
@@ -40,18 +40,18 @@ Este enfoque permite a las empresas y administradores reducir la carga cognitiva
 ## 2. Antecedentes
 **Objetivo:** Explicar el origen del proyecto, su filosofía y su evolución técnica.
 
-NEOPapaya nace de la necesidad de un asistente personal, privado y autónomo, centrado en la administración de sistemas. La idea principal de su diseño es eliminar cualquier dependencia de la nube, garantizando que los datos pertenecen exclusivamente al usuario.
+WatermelonD nace de la necesidad de un asistente personal, privado y autónomo, centrado en la administración de sistemas. La idea principal de su diseño es eliminar cualquier dependencia de la nube, garantizando que los datos pertenecen exclusivamente al usuario.
 
 El desarrollo se fundamenta en tres pilares clave:
-*   **Privacidad y Soberanía:** A diferencia de los asistentes comerciales, NEOPapaya se ejecuta 100% en local. No hay envío de audio ni telemetría externa.
+*   **Privacidad y Soberanía:** A diferencia de los asistentes comerciales, WatermelonD se ejecuta 100% en local. No hay envío de audio ni telemetría externa.
 *   **Eficiencia:** Diseñado para hardware modesto (desde Raspberry Pi hasta estaciones de trabajo), optimizando el uso de recursos para democratizar el acceso a asistentes inteligentes sin requerir GPUs costosas.
 *   **Modularidad:** Arquitectura abierta basada en Python que permite ampliar funciones fácilmente.
 
 **Evolución del Proyecto:**
-Inicialmente concebido como *NEOPapaya* (un asistente para el cuidado de mayores), el proyecto pivotó hacia una herramienta técnica para administradores de sistemas (*SysAdmin AI*), refactorizando el código para eliminar dependencias gráficas (GUI) y centrarse en la operación "headless" y por consola.
+Inicialmente concebido como *WatermelonD* (un asistente para el cuidado de mayores), el proyecto pivotó hacia una herramienta técnica para administradores de sistemas (*SysAdmin AI*), refactorizando el código para eliminar dependencias gráficas (GUI) y centrarse en la operación "headless" y por consola.
 
 - **Fuentes:**
-    - `docs/refactorizar.md` (Historia del pivote de NEOPapaya a NEOPapaya).
+    - `docs/refactorizar.md` (Historia del pivote de WatermelonD a WatermelonD).
     - `docs/evolucion.md` (Fases de desarrollo: Prototipo -> Modular -> IA Local).
     - `docs/resumen.md` (Filosofía de diseño).
 
@@ -93,7 +93,7 @@ Inicialmente concebido como *NEOPapaya* (un asistente para el cuidado de mayores
     - `docs/MANGO.md` y `docs/MANGOv2.md` (Justificación de elección de modelo T5 vs otros).
     - `docs/IMPLANTACION_MANGOT5.md` (Detalles de integración técnica de Mango T5).
     - `docs/BrainNut.md` (Arquitectura de memoria y aprendizaje).
-    - `docs/atackdb.md` (Base de datos de firmas de seguridad - NEOPapaya Guard).
+    - `docs/atackdb.md` (Base de datos de firmas de seguridad - WatermelonD Guard).
     - `docs/web_interface.md` (Diseño de la Interfaz Web y UX).
     - `docs/whisper_manual.md` (Configuración y optimización de Voz/Whisper).
     - `docs/info.md` (Información general del sistema).

@@ -1,8 +1,8 @@
-# Manual Técnico Integral: NEOPapaya Nano (TFG Edition)
+# Manual Técnico Integral: WatermelonD Nano (TFG Edition)
 
 **Versión del Documento:** 4.0 (Final TFG)
 **Fecha:** Diciembre 2025
-**Proyecto:** NEOPapaya Nano - Asistente Inteligente Offline
+**Proyecto:** WatermelonD Nano - Asistente Inteligente Offline
 **Autor:** [Tu Nombre / Usuario]
 
 ---
@@ -13,7 +13,7 @@
 2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
  * [Diagrama de Componentes](#21-diagrama-de-componentes)
  * [Flujo de Datos](#22-flujo-de-datos)
-3. [Núcleo del Sistema (WatermelonD)](#3-núcleo-del-sistema-neocore)
+3. [Núcleo del Sistema (WatermelonD)](#3-núcleo-del-sistema-WatermelonD)
  * [Ciclo de Vida](#31-ciclo-de-vida)
  * [Gestión de Eventos](#32-gestión-de-eventos)
 4. [Módulos de Percepción](#4-módulos-de-percepción)
@@ -28,7 +28,7 @@
  * [File Manager](#62-file-manager)
  * [Terminal Web](#63-terminal-web)
 7. [Inteligencia y Memoria](#7-inteligencia-y-memoria)
- * [Brain (Base de Datos)](#71-BrainNut-base-de-datos)
+ * [BrainNut (Base de Datos)](#71-BrainNut-base-de-datos)
  * [Intent Manager (NLU)](#72-intent-manager-nlu)
  * [AI Engine (LLM)](#73-ai-engine-llm)
 8. [Referencia de Configuración](#8-referencia-de-configuración)
@@ -40,7 +40,7 @@
 
 ## 1. Introducción y Alcance
 
-**NEOPapaya Nano** es un asistente virtual de código abierto diseñado para operar en entornos locales (Edge Computing) sin dependencia de la nube. Su objetivo principal es proporcionar una interfaz natural (voz y visión) para la gestión de sistemas domésticos y servidores, priorizando la privacidad y la baja latencia.
+**WatermelonD Nano** es un asistente virtual de código abierto diseñado para operar en entornos locales (Edge Computing) sin dependencia de la nube. Su objetivo principal es proporcionar una interfaz natural (voz y visión) para la gestión de sistemas domésticos y servidores, priorizando la privacidad y la baja latencia.
 
 Este proyecto se diferencia de asistentes comerciales (Alexa, Google Assistant) por su capacidad de **ejecución 100% offline**, su enfoque en tareas de **administración de sistemas (SysAdmin)** y su arquitectura modular extensible.
 
@@ -58,7 +58,7 @@ graph TD
  User <--> Cam[Cámara]
  User <--> Web[Interfaz Web]
  
- subgraph "NEOPapaya Nano"
+ subgraph "WatermelonD Nano"
  Mic --> VM[Voice Manager]
  Cam --> Vis[Vision Manager]
  
@@ -68,7 +68,7 @@ graph TD
  
  Core --> IM[Intent Manager]
  Core --> AI[AI Engine (Gemma)]
- Core --> Brain[(Brain DB)]
+ Core --> BrainNut[(BrainNut DB)]
  
  Core --> SM[Speaker]
  Core --> Sys[SysAdmin]
@@ -130,7 +130,7 @@ Responsable de convertir audio en texto. Soporta múltiples motores:
 * **Sherpa-ONNX**: Implementación ultraligera de Whisper para dispositivos muy limitados.
 
 **Características Clave**:
-* **Wake Word Fuzzy**: Usa `RapidFuzz` para detectar la palabra de activación ("NEOPapaya", "Tío") incluso con ruido o mala pronunciación.
+* **Wake Word Fuzzy**: Usa `RapidFuzz` para detectar la palabra de activación ("WatermelonD", "Tío") incluso con ruido o mala pronunciación.
 * **VAD (Voice Activity Detection)**: Detecta silencio para cortar la grabación automáticamente.
 
 ### 4.2. Vision Manager (Ojos)
@@ -201,7 +201,7 @@ Emulador de terminal en el navegador.
 
 ## 7. Inteligencia y Memoria
 
-### 7.1. Brain (Base de Datos)
+### 7.1. BrainNut (Base de Datos)
 Ubicación: `modules/BrainNut.py` / `database/`
 
 Memoria persistente basada en SQLite.
@@ -233,7 +233,7 @@ El archivo `config/config.json` controla el comportamiento del sistema.
 
 | Sección | Clave | Tipo | Descripción |
 | :--- | :--- | :--- | :--- |
-| **General** | `wake_words` | Lista | Palabras que activan el asistente (ej. "NEOPapaya", "Tío"). |
+| **General** | `wake_words` | Lista | Palabras que activan el asistente (ej. "WatermelonD", "Tío"). |
 | | `admin_user` | String | Usuario para la interfaz web. |
 | | `admin_pass` | String | Contraseña para la interfaz web. |
 | **STT** | `engine` | String | Motor de voz: "vosk", "whisper", "sherpa". |
@@ -291,7 +291,7 @@ Ejecuta un comando en la terminal virtual.
  {
  "success": true,
  "output": "total 40\ndrwxr-xr-x 2 pi pi 4096...",
- "cwd": "/home/pi/NEOPapaya_nano"
+ "cwd": "/home/pi/WatermelonD_nano"
  }
  ```
 
@@ -398,7 +398,7 @@ def action_run_my_skill(self, response, **kwargs):
 ### Anexo B: Estructura de Archivos
 
 ```
-/home/pi/NEOPapaya_nano/
+/home/pi/WatermelonD_nano/
 ├── WatermelonD.py# Main
 ├── install.sh# Instalador
 ├── config/

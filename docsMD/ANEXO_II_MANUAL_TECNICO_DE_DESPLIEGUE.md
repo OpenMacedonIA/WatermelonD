@@ -1,6 +1,6 @@
 # ANEXO II: MANUAL TÉCNICO DE DESPLIEGUE (INGENIERÍA)
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Versión del Documento:** 2.1 (Revisión Técnica Extendida) 
 **Fecha:** 03/12/2025 
 **Estado:** Release Candidate 
@@ -72,7 +72,7 @@ El sistema se construye sobre un stack moderno y eficiente, priorizando el rendi
 * **Base de Datos:** SQLite 3 con modo WAL (Write-Ahead Logging) para concurrencia.
 
 ### 1.3. Filosofía de Diseño (Edge Computing)
-NEOPapaya sigue una filosofía "Local-First".
+WatermelonD sigue una filosofía "Local-First".
 * **Privacidad:** Ningún dato de voz o texto sale de la red local.
 * **Latencia:** El procesamiento en el borde (Edge) elimina la latencia de red hacia la nube.
 * **Resiliencia:** El sistema funciona 100% offline (excepto para funciones que explícitamente requieren internet, como `speedtest` o `clima`).
@@ -221,7 +221,7 @@ CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python --force-reinstall --no-
 ### 3.2. Configuración del Entorno Python (PEP 582 vs Venv)
 Se recomienda el uso de `venv` estándar por su estabilidad, pero asegurando aislamiento total de `site-packages` del sistema para evitar conflictos con librerías de la distribución (ej. `python3-numpy` de apt vs `numpy` de pip).
 
-* **Path:** `/home/usuario/NEOPapaya/venv`
+* **Path:** `/home/usuario/WatermelonD/venv`
 * **Pip.conf:** Configurar `global.index-url` si se usa un mirror corporativo o caché local (ej. `devpi`) para acelerar despliegues repetitivos.
 
 ### 3.3. Despliegue de Modelos (GGUF & ONNX)
@@ -352,7 +352,7 @@ version: '3.8'
 services:
  neo-core:
  build: .
- image: colega-core:latest
+ image: WatermelonD-core:latest
  container_name: neo_core
  restart: unless-stopped
  devices:
@@ -402,7 +402,7 @@ spec:
  spec:
  containers:
  - name: neo
- image: colega-core:arm64-v2.1
+ image: WatermelonD-core:arm64-v2.1
  resources:
  requests:
  memory: "512Mi"
@@ -503,7 +503,7 @@ Si se ejecuta con Systemd nativo, se pueden usar las directivas de sandboxing pa
 [Service]
 # Solo permitir acceso a red, no a /home (excepto RW paths explícitos)
 ProtectHome=read-only
-ReadWritePaths=/home/usuario/NEOPapaya/database /home/usuario/NEOPapaya/logs
+ReadWritePaths=/home/usuario/WatermelonD/database /home/usuario/WatermelonD/logs
 # Aislar /tmp (crea un /tmp privado para el proceso)
 PrivateTmp=true
 # Prohibir escalada de privilegios (sudo, suid)
@@ -523,7 +523,7 @@ Para entornos de alta seguridad (ej. oficinas gubernamentales), se debe generar 
 ```apparmor
 #include <tunables/global>
 
-profile neo /home/usuario/NEOPapaya/venv/bin/python3 {
+profile neo /home/usuario/WatermelonD/venv/bin/python3 {
 #include <abstractions/base>
 #include <abstractions/python>
 #include <abstractions/audio>
@@ -533,11 +533,11 @@ profile neo /home/usuario/NEOPapaya/venv/bin/python3 {
  network inet udp,
 
 # Read project files
- /home/usuario/NEOPapaya/** r,
+ /home/usuario/WatermelonD/** r,
  
 # Write logs and db
- /home/usuario/NEOPapaya/logs/** rw,
- /home/usuario/NEOPapaya/database/** rw,
+ /home/usuario/WatermelonD/logs/** rw,
+ /home/usuario/WatermelonD/database/** rw,
  
 # Deny execution of other binaries
  deny /bin/bash x,

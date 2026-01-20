@@ -1,6 +1,6 @@
 # ️ Web Interface Roadmap (Future Ideas)
 
-Este documento recoge ideas y planes futuros para evolucionar la interfaz web de NEOPapaya, centrándose en la experiencia de usuario (UX), personalización y nuevas funcionalidades.
+Este documento recoge ideas y planes futuros para evolucionar la interfaz web de WatermelonD, centrándose en la experiencia de usuario (UX), personalización y nuevas funcionalidades.
 
 ## Completado en v2.6.0 (Cosmic Update)
 
@@ -39,7 +39,7 @@ Este documento recoge ideas y planes futuros para evolucionar la interfaz web de
 
 - [X] **Control por Voz en el Navegador**:
 
-- Usar la Web Speech API para hablar con NEOPapaya directamente desde el móvil/PC sin necesidad de micrófono en el servidor central.
+- Usar la Web Speech API para hablar con WatermelonD directamente desde el móvil/PC sin necesidad de micrófono en el servidor central.
 
 ## ️ Herramientas Avanzadas
 

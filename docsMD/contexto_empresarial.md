@@ -3,7 +3,7 @@
 Este documento te sirve de apoyo para redactar la **Sección 4** de tu memoria, ya que en la documentación técnica actual no hay mucha información sobre "Entorno de Empresa".
 
 ## Enfoque Propuesto
-Dado que NEOPapaya es un asistente para "Entornos de Grupo y Administración", puedes plantear el entorno de dos formas:
+Dado que WatermelonD es un asistente para "Entornos de Grupo y Administración", puedes plantear el entorno de dos formas:
 
 ### Opción A: Empresa de Soporte Técnico / SysAdmin
 Simulas que el proyecto se implanta en una pequeña empresa de soporte informático (MSP) o un departamento de IT.

@@ -1,4 +1,4 @@
-# Evolución del Sistema NEOPapaya
+# Evolución del Sistema WatermelonD
 
 ## Fase 1: Prototipo (Legacy)
 - Sistema monolítico.
@@ -8,7 +8,7 @@
 ## Fase 2: Modularización
 - Separación en `modules/`.
 - Introducción de `WatermelonD` como orquestador.
-- Implementación de `Brain` (SQLite).
+- Implementación de `BrainNut` (SQLite).
 
 ## Fase 3: Inteligencia Local (Actual)
 - **Motor AI**: Migración a Gemma-2B (local) con `llama-cpp-python`.

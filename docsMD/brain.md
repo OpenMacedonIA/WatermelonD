@@ -1,10 +1,10 @@
-# Arquitectura Cognitiva: NEOPapaya Brain
+# Arquitectura Cognitiva: WatermelonD BrainNut
 
-Este documento detalla el funcionamiento interno del sistema de memoria y "razonamiento" de NEOPapaya, implementado en los módulos `BrainNut.py` y `chat.py`.
+Este documento detalla el funcionamiento interno del sistema de memoria y "razonamiento" de WatermelonD, implementado en los módulos `BrainNut.py` y `chat.py`.
 
 ## 1. Memoria Estructurada (`modules/BrainNut.py`)
 
-El componente `Brain` actúa como el hipocampo del sistema, gestionando la persistencia de datos explícitos y la memoria de trabajo a corto plazo.
+El componente `BrainNut` actúa como el hipocampo del sistema, gestionando la persistencia de datos explícitos y la memoria de trabajo a corto plazo.
 
 ### 1.1. Persistencia (SQLite)
 Se utiliza **SQLite** (`BrainNut.db`) por su naturaleza ACID, ligereza y cero configuración. El esquema relacional consta de tres tablas principales:
@@ -28,7 +28,7 @@ Implementada mediante una estructura de datos `collections.deque` con `maxlen=5`
 
 ## 2. Motor Conversacional (`modules/chat.py`)
 
-Cuando NEOPapaya no reconoce un comando explícito (Intent Matching fallido), activa el subsistema de **Recuperación de Respuesta Generativa (Retrieval-Based Chatbot)**.
+Cuando WatermelonD no reconoce un comando explícito (Intent Matching fallido), activa el subsistema de **Recuperación de Respuesta Generativa (Retrieval-Based Chatbot)**.
 
 ### 2.1. Modelo Vectorial (TF-IDF)
 El núcleo del sistema es un modelo de **Frecuencia de Término - Frecuencia Inversa de Documento (TF-IDF)**.

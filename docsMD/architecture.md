@@ -1,10 +1,10 @@
-# Arquitectura del Sistema (NEOPapaya v3.0 / Core v4)
+# Arquitectura del Sistema (WatermelonD v3.0 / Core v4)
 
-Este documento describe la arquitectura interna de NEOPapaya con las optimizaciones de la versión 4 del Núcleo (`WatermelonD`).
+Este documento describe la arquitectura interna de WatermelonD con las optimizaciones de la versión 4 del Núcleo (`WatermelonD`).
 
 ## ️ Visión General
 
-NEOPapaya sigue una arquitectura **modular y orientada a eventos**, optimizada para ejecutarse en hardware de recursos limitados (Dual Core CPUs, 8GB RAM).
+WatermelonD sigue una arquitectura **modular y orientada a eventos**, optimizada para ejecutarse en hardware de recursos limitados (Dual Core CPUs, 8GB RAM).
 
 ### Componentes Principales
 
@@ -26,7 +26,7 @@ NEOPapaya sigue una arquitectura **modular y orientada a eventos**, optimizada p
  * **Advanced Modules**:
   * `Guard`: IDS basado en reglas y logs.
   * `CastManager`: Gestión de audio multi-habitación (Google Cast).
-  * `Brain`: Gestión de memoria episódica y DB (SQLite).
+  * `BrainNut`: Gestión de memoria episódica y DB (SQLite).
 
 ## Flujo de Datos
 

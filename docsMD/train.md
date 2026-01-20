@@ -1,6 +1,6 @@
-# Entrenamiento del Modelo Conversacional: NEOPapaya Trainer
+# Entrenamiento del Modelo Conversacional: WatermelonD Trainer
 
-Este documento explica el proceso técnico de entrenamiento del modelo de IA de NEOPapaya (`tools/train_chat.py`), enfocado en la robustez y la eficiencia en hardware limitado.
+Este documento explica el proceso técnico de entrenamiento del modelo de IA de WatermelonD (`tools/train_chat.py`), enfocado en la robustez y la eficiencia en hardware limitado.
 
 ## 1. Pipeline de Entrenamiento
 
@@ -17,7 +17,7 @@ El proceso de entrenamiento sigue un pipeline ETL (Extract, Transform, Load) cl�
 
 ## 2. Subword Matching y N-Grams
 
-Una de las características clave de NEOPapaya Chat v2 es su capacidad para entender palabras mal escritas, jerga o variaciones sin haberlas visto explícitamente. Esto se logra mediante **N-Grams de Caracteres**.
+Una de las características clave de WatermelonD Chat v2 es su capacidad para entender palabras mal escritas, jerga o variaciones sin haberlas visto explícitamente. Esto se logra mediante **N-Grams de Caracteres**.
 
 ### 2.1. El Problema de las Palabras Completas
 En modelos tradicionales (Bag of Words), el vocabulario es rígido:

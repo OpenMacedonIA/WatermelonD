@@ -1,13 +1,13 @@
-# ANEXO X: DESPLIEGUE DEL SISTEMA NEOPapaya 
+# ANEXO X: DESPLIEGUE DEL SISTEMA WatermelonD 
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments) 
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments) 
 **Versión del Documento:** 1
 **Fecha:** 11/01/2026
 
 
 ---
 ## 1. PREPARACION 
-Para llevar acabo la instalacion del sistema NEOPapaya necesitaremos una distribucion Linux, el sistema soporta de manera oficial Debian y Ubuntu 
+Para llevar acabo la instalacion del sistema WatermelonD necesitaremos una distribucion Linux, el sistema soporta de manera oficial Debian y Ubuntu 
 
 1. Nos desplazamos a la pagina de Debian, y pulsaremos en *Descargar*, debemos verificar que se descarga el archivo `debian-13.3.0-amd64-netinst.iso` (Se recomienda usar debian 12/13).
 ![1768155741024](image/ANEXO_X_DESPLIEGUE/1768155741024.png)

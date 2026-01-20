@@ -50,7 +50,8 @@ tts_cache/
 *.bin
 *.pt
 *.safetensors
-docsMD/
+
+
 
 # Experiments & Notebooks
 NB/
@@ -61,7 +62,7 @@ sounds/
 docker/
 .tools/
 MANGOT5/
-
+docsMD/
 config/certs/
 FANN/
 source/

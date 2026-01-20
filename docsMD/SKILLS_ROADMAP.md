@@ -1,6 +1,6 @@
 # Skills & Capabilities Roadmap (Future Ideas)
 
-Este documento describe la evolución planeada para las habilidades (Skills) de NEOPapaya, buscando expandir su utilidad, inteligencia e integración con el mundo real.
+Este documento describe la evolución planeada para las habilidades (Skills) de WatermelonD, buscando expandir su utilidad, inteligencia e integración con el mundo real.
 
 ## Domótica e IoT Avanzado
 - [ ] **Integración Profunda con Home Assistant**:

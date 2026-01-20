@@ -1,6 +1,6 @@
 # FUENTES DE INFORMACIÓN Y REFERENCIAS BIBLIOGRÁFICAS
 
-**Proyecto:** NEOPapaya (Language Copilot for Group and Administration Environments)
+**Proyecto:** WatermelonD (Language Copilot for Group and Administration Environments)
 **Fecha:** 04/12/2025
 **Versión del Documento:** 1.1 (Versión Extendida)
 
@@ -8,7 +8,7 @@
 
 ## 1. INTRODUCCIÓN
 
-Este documento constituye el compendio bibliográfico y de recursos técnicos del proyecto NEOPapaya Su objetivo es proporcionar una trazabilidad completa de las tecnologías, algoritmos y herramientas utilizadas, facilitando la auditoría técnica, el mantenimiento futuro y la comprensión profunda de la arquitectura del sistema.
+Este documento constituye el compendio bibliográfico y de recursos técnicos del proyecto WatermelonD Su objetivo es proporcionar una trazabilidad completa de las tecnologías, algoritmos y herramientas utilizadas, facilitando la auditoría técnica, el mantenimiento futuro y la comprensión profunda de la arquitectura del sistema.
 
 ---
 
@@ -49,7 +49,7 @@ Automatización de despliegue y tareas de sistema.
 
 ### 3.2. Gestión de Procesos (Systemd)
 
-* **Systemd Service Units:** [freedesktop.org](https://www.freedesktop.org/software/systemd/man/systemd.service.html) - Referencia para la creación de los servicios `colega.service`.
+* **Systemd Service Units:** [freedesktop.org](https://www.freedesktop.org/software/systemd/man/systemd.service.html) - Referencia para la creación de los servicios `WatermelonD.service`.
 * **Journalctl:** [Debugging Systemd](https://www.freedesktop.org/software/systemd/man/journalctl.html)
 
 ---

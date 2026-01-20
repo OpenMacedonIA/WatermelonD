@@ -1,15 +1,15 @@
-# Documentación Maestra: NEOPapaya Nano (TFG)
+# Documentación Maestra: WatermelonD Nano (TFG)
 
-**Proyecto:** NEOPapaya Nano
+**Proyecto:** WatermelonD Nano
 **Versión:** 4.0 (Release Candidate TFG)
 **Fecha:** Diciembre 2025
-**Repositorio:** https://github.com/jrodriiguezg/NEOPapaya_nano
+**Repositorio:** https://github.com/jrodriiguezg/WatermelonD_nano
 
 ---
 
 # Resumen Ejecutivo
 
-**NEOPapaya Nano** es un asistente inteligente de código abierto diseñado para la **Soberanía Digital**. A diferencia de las soluciones comerciales que procesan datos en la nube, Nano ejecuta toda su pila tecnológica (Reconocimiento de Voz, Inteligencia Artificial, Síntesis de Voz y Automatización) localmente en el dispositivo (Edge Computing).
+**WatermelonD Nano** es un asistente inteligente de código abierto diseñado para la **Soberanía Digital**. A diferencia de las soluciones comerciales que procesan datos en la nube, Nano ejecuta toda su pila tecnológica (Reconocimiento de Voz, Inteligencia Artificial, Síntesis de Voz y Automatización) localmente en el dispositivo (Edge Computing).
 
 Este documento consolida toda la información técnica, guías de despliegue y referencia de desarrollo para el Trabajo de Fin de Grado.
 
@@ -35,8 +35,8 @@ Esta sección detalla cómo instalar y configurar el sistema desde cero.
 ### 2.1. Obtención del Código
 ```bash
 cd ~
-git clone https://github.com/jrodriiguezg/NEOPapaya_nano.git
-cd NEOPapaya_nano
+git clone https://github.com/jrodriiguezg/WatermelonD_nano.git
+cd WatermelonD_nano
 ```
 
 ### 2.2. Ejecución del Script de Instalación
@@ -90,13 +90,13 @@ Esta sección profundiza en la arquitectura y los módulos del sistema.
 
 ## 4. Arquitectura del Sistema
 
-NEOPapaya Nano utiliza una arquitectura **Event-Driven** (basada en eventos).
+WatermelonD Nano utiliza una arquitectura **Event-Driven** (basada en eventos).
 
 ### 4.1. WatermelonD (`WatermelonD.py`)
 Es el orquestador central. No procesa la lógica de negocio directamente, sino que delega en "Managers" y coordina la comunicación entre ellos.
 
 * **Bucle Principal**: Un `while True` que mantiene el proceso vivo y gestiona señales de parada.
-* **Cola de Eventos**: Aunque Python tiene GIL, NEOPapaya usa colas (`queue.Queue`) para comunicar hilos de manera segura.
+* **Cola de Eventos**: Aunque Python tiene GIL, WatermelonD usa colas (`queue.Queue`) para comunicar hilos de manera segura.
 
 ### 4.2. Módulos Principales
 
@@ -192,9 +192,9 @@ final_score = p_score - length_penalty
 El archivo `modules/voice_manager.py` maneja la complejidad del audio en tiempo real.
 
 ### 7.1. Detección de Wake Word
-Para detectar "NEOPapaya" o "Tío" sin falsos positivos, se usa una estrategia híbrida:
+Para detectar "WatermelonD" o "Tío" sin falsos positivos, se usa una estrategia híbrida:
 1. **Match Exacto**: Si la transcripción contiene la palabra exacta.
-2. **Fuzzy Match**: Si contiene una palabra fonéticamente similar (ej. "Leo" en vez de "NEOPapaya").
+2. **Fuzzy Match**: Si contiene una palabra fonéticamente similar (ej. "Leo" en vez de "WatermelonD").
  * Se usa `RapidFuzz` para comparar cada palabra de la frase con la lista de Wake Words.
 
 ### 7.2. Gestión de Hilos de Audio
@@ -339,7 +339,7 @@ A continuación se detalla cada parámetro del archivo `config.json`.
 * **LLM (Large Language Model)**: Modelo de IA generativa entrenado con grandes cantidades de texto. Usamos Gemma 2B.
 * **GGUF (GPT-Generated Unified Format)**: Formato de archivo binario para guardar modelos de IA optimizados para inferencia en CPU.
 * **VAD (Voice Activity Detection)**: Algoritmo que detecta si hay voz humana en una señal de audio, ignorando el silencio y el ruido de fondo.
-* **Wake Word**: Palabra clave que saca al asistente del modo de espera (ej. "NEOPapaya").
+* **Wake Word**: Palabra clave que saca al asistente del modo de espera (ej. "WatermelonD").
 * **Intent (Intención)**: Lo que el usuario quiere hacer (ej. "encender_luz").
 * **Slot / Entity**: Parámetros dentro de una intención (ej. "cocina" en "encender luz cocina").
 * **Edge Computing**: Procesamiento de datos en el propio dispositivo, sin enviarlos a la nube.
@@ -364,7 +364,7 @@ Si usas USB, a veces el dispositivo cambia de ID al reiniciar.
 * **Solución**: Fija el dispositivo por nombre en `/etc/asound.conf` en lugar de por índice, o usa un script de inicio que detecte el índice dinámicamente.
 
 ### 10.4. Error "Address already in use" (Puerto 5000)
-* **Causa**: Otra instancia de NEOPapaya o servicio está usando el puerto.
+* **Causa**: Otra instancia de WatermelonD o servicio está usando el puerto.
 * **Solución**: `sudo lsof -i :5000` para ver quién es. Matar el proceso o cambiar el puerto en `web_admin.py`.
 
 ### 10.5. El servicio no arranca o "Unit neo.service could not be found"
@@ -431,7 +431,7 @@ El cerebro de la toma de decisiones.
 * **Lógica**:
  1. Verifica si hay diálogos activos (esperando respuesta a una pregunta).
  2. Verifica si es un comando directo (`KeywordRouter`).
- 3. Verifica si es un alias aprendido (`Brain`).
+ 3. Verifica si es un alias aprendido (`BrainNut`).
  4. Busca la intención (`IntentManager`).
  5. Si hay intención clara -> Ejecuta acción (`execute_action`).
  6. Si es ambigua -> Pregunta al usuario.
@@ -493,7 +493,7 @@ El bucle principal de audio.
 
 ### `_check_wake_word(self, text)`
 Verifica si el texto contiene la palabra de activación.
-* Usa `RapidFuzz` para permitir coincidencias aproximadas (ej. "Leo" en vez de "NEOPapaya").
+* Usa `RapidFuzz` para permitir coincidencias aproximadas (ej. "Leo" en vez de "WatermelonD").
 
 ## 15. Módulo `IntentManager` (`modules/intent_manager.py`)
 
@@ -518,7 +518,7 @@ Generador Python que produce texto token a token.
 
 # PARTE IX: HOJA DE RUTA (ROADMAP)
 
-El desarrollo de NEOPapaya Nano continúa. Estas son las características planeadas para la versión 5.0.
+El desarrollo de WatermelonD Nano continúa. Estas son las características planeadas para la versión 5.0.
 
 ## 1. Soporte Multi-Idioma
 * Implementación de `gettext` para internacionalización (i18n).
@@ -539,7 +539,7 @@ El desarrollo de NEOPapaya Nano continúa. Estas son las características planea
 
 # PARTE X: GUÍA DE CONTRIBUCIÓN
 
-¡Gracias por tu interés en contribuir a NEOPapaya Nano!
+¡Gracias por tu interés en contribuir a WatermelonD Nano!
 
 ## 1. Reportar Bugs
 Por favor, usa la pestaña de Issues en GitHub. Incluye:
@@ -562,7 +562,7 @@ Este proyecto se distribuye bajo la licencia **MIT**.
 ```text
 MIT License
 
-Copyright (c) 2025 NEOPapaya Team
+Copyright (c) 2025 WatermelonD Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -588,7 +588,7 @@ SOFTWARE.
 # Anexo: Estructura del Proyecto
 
 ```
-NEOPapaya_nano/
+WatermelonD_nano/
 ├── config/# Configuración JSON
 ├── database/# SQLite (BrainNut.db)
 ├── docs/# Documentación

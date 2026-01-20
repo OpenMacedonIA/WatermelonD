@@ -1,11 +1,11 @@
 # Manual de Optimización de Whisper (Hybrid STT)
 
-Este documento explica cómo configurar el sistema de reconocimiento de voz **Híbrido** (Vosk + Whisper) para NEOPapaya Nano.
+Este documento explica cómo configurar el sistema de reconocimiento de voz **Híbrido** (Vosk + Whisper) para WatermelonD Nano.
 
 ## Arquitectura Híbrida
 
 En sistemas x86_64 (como tu i3 con Fedora), utilizamos lo mejor de dos mundos:
-1. **Vosk**: Escucha continuamente la palabra clave ("NEOPapaya", "Tío"). Es instantáneo y consume muy poca CPU.
+1. **Vosk**: Escucha continuamente la palabra clave ("WatermelonD", "Tío"). Es instantáneo y consume muy poca CPU.
 2. **Whisper**: Se activa SOLO cuando se detecta la palabra clave. Transcribe el comando completo con máxima precisión.
 
 ## 1. Requisitos Previos
