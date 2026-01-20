@@ -1,4 +1,4 @@
-# Estructura del Proyecto NEOPapaya (NeoCore)
+# Estructura del Proyecto NEOPapaya (WatermelonD)
 
 Este documento detalla la estructura de archivos del proyecto y la finalidad de cada uno.
 
@@ -29,7 +29,7 @@ Este documento detalla la estructura de archivos del proyecto y la finalidad de 
 ├── web/# Interfaz Web (Frontend)
 │ ├── static/# Assets (CSS, JS, Imágenes)
 │ └── templates/# Plantillas HTML (Jinja2)
-├── NeoCore.py# **Punto de Entrada Principal** de la aplicación
+├── WatermelonD.py# **Punto de Entrada Principal** de la aplicación
 ├── install.sh# Script de instalación para Debian/Ubuntu
 ├── requirements.txt# Dependencias de Python
 ├── run_neocore_distrobox.sh# Launcher para entorno aislado en Fedora
@@ -40,8 +40,8 @@ Este documento detalla la estructura de archivos del proyecto y la finalidad de 
 ## Descripción Detallada de Archivos
 
 ### Raíz del Proyecto
-* **`NeoCore.py`**: El corazón del sistema. Inicializa todos los gestores (`VoiceManager`, `Brain`, `WebAdmin`, etc.), arranca los hilos de ejecución y gestiona el bucle principal de la aplicación.
-* **`start.sh`**: Script facilitador para iniciar la aplicación. Detecta automáticamente si se debe usar el entorno virtual estándar (`venv`) o el de Distrobox (`venv_distrobox`) y lanza `NeoCore.py`.
+* **`WatermelonD.py`**: El corazón del sistema. Inicializa todos los gestores (`VoiceManager`, `Brain`, `WebAdmin`, etc.), arranca los hilos de ejecución y gestiona el bucle principal de la aplicación.
+* **`start.sh`**: Script facilitador para iniciar la aplicación. Detecta automáticamente si se debe usar el entorno virtual estándar (`venv`) o el de Distrobox (`venv_distrobox`) y lanza `WatermelonD.py`.
 * **`install.sh`**: Script de instalación "clásico" pensado para sistemas Debian/Ubuntu. Instala paquetes del sistema con `apt` y dependencias de Python.
 * **`setup_distrobox.sh`**: Script de instalación avanzado para sistemas inmutables o incompatibles (como Fedora moderno). Crea un contenedor Debian aislado, instala todo dentro y prepara el entorno.
 * **`run_neocore_distrobox.sh`**: Script generado por `setup_distrobox.sh`. Sirve para lanzar la aplicación directamente dentro del contenedor sin tener que entrar manualmente.
@@ -62,7 +62,7 @@ Contiene la configuración persistente del sistema en formato JSON.
 Contiene la lógica de negocio dividida en módulos.
 * **`ai_engine.py`**: Interfaz con modelos de IA generativa (Llama, Ollama).
 * **`alarms.py`**: Gestor de alarmas (crear, sonar, posponer).
-* **`brain.py`**: El "Cerebro". Gestiona la memoria a corto/largo plazo y el aprendizaje.
+* **`BrainNut.py`**: El "Cerebro". Gestiona la memoria a corto/largo plazo y el aprendizaje.
 * **`calendar_manager.py`**: Gestión de eventos de calendario (Google Calendar o local). *Renombrado de calendar.py para evitar conflictos*.
 * **`cast_manager.py`**: Control de dispositivos Chromecast/Google Home.
 * **`chat.py`**: Lógica conversacional, historial de chat y personalidad.

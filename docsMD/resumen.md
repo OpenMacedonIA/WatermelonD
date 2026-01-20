@@ -9,7 +9,7 @@ TIO_AI/
  install.sh
  start.sh
  resumen.md
- NeoCore.py
+ WatermelonD.py
  source/
  conf.py
  training_data/
@@ -82,7 +82,7 @@ TIO_AI/
  guard.py
  database.py
  logger.py
- brain.py
+ BrainNut.py
  speaker.py
  network.py
  date_parser.py
@@ -105,7 +105,7 @@ TIO_AI/
  install_fedora.md
  all.md
  train.md
- brain.md
+ BrainNut.md
  info.md
  refactorizar.md
  database/
@@ -149,10 +149,10 @@ TIO_AI/
 
 ## Detalle por Archivo
 
-### NeoCore.py
+### WatermelonD.py
 - **Líneas:** 486
 - **Clases:** 1
- - `class NeoCore`
+ - `class WatermelonD`
 - **Funciones:** 18
  - `def __init__`
  - `def on_vision_event`
@@ -285,7 +285,7 @@ TIO_AI/
 
 ---
 
-### modules/brain.py
+### modules/BrainNut.py
 - **Líneas:** 183
 - **Clases:** 1
  - `class Brain`
@@ -537,7 +537,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/organizer.py
+### modules/BlueberrySkills/organizer.py
 - **Líneas:** 99
 - **Clases:** 1
  - `class OrganizerSkill`
@@ -573,7 +573,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/system.py
+### modules/BlueberrySkills/system.py
 - **Líneas:** 91
 - **Clases:** 1
  - `class SystemSkill`
@@ -712,7 +712,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/media.py
+### modules/BlueberrySkills/media.py
 - **Líneas:** 80
 - **Clases:** 1
  - `class MediaSkill`
@@ -752,7 +752,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/content.py
+### modules/BlueberrySkills/content.py
 - **Líneas:** 75
 - **Clases:** 1
  - `class ContentSkill`
@@ -796,7 +796,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/files.py
+### modules/BlueberrySkills/files.py
 - **Líneas:** 72
 - **Clases:** 1
  - `class FilesSkill`
@@ -889,7 +889,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/ssh.py
+### modules/BlueberrySkills/ssh.py
 - **Líneas:** 47
 - **Clases:** 1
  - `class SSHSkill`
@@ -1006,7 +1006,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/network.py
+### modules/BlueberrySkills/network.py
 - **Líneas:** 33
 - **Clases:** 1
  - `class NetworkSkill`
@@ -1081,7 +1081,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/time_date.py
+### modules/BlueberrySkills/time_date.py
 - **Líneas:** 15
 - **Clases:** 1
  - `class TimeDateSkill`
@@ -1092,7 +1092,7 @@ TIO_AI/
 
 ---
 
-### modules/skills/__init__.py
+### modules/BlueberrySkills/__init__.py
 - **Líneas:** 8
 - **Clases:** 1
  - `class BaseSkill`

@@ -77,7 +77,7 @@ Si tu dispositivo tiene pantalla (como tu convertible), puedes activar los "ojos
 
 1. **Iniciar NEOPapaya Core**:
  ```bash
- python3 NeoCore.py
+ python3 WatermelonD.py
  ```
 
 2. **Lanzar la Interfaz**:

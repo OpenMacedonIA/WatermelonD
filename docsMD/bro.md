@@ -48,7 +48,7 @@ Eventos críticos. TIO interrumpe, habla por voz y muestra una alerta roja.
 
 ## 2. Implementación en TIO (Servidor)
 
-TIO (`NeoCore.py`) ejecuta dos gestores en segundo plano:
+TIO (`WatermelonD.py`) ejecuta dos gestores en segundo plano:
 
 1. **`MQTTManager`**:
  * Se conecta al broker local (Mosquitto).

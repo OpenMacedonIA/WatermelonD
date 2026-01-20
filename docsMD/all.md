@@ -92,7 +92,7 @@ Esta sección profundiza en la arquitectura y los módulos del sistema.
 
 NEOPapaya Nano utiliza una arquitectura **Event-Driven** (basada en eventos).
 
-### 4.1. NeoCore (`NeoCore.py`)
+### 4.1. WatermelonD (`WatermelonD.py`)
 Es el orquestador central. No procesa la lógica de negocio directamente, sino que delega en "Managers" y coordina la comunicación entre ellos.
 
 * **Bucle Principal**: Un `while True` que mantiene el proceso vivo y gestiona señales de parada.
@@ -208,7 +208,7 @@ PyAudio es bloqueante. Para evitar congelar la interfaz:
 
 ## 8. Creación de Nuevas Habilidades (Skills)
 
-El sistema es extensible mediante la adición de nuevas entradas en `intents.json` y funciones en `NeoCore.py`.
+El sistema es extensible mediante la adición de nuevas entradas en `intents.json` y funciones en `WatermelonD.py`.
 
 ### Paso 1: Definir la Intención
 Edita `config/intents.json`:
@@ -222,7 +222,7 @@ Edita `config/intents.json`:
 ```
 
 ### Paso 2: Implementar la Lógica
-Edita `NeoCore.py`:
+Edita `WatermelonD.py`:
 
 ```python
 def action_check_server(self, response, **kwargs):
@@ -241,7 +241,7 @@ def action_check_server(self, response, **kwargs):
 ```
 
 ### Paso 3: Registrar la Acción
-En el método `execute_action` de `NeoCore.py`:
+En el método `execute_action` de `WatermelonD.py`:
 ```python
 actions = {
 # ...
@@ -397,9 +397,9 @@ Si usas USB, a veces el dispositivo cambia de ID al reiniciar.
 
 Esta sección documenta las clases y métodos principales del código fuente para referencia de desarrolladores.
 
-## 12. Módulo `NeoCore` (`NeoCore.py`)
+## 12. Módulo `WatermelonD` (`WatermelonD.py`)
 
-La clase `NeoCore` es el punto de entrada de la aplicación.
+La clase `WatermelonD` es el punto de entrada de la aplicación.
 
 ### `__init__(self)`
 Constructor principal.
@@ -590,14 +590,14 @@ SOFTWARE.
 ```
 NEOPapaya_nano/
 ├── config/# Configuración JSON
-├── database/# SQLite (brain.db)
+├── database/# SQLite (BrainNut.db)
 ├── docs/# Documentación
 ├── logs/# Archivos de registro
 ├── models/# Modelos GGUF (Gemma)
 ├── modules/# Código fuente modular
 │ ├── ai_engine.py# Integración LLM
 │ ├── bluetooth_manager.py
-│ ├── brain.py# Gestión de DB
+│ ├── BrainNut.py# Gestión de DB
 │ ├── cast_manager.py# Chromecast
 │ ├── file_manager.py# Sistema de archivos
 │ ├── intent_manager.py# NLU
@@ -608,7 +608,7 @@ NEOPapaya_nano/
 ├── resources/# Herramientas y scripts
 ├── vosk-models/# Modelos de voz
 ├── install.sh# Script de instalación
-├── NeoCore.py# Punto de entrada
+├── WatermelonD.py# Punto de entrada
 └── requirements.txt# Dependencias Python
 ```
 

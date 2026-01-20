@@ -51,7 +51,7 @@ chmod +x install.sh
  * Compila e instala **Python 3.10.13** (versión recomendada para compatibilidad).
  * Crea un entorno virtual en `venv/`.
  * Instala las librerías desde `requirements.txt`.
-4. **Base de Datos**: Inicializa `database/brain.db` con las tablas necesarias.
+4. **Base de Datos**: Inicializa `database/BrainNut.db` con las tablas necesarias.
 5. **Modelos de IA**:
  * Descarga el modelo de voz **Vosk** (Español).
  * Descarga el modelo LLM **Gemma 2B** (GGUF).
@@ -115,7 +115,7 @@ NEOPapaya se ejecuta como un servicio de usuario de systemd.
 ### Error: "No module named 'vosk'"
 El entorno virtual no se activó correctamente. Asegúrate de usar el python del venv:
 ```bash
-./venv/bin/python NeoCore.py
+./venv/bin/python WatermelonD.py
 ```
 
 ### Error: "ALSA lib pcm.c... Device or resource busy"

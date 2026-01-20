@@ -444,8 +444,8 @@ El reconocimiento de voz usa Vosk. Puede ajustar su comportamiento en `modules/v
 
 La interfaz web puede personalizarse de dos formas:
 * **Desde Ajustes (Fácil):** Vaya a **Ajustes > Apariencia** e introduzca su código CSS en el campo "CSS Personalizado". Esto permite cambiar colores, fuentes y ocultar elementos sin tocar archivos.
-* **Archivos Fuente (Avanzado):** Modifique directamente `web_client/templates/base.html` o los archivos en `web_client/static/css/` para cambios estructurales profundos.
-* **Imágenes:** Reemplace los archivos en `web_client/static/images/` para cambiar los avatares o iconos.
+* **Archivos Fuente (Avanzado):** Modifique directamente `TangerineUI/templates/base.html` o los archivos en `TangerineUI/static/css/` para cambios estructurales profundos.
+* **Imágenes:** Reemplace los archivos en `TangerineUI/static/images/` para cambiar los avatares o iconos.
 
 ### 8.3. Parámetros Ocultos
 
@@ -546,7 +546,7 @@ NEOPapaya es posible gracias al gigante ecosistema de código abierto:
 ### 12.2. Estructura de Directorios
 
 * `~/NEOPapaya/`
- * `NeoCore.py`: Archivo principal.
+ * `WatermelonD.py`: Archivo principal.
  * `config/`:
  * `config.json`: Configuración general.
  * `intents.json`: Definición de comandos.

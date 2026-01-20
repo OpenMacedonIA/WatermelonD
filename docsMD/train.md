@@ -12,8 +12,8 @@ El proceso de entrenamiento sigue un pipeline ETL (Extract, Transform, Load) cl�
  * Aplicación de ventana deslizante para inyectar contexto (Turno anterior + Turno actual).
 3. **Vectorización (Model)**: Ajuste (`fit`) del vectorizador TF-IDF sobre los inputs.
 4. **Persistencia (Load)**:
- * Serialización del modelo (`pickle`) a `brain/chat_model.pkl`.
- * Almacenamiento de respuestas textuales en SQLite `brain/chat.db`.
+ * Serialización del modelo (`pickle`) a `BrainNut/chat_model.pkl`.
+ * Almacenamiento de respuestas textuales en SQLite `BrainNut/chat.db`.
 
 ## 2. Subword Matching y N-Grams
 
@@ -56,4 +56,4 @@ Para reentrenar el modelo tras añadir nuevos datos:
 python3 tools/train_chat.py
 ```
 
-Esto regenerará los artefactos en `brain/` y el sistema los cargará automáticamente en el próximo reinicio.
+Esto regenerará los artefactos en `BrainNut/` y el sistema los cargará automáticamente en el próximo reinicio.

@@ -1,11 +1,11 @@
 # Guía de Despliegue de WebUI en Android (Termux)
 
-Esta guía te permitirá ejecutar la interfaz web de NEOPapaya en una tablet o teléfono Android utilizando Termux. De esta forma, puedes usar tu dispositivo móvil como un panel de control dedicado, mientras el núcleo del sistema (NeoCore) se ejecuta en tu PC o Raspberry Pi.
+Esta guía te permitirá ejecutar la interfaz web de NEOPapaya en una tablet o teléfono Android utilizando Termux. De esta forma, puedes usar tu dispositivo móvil como un panel de control dedicado, mientras el núcleo del sistema (WatermelonD) se ejecuta en tu PC o Raspberry Pi.
 
 ## Prerrequisitos
 
 1. **Termux**: Debes tener instalado Termux en tu dispositivo Android. Puedes descargarlo desde [F-Droid](https://f-droid.org/en/packages/com.termux/) (recomendado) o Google Play Store (versión antigua, no recomendada).
-2. **Conexión de Red**: Tu dispositivo Android y el servidor NeoCore deben estar en la misma red WiFi.
+2. **Conexión de Red**: Tu dispositivo Android y el servidor WatermelonD deben estar en la misma red WiFi.
 
 ## Paso 1: Preparación del Entorno en Termux
 
@@ -41,7 +41,7 @@ pip install flask requests flask-wtf
 
 ## Paso 4: Conexión con el Servidor
 
-Necesitas saber la dirección IP de tu ordenador donde se ejecuta NeoCore (ej. `192.168.1.50`).
+Necesitas saber la dirección IP de tu ordenador donde se ejecuta WatermelonD (ej. `192.168.1.50`).
 
 Antes de arrancar, debemos decirle al cliente dónde encontrar al servidor:
 
@@ -57,13 +57,13 @@ export NEO_API_URL="http://192.168.1.50:5000"
 Inicia la interfaz web:
 
 ```bash
-python web_client/app.py
+python TangerineUI/app.py
 ```
 
 Verás un mensaje como este:
 ```
  NEOPapaya Headless Client starting...
- Connected to NeoCore at: http://192.168.1.50:5000
+ Connected to WatermelonD at: http://192.168.1.50:5000
  Web Interface at: http://0.0.0.0:8000
 ```
 
@@ -99,7 +99,7 @@ Para no tener que escribir los comandos cada vez, puedes crear un pequeño scrip
  
  cd ~/NEOPapaya
  export NEO_API_URL="http://$SERVER_IP:5000"
- python web_client/app.py
+ python TangerineUI/app.py
  ```
 
 4. Guarda (Ctrl+O, Enter) y Sal (Ctrl+X).

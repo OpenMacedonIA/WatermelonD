@@ -1,13 +1,13 @@
 # Arquitectura Cognitiva: NEOPapaya Brain
 
-Este documento detalla el funcionamiento interno del sistema de memoria y "razonamiento" de NEOPapaya, implementado en los módulos `brain.py` y `chat.py`.
+Este documento detalla el funcionamiento interno del sistema de memoria y "razonamiento" de NEOPapaya, implementado en los módulos `BrainNut.py` y `chat.py`.
 
-## 1. Memoria Estructurada (`modules/brain.py`)
+## 1. Memoria Estructurada (`modules/BrainNut.py`)
 
 El componente `Brain` actúa como el hipocampo del sistema, gestionando la persistencia de datos explícitos y la memoria de trabajo a corto plazo.
 
 ### 1.1. Persistencia (SQLite)
-Se utiliza **SQLite** (`brain.db`) por su naturaleza ACID, ligereza y cero configuración. El esquema relacional consta de tres tablas principales:
+Se utiliza **SQLite** (`BrainNut.db`) por su naturaleza ACID, ligereza y cero configuración. El esquema relacional consta de tres tablas principales:
 
 * **`interactions`**: Registro histórico (Log).
  * Campos: `id`, `timestamp`, `user_input`, `neo_response`, `intent`.

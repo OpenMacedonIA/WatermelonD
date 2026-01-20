@@ -7,7 +7,7 @@
 
 ## Fase 2: Modularización
 - Separación en `modules/`.
-- Introducción de `NeoCore` como orquestador.
+- Introducción de `WatermelonD` como orquestador.
 - Implementación de `Brain` (SQLite).
 
 ## Fase 3: Inteligencia Local (Actual)
@@ -17,7 +17,7 @@
 - **Optimización**:
  - Reducción de hilos de LLM.
  - Caché de intenciones (`IntentManager`).
- - Refactorización de `NeoCore` para delegar lógica a Skills.
+ - Refactorización de `WatermelonD` para delegar lógica a Skills.
 
 ## Futuro (Roadmap)
 - **Fase 4**: Interfaz Web Avanzada (React/Vue).

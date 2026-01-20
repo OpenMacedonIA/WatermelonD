@@ -22,7 +22,7 @@ Este enfoque permite a las empresas y administradores reducir la carga cognitiva
 **Objetivo:** Enumerar el stack tecnológico y las herramientas clave seleccionadas para el desarrollo.
 
 *   **Lenguajes de Programación:**
-    *   **Python 3.10+**: Lenguaje principal del Core (NeoCore) y módulos de IA.
+    *   **Python 3.10+**: Lenguaje principal del Core (WatermelonD) y módulos de IA.
     *   **Bash/Shell**: Scripts de despliegue (`install.sh`) y automatización del sistema.
     *   **HTML5 / CSS3 / JavaScript (Vanilla)**: Interfaz web responsiva y ligera.
 *   **Inteligencia Artificial (Local):**
@@ -92,7 +92,7 @@ Inicialmente concebido como *NEOPapaya* (un asistente para el cuidado de mayores
     - `docs/systemsec.md` (Seguridad Hardware/Software - **Importante para apartado 7.2**).
     - `docs/MANGO.md` y `docs/MANGOv2.md` (Justificación de elección de modelo T5 vs otros).
     - `docs/IMPLANTACION_MANGOT5.md` (Detalles de integración técnica de Mango T5).
-    - `docs/brain.md` (Arquitectura de memoria y aprendizaje).
+    - `docs/BrainNut.md` (Arquitectura de memoria y aprendizaje).
     - `docs/atackdb.md` (Base de datos de firmas de seguridad - NEOPapaya Guard).
     - `docs/web_interface.md` (Diseño de la Interfaz Web y UX).
     - `docs/whisper_manual.md` (Configuración y optimización de Voz/Whisper).

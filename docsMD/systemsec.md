@@ -1,6 +1,6 @@
-# Documentación de Seguridad Integral del Proyecto NEOPapaya (NeoCore)
+# Documentación de Seguridad Integral del Proyecto NEOPapaya (WatermelonD)
 
-Esta guía detalla exhaustivamente las medidas de seguridad implementadas en el sistema NeoCore, abarcando desde la protección a nivel de aplicación web hasta el endurecimiento (hardening) del sistema operativo subyacente.
+Esta guía detalla exhaustivamente las medidas de seguridad implementadas en el sistema WatermelonD, abarcando desde la protección a nivel de aplicación web hasta el endurecimiento (hardening) del sistema operativo subyacente.
 
 ---
 
@@ -27,7 +27,7 @@ Esta guía detalla exhaustivamente las medidas de seguridad implementadas en el 
 
 ## 1. Introducción y Filosofía de Seguridad
 
-La seguridad en NeoCore no es una característica añadida, sino un componente fundamental dada la naturaleza del asistente: un dispositivo siempre activo, con capacidad de escucha (micrófono), visión (cámara) y control sobre otros dispositivos IoT.
+La seguridad en WatermelonD no es una característica añadida, sino un componente fundamental dada la naturaleza del asistente: un dispositivo siempre activo, con capacidad de escucha (micrófono), visión (cámara) y control sobre otros dispositivos IoT.
 
 Nuestro enfoque de seguridad se basa en **"Defensa en Profundidad"**:
 * **Capa Web**: Protege la interfaz de administración contra accesos no autorizados y ataques comunes.
@@ -69,7 +69,7 @@ Para evitar la interceptación de datos (Sniffing) en la red local, especialment
 
 ### 2.3. Protección CSRF (Cross-Site Request Forgery)
 
-Se ha implementado `Flask-WTF` con `CSRFProtect` para blindar la aplicación contra ataques donde un sitio malicioso fuerza al navegador del usuario (ya autenticado) a ejecutar acciones en NeoCore.
+Se ha implementado `Flask-WTF` con `CSRFProtect` para blindar la aplicación contra ataques donde un sitio malicioso fuerza al navegador del usuario (ya autenticado) a ejecutar acciones en WatermelonD.
 
 * **Token CSRF Global**: Se inyecta un token en todas las plantillas HTML a través de una etiqueta meta:
  ```html
@@ -108,7 +108,7 @@ Usamos **UFW (Uncomplicated Firewall)** para cerrar el dispositivo al mundo exte
 
 **Reglas de Permitir (Allow):**
 1. **Puerto 22 (SSH)**: Esencial para la administración remota. *Riesgo*: Si se bloquea este puerto y UFW se activa, perderá acceso remoto.
-2. **Puerto 5000 (TCP)**: Interfaz web de NeoCore.
+2. **Puerto 5000 (TCP)**: Interfaz web de WatermelonD.
 
 **Comandos Útiles:**
 * `sudo ufw status verbose`: Ver estado actual.
@@ -139,7 +139,7 @@ El principio de "mínimo privilegio" se aplica a los archivos sensibles del proy
 
 * **Base de Datos**:
  * Directorio: `database/`
- * Archivos: `brain.db` (y WAL/SHM)
+ * Archivos: `BrainNut.db` (y WAL/SHM)
  * **Permiso**: `600`
  * **Efecto**: Protege el historial de conversaciones y datos de memoria a largo plazo.
 
@@ -251,4 +251,4 @@ sudo cat /var/log/fail2ban.log | grep Ban
 ---
 
 **Resumen de Seguridad:**
-Este conjunto de medidas transforma a NeoCore de un prototipo de desarrollo a un sistema de producción robusto, capaz de resistir ataques básicos y proteger la privacidad de los datos del usuario en entornos domésticos y semiprofesionales.
+Este conjunto de medidas transforma a WatermelonD de un prototipo de desarrollo a un sistema de producción robusto, capaz de resistir ataques básicos y proteger la privacidad de los datos del usuario en entornos domésticos y semiprofesionales.

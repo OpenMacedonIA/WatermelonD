@@ -66,7 +66,7 @@ sudo sysctl -p
 
 ## 4. Software Esencial Recomendado
 
-Para tener un entorno de terminal robusto y listo para desplegar aplicaciones (como NEOPapaya/NeoCore), instala este pack básico:
+Para tener un entorno de terminal robusto y listo para desplegar aplicaciones (como NEOPapaya/WatermelonD), instala este pack básico:
 
 ```bash
 sudo apt update && sudo apt install -y \

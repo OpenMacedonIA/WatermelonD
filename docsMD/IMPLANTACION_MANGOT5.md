@@ -17,7 +17,7 @@ Este documento detalla la integración del modelo **MANGO T5** (Fine-Tuned for B
  * **Inferencia**: Utiliza generación secuencial (Beam Search) para traducir texto a código.
  * **Salida**: Retorna el comando generado y un *score* de confianza.
 
-### 2.2 Integración en NeoCore (Advanced Workflow)
+### 2.2 Integración en WatermelonD (Advanced Workflow)
 
 El flujo de procesamiento ha sido reescrito para potenciar a MANGO como motor principal:
 
@@ -52,5 +52,5 @@ Para acciones de modificación:
 ## 5. Mantenimiento y Optimización
 
 * **Modelo**: Si se entrena una nueva versión de MANGO, basta con reemplazar los archivos en la carpeta `MANGOT5`.
-* **Safety**: La lista de comandos seguros ("whitelist") está hardcodeada en `NeoCore.py` y debería expandirse según se validen más casos de uso.
+* **Safety**: La lista de comandos seguros ("whitelist") está hardcodeada en `WatermelonD.py` y debería expandirse según se validen más casos de uso.
 * **Hardware**: Actualmente corre en CPU (por defecto en i3/8GB). Si se dispone de GPU, `MangoManager` intentará usar CUDA automáticamente.

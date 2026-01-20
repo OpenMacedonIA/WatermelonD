@@ -1,13 +1,13 @@
 # NEOPapaya Web Interface (v3.0)
 
-La interfaz web de **NEOPapaya v3.0** ha sido rediseñada para ser **independiente**, **robusta** y **personalizable**. Funciona como un cliente separado que se conecta a la API de `NeoCore`.
+La interfaz web de **NEOPapaya v3.0** ha sido rediseñada para ser **independiente**, **robusta** y **personalizable**. Funciona como un cliente separado que se conecta a la API de `WatermelonD`.
 
 ## Características Generales
 
 - **Tecnología**: HTML5, Bootstrap 5, Vanilla JS (sin frameworks pesados).
 - **Tema**: "Cosmic Dark" con efectos Glassmorphism.
 - **Responsive**: Adaptada para Escritorio, Tabletas y Móviles.
-- **Independencia**: Si el núcleo de la IA (`NeoCore`) se reinicia, la interfaz web permanece activa y muestra una pantalla de "Reconectando...".
+- **Independencia**: Si el núcleo de la IA (`WatermelonD`) se reinicia, la interfaz web permanece activa y muestra una pantalla de "Reconectando...".
 
 ## ️ Módulos Principales
 
@@ -36,12 +36,12 @@ NEOPapaya v2.2 introduce un sistema de notificaciones unificado:
 - **Desktop Notifications**: Si das permiso, NEOPapaya te enviará notificaciones nativas a tu escritorio (útil si tienes la pestaña en segundo plano).
 
 ## Monitor de Conexión
-La interfaz sondea continuamente el estado de `NeoCore`.
+La interfaz sondea continuamente el estado de `WatermelonD`.
 - **Online**: Todo funciona correctamente.
 - **Offline / Reiniciando**: Aparecerá un overlay a pantalla completa bloqueando la interacción hasta que el sistema vuelva a estar en línea. ¡Ya no necesitas refrescar la página manualmente!
 
 ## Desarrollo
 Los archivos de la interfaz se encuentran en:
-- `web_client/templates/`: HTML (Jinja2).
-- `web_client/static/`: CSS, JS e imágenes.
+- `TangerineUI/templates/`: HTML (Jinja2).
+- `TangerineUI/static/`: CSS, JS e imágenes.
 - `modules/web_admin.py`: Servidor Flask (Backend API).

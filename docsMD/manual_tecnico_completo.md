@@ -13,7 +13,7 @@
 2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
  * [Diagrama de Componentes](#21-diagrama-de-componentes)
  * [Flujo de Datos](#22-flujo-de-datos)
-3. [Núcleo del Sistema (NeoCore)](#3-núcleo-del-sistema-neocore)
+3. [Núcleo del Sistema (WatermelonD)](#3-núcleo-del-sistema-neocore)
  * [Ciclo de Vida](#31-ciclo-de-vida)
  * [Gestión de Eventos](#32-gestión-de-eventos)
 4. [Módulos de Percepción](#4-módulos-de-percepción)
@@ -28,7 +28,7 @@
  * [File Manager](#62-file-manager)
  * [Terminal Web](#63-terminal-web)
 7. [Inteligencia y Memoria](#7-inteligencia-y-memoria)
- * [Brain (Base de Datos)](#71-brain-base-de-datos)
+ * [Brain (Base de Datos)](#71-BrainNut-base-de-datos)
  * [Intent Manager (NLU)](#72-intent-manager-nlu)
  * [AI Engine (LLM)](#73-ai-engine-llm)
 8. [Referencia de Configuración](#8-referencia-de-configuración)
@@ -48,7 +48,7 @@ Este proyecto se diferencia de asistentes comerciales (Alexa, Google Assistant) 
 
 ## 2. Arquitectura del Sistema
 
-El sistema sigue una arquitectura modular centrada en eventos, orquestada por un núcleo central (`NeoCore`).
+El sistema sigue una arquitectura modular centrada en eventos, orquestada por un núcleo central (`WatermelonD`).
 
 ### 2.1. Diagrama de Componentes
 
@@ -62,7 +62,7 @@ graph TD
  Mic --> VM[Voice Manager]
  Cam --> Vis[Vision Manager]
  
- VM --> Core{NeoCore}
+ VM --> Core{WatermelonD}
  Vis --> Core
  Web --> Core
  
@@ -91,7 +91,7 @@ graph TD
  * `VoiceManager` transcribe el audio a texto (STT).
  * `VisionManager` detecta presencia o identifica al usuario.
 3. **Decisión**:
- * `NeoCore` recibe el evento.
+ * `WatermelonD` recibe el evento.
  * Consulta a `IntentManager` para ver si es un comando conocido.
  * Si no, deriva a `AI Engine` para una respuesta generativa.
 4. **Ejecución**: Se invoca el módulo correspondiente (ej. `SSHManager` para conectar a un servidor).
@@ -99,9 +99,9 @@ graph TD
 
 ---
 
-## 3. Núcleo del Sistema (NeoCore)
+## 3. Núcleo del Sistema (WatermelonD)
 
-Ubicación: `NeoCore.py`
+Ubicación: `WatermelonD.py`
 
 Es el punto de entrada (`__main__`) y el orquestador. Inicializa todos los subsistemas y mantiene el bucle principal de la aplicación.
 
@@ -112,7 +112,7 @@ Es el punto de entrada (`__main__`) y el orquestador. Inicializa todos los subsi
 4. **Shutdown**: Cierra conexiones y termina hilos ordenadamente al recibir `SIGINT`.
 
 ### 3.2. Gestión de Eventos
-NeoCore expone métodos de callback que los módulos llaman:
+WatermelonD expone métodos de callback que los módulos llaman:
 * `on_voice_command(text)`: Invocado cuando se detecta una frase completa.
 * `on_vision_event(type, data)`: Invocado al detectar movimiento o caras.
 
@@ -202,7 +202,7 @@ Emulador de terminal en el navegador.
 ## 7. Inteligencia y Memoria
 
 ### 7.1. Brain (Base de Datos)
-Ubicación: `modules/brain.py` / `database/`
+Ubicación: `modules/BrainNut.py` / `database/`
 
 Memoria persistente basada en SQLite.
 * **Tablas**:
@@ -329,10 +329,10 @@ Para añadir una nueva habilidad, edita `jsons/intents.json`:
 }
 ```
 
-Luego, en `NeoCore.py`, registra la función en el mapa de acciones:
+Luego, en `WatermelonD.py`, registra la función en el mapa de acciones:
 
 ```python
-# En NeoCore.execute_action
+# En WatermelonD.execute_action
 actions = {
 # ...
  "run_my_skill": self.action_run_my_skill
@@ -399,7 +399,7 @@ def action_run_my_skill(self, response, **kwargs):
 
 ```
 /home/pi/NEOPapaya_nano/
-├── NeoCore.py# Main
+├── WatermelonD.py# Main
 ├── install.sh# Instalador
 ├── config/
 │ ├── config.json

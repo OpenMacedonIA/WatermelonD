@@ -8,7 +8,7 @@ Un "Mini Network Bro" (MNB) es un microcontrolador (ESP32, RP2040) que actúa co
 
 ## Flujo de Comunicación
 1. **Inicio**: Intenta conectar a WiFi.
-2. **Conexión MQTT**: Si hay WiFi, conecta al broker (IP de NeoCore). Topic base: `tio/agents/{hostname}/`.
+2. **Conexión MQTT**: Si hay WiFi, conecta al broker (IP de WatermelonD). Topic base: `tio/agents/{hostname}/`.
 3. **Fallback Bluetooth**: Si no hay WiFi tras varios intentos, activa Bluetooth Serial.
  - Nombre BT: `MNB_{Hostname}`
  - Protocolo: JSON por Serial (RFCOMM).
@@ -33,7 +33,7 @@ Edita las variables al inicio de `main.py`:
 ```python
 SSID = "TuWiFi"
 PASSWORD = "TuClave"
-BRAIN_IP = "192.168.1.X"# IP de NeoCore
+BRAIN_IP = "192.168.1.X"# IP de WatermelonD
 HOSTNAME = "mnb-sensor-1"
 ```
 
@@ -47,5 +47,5 @@ HOSTNAME = "mnb-sensor-1"
 ## Visión por Computador (ESP32-CAM)
 Para usar la cámara, usa el código Arduino en `resources/esp32_cam/`.
 - La cámara transmite un stream MJPEG.
-- NeoCore (VisionManager) consume este stream para reconocimiento facial.
+- WatermelonD (VisionManager) consume este stream para reconocimiento facial.
 - URL del stream: `http://{IP_CAM}:81/stream`

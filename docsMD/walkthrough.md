@@ -39,4 +39,4 @@ Hemos creado un "Script Maestro" que se encarga de todo: limpiar procesos antigu
 ## Detalles Técnicos
 - **Tecnología**: HTML5/CSS3 + WebSockets (`flask-socketio`).
 - **Automatización**: Bash scripting con gestión de PIDs y `tail` para logs.
-- **Integración**: `NeoCore.py` emite eventos en tiempo real a través del servidor web integrado.
+- **Integración**: `WatermelonD.py` emite eventos en tiempo real a través del servidor web integrado.

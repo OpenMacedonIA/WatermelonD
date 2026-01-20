@@ -12,12 +12,12 @@
 - **Causa**: Las tablas virtuales FTS5 no almacenan columnas adicionales por defecto y la consulta SQL no hacía el JOIN correcto con la tabla principal.
 - **Solución**: Se corrigió la consulta SQL para hacer un `JOIN` explícito entre `episodic_memory` y `memory_fts`.
 
-### 3. "God Object" NeoCore
-- **Síntoma**: `NeoCore.py` tenía más de 500 líneas y manejaba lógica de negocio (citas, resumen matutino) mezclada con orquestación.
-- **Solución**: Se movió la lógica específica a `OrganizerSkill` y `SystemSkill`, dejando `NeoCore` solo como orquestador.
+### 3. "God Object" WatermelonD
+- **Síntoma**: `WatermelonD.py` tenía más de 500 líneas y manejaba lógica de negocio (citas, resumen matutino) mezclada con orquestación.
+- **Solución**: Se movió la lógica específica a `OrganizerSkill` y `SystemSkill`, dejando `WatermelonD` solo como orquestador.
 
 ### 4. Duplicidad en Skills
-- **Síntoma**: Lógica redundante en `modules/sysadmin.py` y `modules/skills/system.py`.
+- **Síntoma**: Lógica redundante en `modules/sysadmin.py` y `modules/BlueberrySkills/system.py`.
 - **Solución**: Se clarificó la separación: `SysAdminManager` es la capa de bajo nivel (driver) y `SystemSkill` es la capa de alto nivel (interfaz de voz).
 
 ## Estado Actual

@@ -66,9 +66,9 @@ Se eliminaron las credenciales y configuraciones "hardcoded" (escritas en el có
 
 ---
 
-## 4. Refactorización del Núcleo (`NeoCore.py`)
+## 4. Refactorización del Núcleo (`WatermelonD.py`)
 
-El archivo principal `NeoCore.py` fue reescrito casi en su totalidad para soportar la nueva arquitectura concurrente.
+El archivo principal `WatermelonD.py` fue reescrito casi en su totalidad para soportar la nueva arquitectura concurrente.
 
 ### 4.1. Arquitectura de Hilos (Threading)
 El sistema ahora ejecuta múltiples procesos ligeros en paralelo:

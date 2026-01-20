@@ -75,7 +75,7 @@ La detección de la palabra "Tío" se realiza mediante algoritmos de lógica dif
 3. Detectar la palabra dentro de un flujo de audio continuo sin necesidad de pausas estrictas.
 4. Filtrar falsos positivos por contexto fonético.
 
-El código en `NeoCore.py` analiza el stream de audio y busca coincidencias con un umbral de confianza superior al 85%.
+El código en `WatermelonD.py` analiza el stream de audio y busca coincidencias con un umbral de confianza superior al 85%.
 
 ### 3.2. Sistema de Intents (Intenciones)
 El archivo `jsons/intents.json` ha sido reescrito completamente. Cada intención (`intent`) ahora contiene múltiples respuestas aleatorias (`responses`) que siguen la guía de estilo de T.I.O.
@@ -141,7 +141,7 @@ Si quieres que T.I.O. aprenda nuevas respuestas conversacionales:
 
 ### 5.3. Ajustar Sensibilidad
 Si T.I.O. responde demasiado (falsos positivos) o muy poco:
-* Edita `NeoCore.py`.
+* Edita `WatermelonD.py`.
 * Busca la línea `if ratio > 85`.
 * Sube el valor (ej. 90) para ser más estricto, o bájalo (ej. 80) para ser más permisivo.
 

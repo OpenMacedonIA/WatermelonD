@@ -14,20 +14,20 @@ Este documento es una guía técnica detallada para desarrolladores que deseen e
 
 ## 2. ARQUITECTURA DE UNA SKILL
 
-Las Skills se encuentran en el directorio `modules/skills/`. Cada Skill es una clase de Python que encapsula una funcionalidad específica.
+Las Skills se encuentran en el directorio `modules/BlueberrySkills/`. Cada Skill es una clase de Python que encapsula una funcionalidad específica.
 
 ### 2.1. Estructura Básica
 Aunque el sistema soporta inyección de dependencias simple, se recomienda seguir este patrón:
 
 ```python
-# modules/skills/ejemplo_skill.py
+# modules/BlueberrySkills/ejemplo_skill.py
 
 from modules.skills.base_skill import BaseSkill, intent
 
 class EjemploSkill(BaseSkill):
  def __init__(self, core):
  super().__init__(name="EjemploSkill")
- self.core = core# Referencia al núcleo (NeoCore)
+ self.core = core# Referencia al núcleo (WatermelonD)
 
  @intent("ejemplo_intent")
  def handle_ejemplo(self, message):
@@ -39,7 +39,7 @@ class EjemploSkill(BaseSkill):
 ```
 
 ### 2.2. Decoradores de Intención
-El decorador `@intent("nombre_intent")` registra automáticamente el método en el `IntentManager` al iniciar el sistema. Esto permite una arquitectura modular donde añadir una nueva capacidad es tan simple como crear un archivo en `modules/skills/`.
+El decorador `@intent("nombre_intent")` registra automáticamente el método en el `IntentManager` al iniciar el sistema. Esto permite una arquitectura modular donde añadir una nueva capacidad es tan simple como crear un archivo en `modules/BlueberrySkills/`.
 
 ---
 

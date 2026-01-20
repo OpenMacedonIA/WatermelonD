@@ -256,7 +256,7 @@ Este enfoque permite a las empresas y administradores reducir la carga cognitiva
 ## **1.1. Herramientas  a usar**
 
 * **Lenguajes de Programación:**
-  * **Python 3.10+:** Lenguaje principal del Core (NeoCore) y módulos de IA. Se prioriza la estabilidad y compatibilidad.
+  * **Python 3.10+:** Lenguaje principal del Core (WatermelonD) y módulos de IA. Se prioriza la estabilidad y compatibilidad.
   * **Bash/Shell:** Scripts de despliegue (`install.sh`) y automatización del sistema.
   * **HTML5 / CSS3 / JavaScript (Vanilla):** Interfaz web responsiva y ligera.
 * **Inteligencia Artificial (Local):**
@@ -305,7 +305,7 @@ La arquitectura del proyecto es híbrida y distribuida, utilizando tres nodos pr
 
    * **CPU:** Intel Core i3-7020U (2 núcleos / 4 hilos).
    * **RAM:** 8GB DDR4.
-   * **Función:** Ejecuta `NeoCore`, el LLM (Gemma 2B) y el servidor web.
+   * **Función:** Ejecuta `WatermelonD`, el LLM (Gemma 2B) y el servidor web.
 2. **Agente Satélite (ARM):** Raspberry Pi 4B.
 
    * **CPU:** Broadcom BCM2711.
@@ -352,7 +352,7 @@ Los recursos de hardware son los descritos en el apartado 3.2. A nivel de recurs
 ## **5.1 Planificación (Roadmap)**
 
 1. **Fase 1 (Completada):** Prototipo funcional, reconocimiento de voz y ejecución de comandos básicos.
-2. **Fase 2 (Completada):** Modularización (NeoCore), integración de LLM (Gemma) y Web UI v2.
+2. **Fase 2 (Completada):** Modularización (WatermelonD), integración de LLM (Gemma) y Web UI v2.
 3. **Fase 3 (Actual):** Implementación de **Mango T5** (NL2Bash), seguridad con **NEOPapayaGuard** y optimización de hilos (Core v4).
 4. **Fase 4 (Futura):** Interfaz Web Reactiva v3 y soporte completo para clústeres MNB (Mango Node Bros).
 
@@ -366,7 +366,7 @@ Los recursos de hardware son los descritos en el apartado 3.2. A nivel de recurs
 
 NEOPapaya (v3.0 / Core v4) implementa una arquitectura modular dirigida por eventos, diseñada para desacoplar la percepción (sensores) de la cognición (IA) y la acción (actuadores).
 
-El núcleo, **NeoCore**, actúa como un bus de mensajes local de baja latencia.
+El núcleo, **WatermelonD**, actúa como un bus de mensajes local de baja latencia.
 
 ## **6.1 Capa de Percepción (Inputs)**
 
@@ -460,7 +460,7 @@ Estimación basada en el desarrollo de un ingeniero junior-mid para completar la
 | Fase                      | Tareas Principales                                         | Horas Est.     | Coste/Hora | Total                 |
 | :------------------------ | :--------------------------------------------------------- | :------------- | :--------- | :-------------------- |
 | **Investigación**  | Selección de stack (Vosk, Gemma), diseño de arquitectura | 30h            | 25,00 €   | 750,00 €             |
-| **Desarrollo Core** | NeoCore, Threads, Gestión de eventos                      | 50h            | 30,00 €   | 1.500,00 €           |
+| **Desarrollo Core** | WatermelonD, Threads, Gestión de eventos                      | 50h            | 30,00 €   | 1.500,00 €           |
 | **Integración IA** | Implementación de Llama.cpp, T5 (Mango), Vosk             | 40h            | 30,00 €   | 1.200,00 €           |
 | **Front/Doc**       | Interfaz Web, Manuales, Testing                            | 30h            | 25,00 €   | 750,00 €             |
 | **TOTAL RRHH**      |                                                            | **150h** |            | **4.200,00 €** |
@@ -965,8 +965,8 @@ El reconocimiento de voz usa Vosk. Puede ajustar su comportamiento en `modules/v
 La interfaz web puede personalizarse de dos formas:
 
 * **Desde Ajustes (Fácil):** Vaya a **Ajustes > Apariencia** e introduzca su código CSS en el campo "CSS Personalizado". Esto permite cambiar colores, fuentes y ocultar elementos sin tocar archivos.
-* **Archivos Fuente (Avanzado):** Modifique directamente `web_client/templates/base.html` o los archivos en `web_client/static/css/` para cambios estructurales profundos.
-* **Imágenes:** Reemplace los archivos en `web_client/static/images/` para cambiar los avatares o iconos.
+* **Archivos Fuente (Avanzado):** Modifique directamente `TangerineUI/templates/base.html` o los archivos en `TangerineUI/static/css/` para cambios estructurales profundos.
+* **Imágenes:** Reemplace los archivos en `TangerineUI/static/images/` para cambiar los avatares o iconos.
 
 ### 8.3. Parámetros Ocultos
 
@@ -1078,7 +1078,7 @@ NEOPapaya es posible gracias al gigante ecosistema de código abierto:
 ### 12.2. Estructura de Directorios
 
 * `~/NEOPapaya/`
-* `NeoCore.py`: Archivo principal.
+* `WatermelonD.py`: Archivo principal.
 * `config/`:
 * `config.json`: Configuración general.
 * `intents.json`: Definición de comandos.
@@ -1187,7 +1187,7 @@ NEOPapaya sigue una filosofía "Local-First".
 
 ### 2.1. Diagrama de Componentes (Nivel Kernel)
 
-El núcleo `NeoCore` actúa como un *Event Loop* híbrido que orquesta hilos bloqueantes (Audio I/O) y no bloqueantes (MQTT, Web Server).
+El núcleo `WatermelonD` actúa como un *Event Loop* híbrido que orquesta hilos bloqueantes (Audio I/O) y no bloqueantes (MQTT, Web Server).
 
 ```mermaid
 graph TD
@@ -1195,7 +1195,7 @@ graph TD
  HW[Hardware Audio]
  end
 
- subgraph "User Space (NeoCore)"
+ subgraph "User Space (WatermelonD)"
  Mic[PyAudio Stream] -->|PCM Raw| RingBuffer
  RingBuffer -->|Chunks| VAD[Voice Activity Detection]
  VAD -->|Speech Frames| STT[STT Engine]
@@ -1289,7 +1289,7 @@ El sistema evita el uso de PulseAudio/PipeWire en entornos *headless* para reduc
 * *Silencio:* Se mantiene un buffer circular. Si el nivel cae por debajo del umbral durante `M` frames (ej. 1 segundo), se corta el segmento y se envía a procesar.
 
 3. **Buffer:** Los frames de audio se acumulan en un `RingBuffer` antes de enviarse al decodificador para evitar *buffer underruns* si la CPU está ocupada.
-4. **Safe Mode (Modo Seguro):** Si la inicialización de PyAudio o Jack falla (común en entornos contenerizados o mal configurados), el sistema captura la excepción e inicializa objetos `Mock` (simulados). Esto permite que el núcleo (`NeoCore`) arranque completamente en modo "Sordo/Mudo", manteniendo operativas las funciones de red y la interfaz web sin crashear. El estado se refleja globalmente en `AUDIO_STATUS`.
+4. **Safe Mode (Modo Seguro):** Si la inicialización de PyAudio o Jack falla (común en entornos contenerizados o mal configurados), el sistema captura la excepción e inicializa objetos `Mock` (simulados). Esto permite que el núcleo (`WatermelonD`) arranque completamente en modo "Sordo/Mudo", manteniendo operativas las funciones de red y la interfaz web sin crashear. El estado se refleja globalmente en `AUDIO_STATUS`.
 
 ### 2.4. Gestión de Memoria y Ciclo de Vida
 
@@ -1474,7 +1474,7 @@ CMD ["python", "start_services.py"]
 
 ### 5.2. Orquestación con Docker Compose
 
-Para desplegar el stack completo (NeoCore + Mosquitto + UI).
+Para desplegar el stack completo (WatermelonD + Mosquitto + UI).
 
 ```yaml
 version: '3.8'
@@ -1620,7 +1620,7 @@ jobs:
 ### 6.2. Análisis Estático de Código (Linting & Typing)
 
 * **Flake8:** Para estilo (PEP 8) y errores de sintaxis.
-* **Mypy:** Para chequeo de tipos estáticos. Es crítico en `NeoCore` para evitar `TypeError` en tiempo de ejecución que podrían detener el servicio en producción.
+* **Mypy:** Para chequeo de tipos estáticos. Es crítico en `WatermelonD` para evitar `TypeError` en tiempo de ejecución que podrían detener el servicio en producción.
 * **Bandit:** Para análisis de seguridad (búsqueda de hardcoded passwords, uso inseguro de `eval`, etc.).
 
 ### 6.3. Release Management
@@ -1724,7 +1724,7 @@ Estimación de consumo en reposo vs carga máxima.
 | Componente            | RAM (Idle)        | RAM (Load)        | Notas                                |
 | :-------------------- | :---------------- | :---------------- | :----------------------------------- |
 | Kernel + OS           | 150 MB            | 200 MB            | Headless Debian (Minimizado)         |
-| NeoCore (Python)      | 80 MB             | 120 MB            | Base overhead del intérprete        |
+| WatermelonD (Python)      | 80 MB             | 120 MB            | Base overhead del intérprete        |
 | Vosk Model            | 120 MB            | 150 MB            | Modelo 'small' (es)                  |
 | Gemma 2B (q4_k)       | 0 MB              | 1.8 GB            | Carga bajo demanda (mmap)            |
 | ChromaDB              | 50 MB             | 200 MB            | Base vectorial (depende de nº docs) |
@@ -2032,7 +2032,7 @@ El LLM (Gemma) tiene una ventana de contexto limitada (2048 tokens).
 
 ### 4.2. Memoria a Largo Plazo (Persistencia SQLite)
 
-Almacenada en `database/brain.db`.
+Almacenada en `database/BrainNut.db`.
 
 ### 4.3. Esquema de Base de Datos (SQL Reference)
 
@@ -2515,21 +2515,21 @@ Este documento es una guía técnica detallada para desarrolladores que deseen e
 
 ## 2. ARQUITECTURA DE UNA SKILL
 
-Las Skills se encuentran en el directorio `modules/skills/`. Cada Skill es una clase de Python que encapsula una funcionalidad específica.
+Las Skills se encuentran en el directorio `modules/BlueberrySkills/`. Cada Skill es una clase de Python que encapsula una funcionalidad específica.
 
 ### 2.1. Estructura Básica
 
 Aunque el sistema soporta inyección de dependencias simple, se recomienda seguir este patrón:
 
 ```python
-# modules/skills/ejemplo_skill.py
+# modules/BlueberrySkills/ejemplo_skill.py
 
 from modules.skills.base_skill import BaseSkill, intent
 
 class EjemploSkill(BaseSkill):
  def __init__(self, core):
  super().__init__(name="EjemploSkill")
- self.core = core# Referencia al núcleo (NeoCore)
+ self.core = core# Referencia al núcleo (WatermelonD)
 
  @intent("ejemplo_intent")
  def handle_ejemplo(self, message):
@@ -2542,7 +2542,7 @@ class EjemploSkill(BaseSkill):
 
 ### 2.2. Decoradores de Intención
 
-El decorador `@intent("nombre_intent")` registra automáticamente el método en el `IntentManager` al iniciar el sistema. Esto permite una arquitectura modular donde añadir una nueva capacidad es tan simple como crear un archivo en `modules/skills/`.
+El decorador `@intent("nombre_intent")` registra automáticamente el método en el `IntentManager` al iniciar el sistema. Esto permite una arquitectura modular donde añadir una nueva capacidad es tan simple como crear un archivo en `modules/BlueberrySkills/`.
 
 ---
 

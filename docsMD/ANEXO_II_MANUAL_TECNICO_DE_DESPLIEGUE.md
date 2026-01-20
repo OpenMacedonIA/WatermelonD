@@ -82,7 +82,7 @@ NEOPapaya sigue una filosofía "Local-First".
 ## 2. ARQUITECTURA INTERNA Y FLUJO DE DATOS
 
 ### 2.1. Diagrama de Componentes (Nivel Kernel)
-El núcleo `NeoCore` actúa como un *Event Loop* híbrido que orquesta hilos bloqueantes (Audio I/O) y no bloqueantes (MQTT, Web Server).
+El núcleo `WatermelonD` actúa como un *Event Loop* híbrido que orquesta hilos bloqueantes (Audio I/O) y no bloqueantes (MQTT, Web Server).
 
 ```mermaid
 graph TD
@@ -90,7 +90,7 @@ graph TD
  HW[Hardware Audio]
  end
 
- subgraph "User Space (NeoCore)"
+ subgraph "User Space (WatermelonD)"
  Mic[PyAudio Stream] -->|PCM Raw| RingBuffer
  RingBuffer -->|Chunks| VAD[Voice Activity Detection]
  VAD -->|Speech Frames| STT[STT Engine]
@@ -177,7 +177,7 @@ El sistema evita el uso de PulseAudio/PipeWire en entornos *headless* para reduc
  * *Lógica:* Si `RMS > Umbral` durante `N` frames consecutivos, se considera inicio de voz.
  * *Silencio:* Se mantiene un buffer circular. Si el nivel cae por debajo del umbral durante `M` frames (ej. 1 segundo), se corta el segmento y se envía a procesar.
 3. **Buffer:** Los frames de audio se acumulan en un `RingBuffer` antes de enviarse al decodificador para evitar *buffer underruns* si la CPU está ocupada.
-4. **Safe Mode (Modo Seguro):** Si la inicialización de PyAudio o Jack falla (común en entornos contenerizados o mal configurados), el sistema captura la excepción e inicializa objetos `Mock` (simulados). Esto permite que el núcleo (`NeoCore`) arranque completamente en modo "Sordo/Mudo", manteniendo operativas las funciones de red y la interfaz web sin crashear. El estado se refleja globalmente en `AUDIO_STATUS`.
+4. **Safe Mode (Modo Seguro):** Si la inicialización de PyAudio o Jack falla (común en entornos contenerizados o mal configurados), el sistema captura la excepción e inicializa objetos `Mock` (simulados). Esto permite que el núcleo (`WatermelonD`) arranque completamente en modo "Sordo/Mudo", manteniendo operativas las funciones de red y la interfaz web sin crashear. El estado se refleja globalmente en `AUDIO_STATUS`.
 
 ### 2.4. Gestión de Memoria y Ciclo de Vida
 * **Carga Perezosa (Lazy Loading):** Los modelos pesados (Gemma) no se cargan en RAM hasta el primer uso o solicitud explícita, a menos que se configure `preload: true`.
@@ -344,7 +344,7 @@ CMD ["python", "start_services.py"]
 ```
 
 ### 5.2. Orquestación con Docker Compose
-Para desplegar el stack completo (NeoCore + Mosquitto + UI).
+Para desplegar el stack completo (WatermelonD + Mosquitto + UI).
 
 ```yaml
 version: '3.8'
@@ -485,7 +485,7 @@ jobs:
 
 ### 6.2. Análisis Estático de Código (Linting & Typing)
 * **Flake8:** Para estilo (PEP 8) y errores de sintaxis.
-* **Mypy:** Para chequeo de tipos estáticos. Es crítico en `NeoCore` para evitar `TypeError` en tiempo de ejecución que podrían detener el servicio en producción.
+* **Mypy:** Para chequeo de tipos estáticos. Es crítico en `WatermelonD` para evitar `TypeError` en tiempo de ejecución que podrían detener el servicio en producción.
 * **Bandit:** Para análisis de seguridad (búsqueda de hardcoded passwords, uso inseguro de `eval`, etc.).
 
 ### 6.3. Release Management
@@ -579,7 +579,7 @@ Estimación de consumo en reposo vs carga máxima.
 | Componente | RAM (Idle) | RAM (Load) | Notas |
 | :--- | :--- | :--- | :--- |
 | Kernel + OS | 150 MB | 200 MB | Headless Debian (Minimizado) |
-| NeoCore (Python) | 80 MB | 120 MB | Base overhead del intérprete |
+| WatermelonD (Python) | 80 MB | 120 MB | Base overhead del intérprete |
 | Vosk Model | 120 MB | 150 MB | Modelo 'small' (es) |
 | Gemma 2B (q4_k) | 0 MB | 1.8 GB | Carga bajo demanda (mmap) |
 | ChromaDB | 50 MB | 200 MB | Base vectorial (depende de nº docs) |

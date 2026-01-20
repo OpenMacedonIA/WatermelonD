@@ -1,6 +1,6 @@
 # Funciones Experimentales y Roadmap Futuro
 
-Este documento recopila ideas, propuestas y funcionalidades experimentales planificadas para futuras versiones de **NeoCore **. Estas características están en fase de investigación y pueden ser inestables o requerir hardware específico.
+Este documento recopila ideas, propuestas y funcionalidades experimentales planificadas para futuras versiones de **WatermelonD **. Estas características están en fase de investigación y pueden ser inestables o requerir hardware específico.
 
 ---
 

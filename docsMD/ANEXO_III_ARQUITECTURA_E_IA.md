@@ -254,7 +254,7 @@ El LLM (Gemma) tiene una ventana de contexto limitada (2048 tokens).
 * **Pruning:** Se eliminan los mensajes más antiguos, preservando el `System Prompt`.
 
 ### 4.2. Memoria a Largo Plazo (Persistencia SQLite)
-Almacenada en `database/brain.db`.
+Almacenada en `database/BrainNut.db`.
 
 ### 4.3. Esquema de Base de Datos (SQL Reference)
 ```sql

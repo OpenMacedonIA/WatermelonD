@@ -32,7 +32,7 @@ Accede a `http://<IP-DEL-DISPOSITIVO>:5000` para un control total:
 
 ```
 Neo_nano/
-├── NeoCore.py# Cerebro de la aplicación (Punto de entrada)
+├── WatermelonD.py# Cerebro de la aplicación (Punto de entrada)
 ├── install.sh# Script de instalación automática
 ├── config.json# Configuración (Credenciales, Wake Word)
 ├── modules/

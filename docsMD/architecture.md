@@ -1,6 +1,6 @@
 # Arquitectura del Sistema (NEOPapaya v3.0 / Core v4)
 
-Este documento describe la arquitectura interna de NEOPapaya con las optimizaciones de la versión 4 del Núcleo (`NeoCore`).
+Este documento describe la arquitectura interna de NEOPapaya con las optimizaciones de la versión 4 del Núcleo (`WatermelonD`).
 
 ## ️ Visión General
 
@@ -8,7 +8,7 @@ NEOPapaya sigue una arquitectura **modular y orientada a eventos**, optimizada p
 
 ### Componentes Principales
 
-1. **NeoCore (`NeoCore.py`)**:
+1. **WatermelonD (`WatermelonD.py`)**:
  * **Función**: Orquestador central. Gestiona el ciclo de vida de la aplicación.
  * **Threading**: Utiliza hilos ligeros para manejar tareas simultáneas (Voz, Eventos, Web).
  * **V4 Optimization**: Implementa un **Watchdog** interno que supervisa y reinicia hilos críticos si fallan, garantizando "Alta Disponibilidad" local.
@@ -16,7 +16,7 @@ NEOPapaya sigue una arquitectura **modular y orientada a eventos**, optimizada p
 2. **Web Admin (`modules/web_admin.py`)**:
  * **Función**: Servidor API y Web Interface.
  * **Tecnología**: Flask + Flask-SocketIO.
- * **Aislamiento**: Se ejecuta en su propio hilo dentro de NeoCore, sirviendo la UI independientemente del estado de la IA.
+ * **Aislamiento**: Se ejecuta en su propio hilo dentro de WatermelonD, sirviendo la UI independientemente del estado de la IA.
 
 3. **Managers (Decoupled Modules)**:
  * `VoiceManager`: Captura de audio y STT (Vosk/Whisper).
@@ -31,7 +31,7 @@ NEOPapaya sigue una arquitectura **modular y orientada a eventos**, optimizada p
 ## Flujo de Datos
 
 1. **Input**: El usuario habla -> `VoiceManager` detecta y transcribe.
-2. **Routing**: `NeoCore.handle_command` decide:
+2. **Routing**: `WatermelonD.handle_command` decide:
  * Es un comando de sistema? -> `MangoManager` (T5).
  * Es una charla? -> `AIEngine` (Gemma).
  * Es una orden directa? -> `IntentManager` (Reglas/Vosk).
