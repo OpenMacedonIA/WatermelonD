@@ -505,7 +505,21 @@ class NeoCore:
         self.app_logger.info(f"MANGO Prompt: '{mango_prompt}'")
         
         # --- SELF-CORRECTION LOOP ---
-        max_retries = 1
+        max_retries = 2
+        
+        REPAIR_PROMPTS = [
+            "El comando '{cmd}' falló con error: '{err}'. Corrígelo.",
+            "Error ejecutando '{cmd}': '{err}'. Dame la solución.",
+            "Fallo: '{err}' al ejecutar '{cmd}'. Arréglalo.",
+            "Corrige el comando '{cmd}' dado este error: '{err}'",
+            "He recibido este error: '{err}' tras lanzar '{cmd}'. ¿Qué hago?",
+            "Intento hacer '{cmd}' pero sale '{err}'.",
+            "Ayuda, '{cmd}' no funciona. Error: '{err}'.",
+            "Repara este comando: '{cmd}'. El error es '{err}'.",
+            "Salida de error: '{err}' para el comando '{cmd}'.",
+            "Fix: '{cmd}' -> '{err}'."
+        ]
+        
         attempt = 0
         command_to_run = None
         
@@ -570,8 +584,12 @@ class NeoCore:
                      
                      if attempt < max_retries:
                          attempt += 1
-                         repair_prompt = f"Previous command '{command_to_run}' failed with error: '{error_msg}'. Fix the command to: {command_text}"
-                         self.app_logger.info(f"MANGO Repair Prompt: {repair_prompt}")
+                         
+                         # Dynamic Repair Prompt
+                         template = random.choice(REPAIR_PROMPTS)
+                         repair_prompt = template.format(cmd=command_to_run, err=error_msg)
+                         
+                         self.app_logger.info(f"MANGO Repair Prompt ({attempt}/{max_retries}): {repair_prompt}")
                          
                          fixed_cmd, fixed_conf = self.mango_manager.infer(repair_prompt)
                          if fixed_cmd:
