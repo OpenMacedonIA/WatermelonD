@@ -69,7 +69,7 @@ COLEGA.code-workspace
 docs/
 data/health_history.json
 resources/tools/diagnose.sh
-
+temp
 # Tests
 tests/
 test_rag_temp.py
