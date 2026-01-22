@@ -1,7 +1,7 @@
 {
     "decision_router": {
         "enabled": true,
-        "model_path": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "model_path": "models/lemon-route",
         "confidence_threshold": 0.6
     },
     "wake_words": [

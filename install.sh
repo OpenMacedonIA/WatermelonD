@@ -274,6 +274,10 @@ function install_standard() {
     [ "$MANGO_OPT" == "2" ] && BRANCH="MANGO2"
     [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --branch "$BRANCH"
 
+    # Decision Router Model
+    echo "Descargando modelo Decision Router (Lemon Route)..."
+    [ -f "resources/tools/download_router_model.py" ] && $VENV_DIR/bin/python resources/tools/download_router_model.py
+
     # Socket.IO
     mkdir -p "web_client/static/js"
     if [ ! -f "web_client/static/js/socket.io.min.js" ]; then

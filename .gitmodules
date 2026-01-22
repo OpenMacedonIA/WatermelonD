@@ -7,3 +7,21 @@
 [submodule "web_client"]
 	path = web_client
 	url = https://github.com/OpenMacedonIA/neo-cereza.git
+[submodule "modules/BrainNut"]
+	path = modules/BrainNut
+	url = https://github.com/OpenMacedonIA/BrainNut
+[submodule "modules/BlueberrySkills"]
+	path = modules/BlueberrySkills
+	url = https://github.com/OpenMacedonIA/BlueberrySkills
+[submodule "TangerineUI"]
+	path = TangerineUI
+	url = https://github.com/OpenMacedonIA/TangerineUI
+[submodule "modules/Watermelon-extras"]
+	path = modules/Watermelon-extras
+	url = https://github.com/OpenMacedonIA/Watermelon-extras
+[submodule "modules/BerryConnect"]
+	path = modules/BerryConnect
+	url = https://github.com/OpenMacedonIA/BerryConnect.git
+[submodule "modules/extensions"]
+	path = modules/extensions
+	url = https://github.com/OpenMacedonIA/Watermelon-extras
