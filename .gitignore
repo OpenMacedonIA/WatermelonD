@@ -76,7 +76,7 @@ test_rag_temp.py
 venv_distrobox
 # Hardware/Specific Modules
 esp32_cam/
-
+priv_docs/
 # IDE & System
 .idea/
 .vscode/

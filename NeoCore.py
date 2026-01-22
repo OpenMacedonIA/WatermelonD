@@ -43,6 +43,7 @@ from modules.mango.engine import MangoManager # MANGO T5
 from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
 from modules.plugin_loader import PluginLoader
+from modules.decision_router import DecisionRouter
 
 
 # --- Módulos Opcionales ---
@@ -147,6 +148,7 @@ class NeoCore:
         model_path = self.config.get('ai_model_path')
         self.ai_engine = AIEngine(model_path=model_path) 
         self.intent_manager = IntentManager(self.config_manager)
+        self.decision_router = DecisionRouter(self.config_manager)
         self.keyword_router = KeywordRouter(self)
         # --- Audio Input (VoiceManager) ---
         try:
@@ -697,7 +699,47 @@ class NeoCore:
                         self.speak("Lo siento, mis sistemas de visión no están activos.")
                         return
 
-                # --- 1. SKILLS (IntentManager) - PRIORITY 1 ---
+                # --- 1. DECISION ROUTER (Semantic High-Level Routing) ---
+                # Checks for broad categories before specific intents
+                router_category, router_score = self.decision_router.predict(command_text)
+                
+                if router_category:
+                    app_logger.info(f"⚡ ROUTER: Routing to '{router_category}' (Score: {router_score:.2f})")
+                    
+                    if router_category == 'conversation':
+                         # Direct chat bypass
+                         final_response = self.chat_manager.get_response(command_text)
+                         self.speak(final_response)
+                         return
+
+                    elif router_category in ['docker', 'security', 'command']:
+                         # Route to Mango with context hint
+                         # We can prepend context or just let Mango handle it, but identifying it helps logging
+                         # Ideally we pass 'mode' to handle_mango_logic if supported, but for now we just fallback to it
+                         # as a priority.
+                         if self._handle_mango_logic(command_text):
+                             return
+
+                    elif router_category == 'time':
+                        self.skills_time.execute_action('time', command_text) # Simplified for example
+                        # Or better, find the intent within time skill or force it
+                        # For now, let's map it to specific intent if possible or call skill direct
+                        # Since we don't have direct skill execute methods exposed uniformly, 
+                        # we might need to rely on intent_manager still OR hardcode calls.
+                        # LET'S FALLBACK TO INTENT MANAGER WITH A HINT OR TEXT MOD IF NEEDED?
+                        # Actually, if we are sure it is time, we can look for "time" related intents specifically.
+                        # But simpler: rely on Intent Manager BUT bump confidence if router agrees?
+                        # For this plan, we said "Prioritizes these skills". 
+                        pass # Fall through to IntentManager which likely has "time" intents.
+                        # BUT if IntentManager fails (fuzzy mismatch), we might want to force it.
+                        # Let's keep it simple: If Router says "Time", we trust it? 
+                        # Since we don't have a direct 'get_time' method exposed on NeoCore easily without importing skill logic,
+                        # We will let IntentManager handle the specific execution, but we could filter intents.
+                        
+                    elif router_category == 'entertainment':
+                        pass # Fall through to Intent Manager (Media Skill)
+
+                # --- 2. SKILLS (IntentManager) - PRIORITY 1 ---
                 # Check this FIRST to protect critical systems (System, SSH, Alarms)
                 best_intent = self.intent_manager.find_best_intent(command_text)
                 
