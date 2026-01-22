@@ -1,12 +1,3 @@
-[submodule "modules/mango"]
-	path = modules/mango
-	url = https://github.com/OpenMacedonIA/neo-mango.git
-[submodule "modules/skills"]
-	path = modules/skills
-	url = https://github.com/OpenMacedonIA/neo-uvas.git
-[submodule "web_client"]
-	path = web_client
-	url = https://github.com/OpenMacedonIA/neo-cereza.git
 [submodule "modules/BrainNut"]
 	path = modules/BrainNut
 	url = https://github.com/OpenMacedonIA/BrainNut
