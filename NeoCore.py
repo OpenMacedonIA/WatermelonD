@@ -15,18 +15,17 @@ from modules.speaker import Speaker
 from modules.calendar_manager import CalendarManager
 from modules.alarms import AlarmManager
 from modules.config_manager import ConfigManager
-from modules.skills.system import SystemSkill
-from modules.skills.network import NetworkSkill
-from modules.skills.time_date import TimeDateSkill
+from modules.BlueberrySkills.system import SystemSkill
+from modules.BlueberrySkills.network import NetworkSkill
+from modules.BlueberrySkills.time_date import TimeDateSkill
 
-from modules.skills.media import MediaSkill
-from modules.skills.organizer import OrganizerSkill
-from modules.skills.ssh import SSHSkill
-from modules.skills.files import FilesSkill
-from modules.skills.files import FilesSkill
-from modules.skills.finder import FinderSkill
-from modules.skills.docker import DockerSkill
-from modules.skills.diagnosis import DiagnosisSkill
+from modules.BlueberrySkills.media import MediaSkill
+from modules.BlueberrySkills.organizer import OrganizerSkill
+from modules.BlueberrySkills.ssh import SSHSkill
+from modules.BlueberrySkills.files import FilesSkill
+from modules.BlueberrySkills.finder import FinderSkill
+from modules.BlueberrySkills.docker import DockerSkill
+from modules.BlueberrySkills.diagnosis import DiagnosisSkill
 from modules.ssh_manager import SSHManager
 from modules.wifi_manager import WifiManager
 # from modules.vision import VisionManager # Lazy load to prevent CV2 segfaults
@@ -39,7 +38,7 @@ from modules.voice_manager import VoiceManager
 from modules.intent_manager import IntentManager
 from modules.keyword_router import KeywordRouter
 from modules.chat import ChatManager
-from modules.mango.engine import MangoManager # MANGO T5
+from modules.BrainNut.engine import MangoManager # MANGO T5
 from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
 from modules.plugin_loader import PluginLoader
@@ -268,7 +267,7 @@ class NeoCore:
         
         # --- Optional Skills (Voice Auth) ---
         try:
-            from modules.skills.optional.voice_auth import VoiceAuthSkill
+            from modules.BlueberrySkills.optional.voice_auth import VoiceAuthSkill
             self.voice_auth_skill = VoiceAuthSkill(self)
         except ImportError:
              self.voice_auth_skill = None
