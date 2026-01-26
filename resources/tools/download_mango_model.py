@@ -5,22 +5,35 @@ from huggingface_hub import snapshot_download
 import argparse
 
 def download_mango():
-    parser = argparse.ArgumentParser(description="Download MANGO T5 model")
-    parser.add_argument("--branch", type=str, default="main", help="Model branch to download (default: main)")
+    parser = argparse.ArgumentParser(description="Download AI Sysadmin Model (Lime/Mango)")
+    parser.add_argument("--model", type=str, default="lime", choices=["lime", "mango"], help="Model to download: 'lime' (default) or 'mango' (legacy)")
+    # Backwards compatibility for --branch if some old script calls it, though we are deprecating it for 'model' arg preference
+    parser.add_argument("--branch", type=str, help="Deprecated: Use --model instead")
+    
     args = parser.parse_args()
     
-    repo_id = "jrodriiguezg/mango-t5-770m"
-    target_dir = os.path.join(os.getcwd(), "models", "MANGOt5")
-    revision = args.branch
-    
-    print(f"ℹ️  Selected Branch: {revision}")
+    # Determine model configuration
+    if args.model == "lime":
+        repo_id = "jrodriiguezg/lime-t5-large-770m"
+        target_dir = os.path.join(os.getcwd(), "models", "Lime")
+        revision = "main"
+        model_name = "Lime"
+    else:
+        # Legacy Mango
+        repo_id = "jrodriiguezg/mango-t5-770m"
+        target_dir = os.path.join(os.getcwd(), "models", "MANGOt5")
+        revision = "main"
+        model_name = "MANGO (Legacy)"
+
+    print(f"ℹ️  Selected Model: {model_name}")
+    print(f"ℹ️  Repository: {repo_id}")
     
     # Check if model seems populated (simple check)
     if os.path.exists(target_dir):
         files = os.listdir(target_dir)
         # Look for critical model files
         if any(f.endswith(".bin") or f.endswith(".safetensors") for f in files) and "config.json" in files:
-            print(f"✅ MANGO T5 already exists in {target_dir}. Skipping download.")
+            print(f"✅ {model_name} already exists in {target_dir}. Skipping download.")
             return
 
     print(f"⬇️ Downloading {repo_id} (Branch: {revision}) to {target_dir}...")
@@ -35,15 +48,11 @@ def download_mango():
             resume_download=True,         # Resume if interrupted
             ignore_patterns=[".gitattributes", "README.md", "*.onnx", "*.tflite"] # Optimize size
         )
-        print(f"✅ Successfully downloaded MANGO T5 to {path}")
+        print(f"✅ Successfully downloaded {model_name} to {path}")
         
     except Exception as e:
         print(f"❌ Error downloading model: {e}")
         print("   Please check your internet connection or install manually.")
-        # Don't exit(1) to allow installation to proceed? 
-        # No, if the user wants it 'ready to work', we should probably fail or warn loudly.
-        # But 'set -e' in install.sh will stop everything.
-        # Let's fail so they know something went wrong.
         exit(1)
 
 if __name__ == "__main__":

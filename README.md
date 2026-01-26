@@ -27,14 +27,14 @@ NEOPapaya is a proactive and modular personal assistant designed to run locally 
   * **Unified Notifications**: Replaced browser alerts with a modern Toast system + Desktop Notifications.
   * **Connection Monitor**: Full-screen overlay that automatically detects system restarts/outages.
   * **About & Updates**: Dedicated section for version management.
-* **🥭 SysAdmin AI ([MANGOT5](https://huggingface.co/jrodriiguezg/mango-t5-770m))**: Robust translation of natural language to Bash commands.
+* **🍋 SysAdmin AI ([LIME](https://huggingface.co/jrodriiguezg/lemon-t5-large-770m))**: **New in v2.6!** Powered by Flan-T5 Large, replacing Mango for superior natural language understanding in Bash command generation. (Mango still available as legacy).
 
 ### 🚀 Key Features
 
 #### 🧠 Hybrid Intelligence
 
 * **Local LLM**: Integration with **Gemma 2B** (4-bit) for fluid conversations.
-* **SysAdmin AI**: **MANGO T5** model for robust Natural Language to Bash translation.
+* **SysAdmin AI**: **LIME** (Flan-T5 Large) for robust Natural Language to Bash translation.
 * **Memory (Brain)**: Long-term memory system and alias learning.
 * **RAG (Retrieval-Augmented Generation)**: Query local documents.
 
@@ -98,14 +98,14 @@ NEOPapaya es un asistente personal proactivo y modular diseñado para ejecutarse
   * **Notificaciones Unificadas**: Sistema de Toasts moderno + Notificaciones de Escritorio.
   * **Monitor de Conexión**: Overlay a pantalla completa que detecta reinicios del servidor automáticamente.
   * **Actualizaciones**: Nueva sección "About" para gestión de versiones.
-* **🥭 SysAdmin AI (MANGO T5)**: Traducción robusta de comandos.
+* **🍋 SysAdmin AI (LIME)**: **Nuevo en v2.6!** Basado en Flan-T5, sustituye a Mango para una comprensión superior de instrucciones de sistema.
 
 ### 🚀 Características Principales
 
 #### 🧠 Inteligencia Híbrida
 
 * **LLM Local**: **Gemma 2B** para conversaciones.
-* **SysAdmin AI**: **MANGO T5** para comandos Bash.
+* **SysAdmin AI**: **LIME** (Recomendado) o **MANGO** (Legacy) para comandos Bash.
 * **Memoria (Brain)**: Memoria a largo plazo y RAG.
 
 #### 🗣️ Interacción Natural

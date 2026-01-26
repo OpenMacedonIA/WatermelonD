@@ -265,14 +265,16 @@ function install_standard() {
         [ -f "resources/tools/download_whisper_model.py" ] && $VENV_DIR/bin/python resources/tools/download_whisper_model.py
     fi
 
-    # Opción de Mango
-    echo "Seleccione versión de MANGO:"
-    echo "1) MANGO (Recomendado)"
-    echo "2) MANGO2 (Legacy)"
-    read -p "Opción [1]: " MANGO_OPT
-    BRANCH="main"
-    [ "$MANGO_OPT" == "2" ] && BRANCH="MANGO2"
-    [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --branch "$BRANCH"
+    # Opción de Mango / Lime
+    echo "Seleccione el modelo de IA:"
+    echo "1) Lime (Recomendado)"
+    echo "2) Mango (Legacy)"
+    read -p "Opción [1]: " MODEL_OPT
+    MODEL_TYPE="lime"
+    if [ "$MODEL_OPT" == "2" ]; then
+        MODEL_TYPE="mango"
+    fi
+    [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --model "$MODEL_TYPE"
 
     # Decision Router Model
     echo "Descargando modelo Decision Router (Lemon Route)..."
