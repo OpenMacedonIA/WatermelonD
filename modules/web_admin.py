@@ -23,7 +23,7 @@ from modules.dashboard_data import DashboardDataManager
 from modules.knowledge_base import KnowledgeBase
 from modules.scheduler_manager import SchedulerManager
 
-app = Flask(__name__, template_folder='../web_client/templates', static_folder='../web_client/static')
+app = Flask(__name__, template_folder='../TangerineUI/templates', static_folder='../TangerineUI/static')
 
 config_manager = ConfigManager()
 

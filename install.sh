@@ -281,9 +281,9 @@ function install_standard() {
     [ -f "resources/tools/download_router_model.py" ] && $VENV_DIR/bin/python resources/tools/download_router_model.py
 
     # Socket.IO
-    mkdir -p "web_client/static/js"
-    if [ ! -f "web_client/static/js/socket.io.min.js" ]; then
-        wget -q -O "web_client/static/js/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
+    mkdir -p "TangerineUI/static/js"
+    if [ ! -f "TangerineUI/static/js/socket.io.min.js" ]; then
+        wget -q -O "TangerineUI/static/js/socket.io.min.js" https://cdn.socket.io/4.7.2/socket.io.min.js
     fi
 
     # --- SERVICIOS ---
@@ -304,7 +304,7 @@ function install_standard() {
     # Servicio Core
     cat <<EOT > "$USER_HOME/.config/systemd/user/neo.service"
 [Unit]
-Description=Neo Core Backend Service
+Description=Neo Core Backend Service (WatermelonD)
 After=network.target sound.target
 
 [Service]
@@ -314,37 +314,17 @@ WorkingDirectory=$(pwd)
 ExecStart=$(pwd)/venv/bin/python $(pwd)/NeoCore.py
 Restart=always
 RestartSec=5
-SyslogIdentifier=neo_core
+SyslogIdentifier=watermelon_core
 
 [Install]
 WantedBy=default.target
 EOT
 
-    # Servicio Web
-    cat <<EOT > "$USER_HOME/.config/systemd/user/neo-web.service"
-[Unit]
-Description=Neo Web Client Service
-After=network.target neo.service
-
-[Service]
-Type=simple
-Environment=PYTHONUNBUFFERED=1
-Environment=NEO_API_URL=http://localhost:5000
-WorkingDirectory=$(pwd)
-ExecStart=$(pwd)/venv/bin/python $(pwd)/web_client/app.py
-Restart=always
-RestartSec=5
-SyslogIdentifier=neo_web
-
-[Install]
-WantedBy=default.target
-EOT
-
-    # Recargar y Habilitar
+    # Recargar y Habilitar (Solo Core)
     sudo loginctl enable-linger $USER_NAME
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service neo-web.service
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service neo-web.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
     # --- CONFIGURACIÓN DE KIOSK ---
     if [ "$INSTALL_GUI" = true ]; then
@@ -371,11 +351,11 @@ xset s off
 xset s noblank
 openbox &
 echo "Esperando backend..."
-while ! curl -s http://localhost:8000 > /dev/null; do sleep 2; done
+while ! curl -s http://localhost:5000 > /dev/null; do sleep 2; done
 CHROMIUM_BIN="chromium"
 command -v chromium-browser &> /dev/null && CHROMIUM_BIN="chromium-browser"
 while true; do
-  \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:8000
+  \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:5000
   sleep 2
 done
 EOT
@@ -416,7 +396,7 @@ function install_web_client() {
     echo "Creando lanzador run_client.sh..."
     echo "#!/bin/bash" > run_client.sh
     echo "export NEO_API_URL='$NEO_IP'" >> run_client.sh
-    echo "python3 web_client/app.py" >> run_client.sh
+    echo "python3 TangerineUI/app.py" >> run_client.sh
     chmod +x run_client.sh
     
     echo "✅ Listo. Ejecuta ./run_client.sh para iniciar."
