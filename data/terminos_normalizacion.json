@@ -1,0 +1,290 @@
+{
+    "malbec": [
+        {
+            "canonical": "docker",
+            "variants": [
+                "docer",
+                "doker",
+                "docor",
+                "dokar"
+            ]
+        },
+        {
+            "canonical": "contenedor",
+            "variants": [
+                "conteneder",
+                "conteiner",
+                "counter"
+            ]
+        },
+        {
+            "canonical": "imagen",
+            "variants": [
+                "imajen",
+                "imagene"
+            ]
+        }
+    ],
+    "syrah": [
+        {
+            "canonical": "network",
+            "variants": [
+                "networ",
+                "nework",
+                "netguor"
+            ]
+        },
+        {
+            "canonical": "wifi",
+            "variants": [
+                "guifi",
+                "wify",
+                "wayfay"
+            ]
+        },
+        {
+            "canonical": "escanear",
+            "variants": [
+                "scanear",
+                "escanar",
+                "scaniar"
+            ]
+        }
+    ],
+    "tempranillo": [
+        {
+            "canonical": "sistema",
+            "variants": [
+                "sistma",
+                "sistem"
+            ]
+        },
+        {
+            "canonical": "actualizar",
+            "variants": [
+                "actualisar",
+                "actuallizar"
+            ]
+        }
+    ],
+    "pinot": [
+        {
+            "canonical": "buscar",
+            "variants": [
+                "busqar",
+                "vBuscar",
+                "buskr"
+            ]
+        },
+        {
+            "canonical": "google",
+            "variants": [
+                "gugel",
+                "gougle",
+                "gogle"
+            ]
+        }
+    ],
+    "chandonay": [
+    {
+        "canonical": "fichero",
+        "variants": [
+            "fichro",
+            "fixero",
+            "file"
+        ]
+    },
+    {
+        "canonical": "directorio",
+        "variants": [
+            "direcotrio",
+            "directoio",
+            "directrio"
+        ]
+    },
+    {
+        "canonical": "archivo",
+        "variants": [
+            "archibo",
+            "arxivo",
+            "achivo",
+            "archiv"
+        ]
+    },
+    {
+        "canonical": "carpeta",
+        "variants": [
+            "karpeta",
+            "carpta",
+            "capeta",
+            "folder"
+        ]
+    },
+    {
+        "canonical": "crea",
+        "variants": [
+            "krea",
+            "crae",
+            "crear",
+            "genera",
+            "haz"
+        ]
+    },
+    {
+        "canonical": "borra",
+        "variants": [
+            "bora",
+            "vorra",
+            "borar",
+            "elimina",
+            "quita"
+        ]
+    },
+    {
+        "canonical": "mueve",
+        "variants": [
+            "muebe",
+            "muev",
+            "mover",
+            "pasa",
+            "cambia de sitio"
+        ]
+    },
+    {
+        "canonical": "copia",
+        "variants": [
+            "copea",
+            "cpoia",
+            "copiar",
+            "duplica"
+        ]
+    },
+    {
+        "canonical": "renombra",
+        "variants": [
+            "renobra",
+            "renombrar",
+            "cambia el nombre",
+            "nombrar"
+        ]
+    },
+    {
+        "canonical": "lista",
+        "variants": [
+            "lsta",
+            "listar",
+            "listado",
+            "enumera"
+        ]
+    },
+    {
+        "canonical": "muestra",
+        "variants": [
+            "mustra",
+            "muestrame",
+            "enseña",
+            "ver"
+        ]
+    },
+    {
+        "canonical": "entra",
+        "variants": [
+            "entr",
+            "antra",
+            "entrar",
+            "accede",
+            "metete"
+        ]
+    },
+    {
+        "canonical": "configuración",
+        "variants": [
+            "configuracion",
+            "config",
+            "confi",
+            "configurazion",
+            "ajustes"
+        ]
+    },
+    {
+        "canonical": "imagen",
+        "variants": [
+            "imgen",
+            "ymagen",
+            "foto",
+            "picture"
+        ]
+    },
+    {
+        "canonical": "video",
+        "variants": [
+            "bideo",
+            "vidio",
+            "clip"
+        ]
+    },
+    {
+        "canonical": "documento",
+        "variants": [
+            "doc",
+            "documnto",
+            "ducumento",
+            "docs"
+        ]
+    },
+    {
+        "canonical": "descargas",
+        "variants": [
+            "deskargas",
+            "dscargas",
+            "downloads",
+            "bajadas"
+        ]
+    },
+    {
+        "canonical": "escritorio",
+        "variants": [
+            "scritorio",
+            "escritrio",
+            "desktop",
+            "pantalla"
+        ]
+    },
+    {
+        "canonical": "historial",
+        "variants": [
+            "istorial",
+            "hystorial",
+            "history"
+        ]
+    },
+    {
+        "canonical": "mueve",
+        "variants": [
+            "muebe",
+            "muev",
+            "mover",
+            "mueves"
+        ]
+    },
+],
+    "cabernet": [
+        {
+            "canonical": "ssh",
+            "variants": [
+                "shh",
+                "s h h",
+                "ese ese hache"
+            ]
+        }
+    ],
+    "gemma": [
+        {
+            "canonical": "hola",
+            "variants": [
+                "ola",
+                "holla"
+            ]
+        }
+    ]
+}

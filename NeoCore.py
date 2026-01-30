@@ -44,6 +44,7 @@ from modules.bluetooth_manager import BluetoothManager
 from modules.plugin_loader import PluginLoader
 from modules.decision_router import DecisionRouter
 from modules.onnx_runner import SpecificModelRunner # New ONNX Runtime Runner
+from modules.text_normalizer import TextNormalizer # Text Normalization Module
 
 
 # --- Módulos Opcionales ---
@@ -150,6 +151,7 @@ class NeoCore:
         self.intent_manager = IntentManager(self.config_manager)
         self.decision_router = DecisionRouter(self.config_manager)
         self.onnx_runner = SpecificModelRunner() # Initialize specialized runner
+        self.text_normalizer = TextNormalizer() # Initialize normalizer
         self.keyword_router = KeywordRouter(self)
         # --- Audio Input (VoiceManager) ---
         try:
@@ -719,6 +721,9 @@ class NeoCore:
                         return
 
                 # --- 1. NEW ROUTER ARCHITECTURE ---
+                # "Capa de Normalización"
+                command_text = self.text_normalizer.normalize(command_text)
+
                 # "Capa de Clasificación (Router)"
                 router_label, router_score = self.decision_router.predict(command_text)
                 
@@ -740,7 +745,7 @@ class NeoCore:
                      self.speak(final_response)
                      return
                 
-                # Technical Categories (malbec, syrah, tempranillo, pinot, cardonnay, cabernet)
+                # Technical Categories (malbec, syrah, tempranillo, pinot, chandonay, cabernet)
                 else:
                     try:
                         # "Capa de Ejecución": ONNX Runner
