@@ -1,8 +1,8 @@
 {
     "decision_router": {
         "enabled": true,
-        "model_path": "models/lemon-route",
-        "confidence_threshold": 0.6
+        "model_path": "models/microsoft/Multilingual-MiniLM-L12-H384",
+        "confidence_threshold": 0.4
     },
     "wake_words": [
         "neo",

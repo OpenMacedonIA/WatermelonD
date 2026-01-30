@@ -43,6 +43,7 @@ from modules.health_manager import HealthManager # Self-Healing
 from modules.bluetooth_manager import BluetoothManager
 from modules.plugin_loader import PluginLoader
 from modules.decision_router import DecisionRouter
+from modules.onnx_runner import SpecificModelRunner # New ONNX Runtime Runner
 
 
 # --- Módulos Opcionales ---
@@ -148,6 +149,7 @@ class NeoCore:
         self.ai_engine = AIEngine(model_path=model_path) 
         self.intent_manager = IntentManager(self.config_manager)
         self.decision_router = DecisionRouter(self.config_manager)
+        self.onnx_runner = SpecificModelRunner() # Initialize specialized runner
         self.keyword_router = KeywordRouter(self)
         # --- Audio Input (VoiceManager) ---
         try:
@@ -716,97 +718,87 @@ class NeoCore:
                         self.speak("Lo siento, mis sistemas de visión no están activos.")
                         return
 
-                # --- 1. DECISION ROUTER (Semantic High-Level Routing) ---
-                # Checks for broad categories before specific intents
-                router_category, router_score = self.decision_router.predict(command_text)
+                # --- 1. NEW ROUTER ARCHITECTURE ---
+                # "Capa de Clasificación (Router)"
+                router_label, router_score = self.decision_router.predict(command_text)
                 
-                if router_category:
-                    app_logger.info(f"⚡ ROUTER: Routing to '{router_category}' (Score: {router_score:.2f})")
-                    
-                    if router_category == 'conversation':
-                         # Direct chat bypass
-                         final_response = self.chat_manager.get_response(command_text)
-                         self.speak(final_response)
+                # Handling 'null' category (Restart Loop)
+                if router_label == "null" or router_label is None:
+                    self.speak("No he entendido el comando. Reiniciando.")
+                    app_logger.info("Router returned NULL. Restarting listen loop.")
+                    return # Vuelve al bucle principal
+
+                app_logger.info(f" ROUTER SELECTED: {router_label} ({router_score:.2f})")
+
+                # "Capa de Ejecución de Modelos Específicos"
+                generated_command = None
+
+                # Specific Logic for Non-Technical Categories
+                if router_label == "gemma":
+                     # Fallback to chat/general queries
+                     final_response = self.chat_manager.get_response(command_text)
+                     self.speak(final_response)
+                     return
+                
+                # Technical Categories (malbec, syrah, tempranillo, pinot, cardonnay, cabernet)
+                else:
+                    try:
+                        # "Capa de Ejecución": ONNX Runner
+                        generated_command = self.onnx_runner.generate_command(command_text, router_label)
+                        self.app_logger.info(f" ONNX Generated Command: {generated_command}")
+                        
+                        if not generated_command:
+                            self.speak("El modelo no generó ningún comando.")
+                            return
+
+                    except FileNotFoundError as e:
+                        # "Graceful Failure": Model missing
+                        self.app_logger.error(f"Missing Model for {router_label}: {e}")
+                        self.speak(f"No encuentro el modelo especializado para {router_label}. Continuando...")
+                        return # Restart loop
+                        
+                    except Exception as e:
+                         self.app_logger.error(f"Error in ONNX Runner: {e}")
+                         self.speak("Hubo un error al ejecutar el modelo especializado.")
                          return
 
-                    elif router_category in ['docker', 'security', 'command']:
-                         # Route to Mango with context hint
-                         # We can prepend context or just let Mango handle it, but identifying it helps logging
-                         # Ideally we pass 'mode' to handle_mango_logic if supported, but for now we just fallback to it
-                         # as a priority.
-                         if self._handle_mango_logic(command_text):
+                # "Capa de Post-Procesamiento"
+                if generated_command:
+                    # 1. Visual Content Logic
+                    visual_tokens = ["cat ", "gedit ", "nano ", "vim ", "ls ", "tree", "top", "htop", "less ", "more "]
+                    is_visual = any(token in generated_command for token in visual_tokens)
+                    
+                    if is_visual and self.web_server: 
+                         self.app_logger.info("Visual command detected. Emitting CLI event.")
+                    
+                    # 2. Validate & Execute via SysAdminManager
+                    if self.sysadmin_manager:
+                        is_valid, val_msg = self.sysadmin_manager.validate_command_flags(generated_command)
+                        if not is_valid:
+                             self.speak(f"Comando inválido: {val_msg}")
                              return
-
-                    elif router_category == 'time':
-                        self.skills_time.execute_action('time', command_text) # Simplified for example
-                        # Or better, find the intent within time skill or force it
-                        # For now, let's map it to specific intent if possible or call skill direct
-                        # Since we don't have direct skill execute methods exposed uniformly, 
-                        # we might need to rely on intent_manager still OR hardcode calls.
-                        # LET'S FALLBACK TO INTENT MANAGER WITH A HINT OR TEXT MOD IF NEEDED?
-                        # Actually, if we are sure it is time, we can look for "time" related intents specifically.
-                        # But simpler: rely on Intent Manager BUT bump confidence if router agrees?
-                        # For this plan, we said "Prioritizes these skills". 
-                        pass # Fall through to IntentManager which likely has "time" intents.
-                        # BUT if IntentManager fails (fuzzy mismatch), we might want to force it.
-                        # Let's keep it simple: If Router says "Time", we trust it? 
-                        # Since we don't have a direct 'get_time' method exposed on NeoCore easily without importing skill logic,
-                        # We will let IntentManager handle the specific execution, but we could filter intents.
                         
-                    elif router_category == 'entertainment':
-                        pass # Fall through to Intent Manager (Media Skill)
-
-                # --- 2. SKILLS (IntentManager) - PRIORITY 1 ---
-                # Check this FIRST to protect critical systems (System, SSH, Alarms)
-                best_intent = self.intent_manager.find_best_intent(command_text)
+                        success, output = self.sysadmin_manager.run_command(generated_command)
+                        
+                        # "Capa de Finalizacion"
+                        if success:
+                            if is_visual and self.web_server:
+                                 try:
+                                     # Emit output to web console
+                                     self.web_server.socketio.emit('cli:output', {'cmd': generated_command, 'output': output}, namespace='/')
+                                 except: pass
+                            
+                            # Heuristic: If output is short/readable, speak it.
+                            if len(output) < 200:
+                                self.speak(f"Hecho: {output}")
+                            else:
+                                self.speak("Comando ejecutado.")
+                        else:
+                            self.speak(f"Error ejecutando comando: {output}")
+                    else:
+                         self.speak("Gestor de sistema no disponible.")
                 
-                if best_intent and best_intent.get('confidence') == 'high':
-                     # --- PERMISSION CHECK ---
-                     if self.voice_auth_skill and self.voice_auth_skill.enabled:
-                         required_perm = best_intent.get("name") # Using intent name as permission node
-                         if not self.voice_auth_skill.check_permission(current_user, required_perm):
-                             self.speak(f"Lo siento, {current_user}. No tienes permiso para usar {required_perm}.")
-                             app_logger.warning(f"⛔ Access Denied: User '{current_user}' tried '{required_perm}'")
-                             return
-
-                     app_logger.info(f"SKILL HIGH CONFIDENCE: '{best_intent['name']}' ({best_intent.get('score', 0)}%)")
-                     self.chat_manager.reset_context()
-                     response = random.choice(best_intent['responses'])
-                     params = best_intent.get('parameters', {})
-                     self.consecutive_failures = 0
-                     
-                     # Execute Action
-                     action_result = self.execute_action(best_intent.get('action'), command_text, params, response, best_intent.get('name'))
-                     
-                     # Handle Text Result (Streaming) or Default Response
-                     if action_result and isinstance(action_result, str):
-                         app_logger.info(f"Action Result: {action_result}")
-                         self.speak(action_result) # Shortcut strict streaming for now to ensure stability
-                     elif response:
-                         # If action didn't return text but we have a response configured in Intent
-                         app_logger.info(f"Action silent, speaking intent response: {response}")
-                         self.speak(response)
-                     
-                     return
-
-                # --- 2. MANGO T5 (SysAdmin AI) - PRIORITY 2 ---
-                # Check this SECOND (Fallback for explicit bash/admin commands)
-                # Check global admin permission first
-                if self.voice_auth_skill and self.voice_auth_skill.enabled:
-                     if not self.voice_auth_skill.check_permission(current_user, "admin"):
-                         # Mango is considered admin-level usually
-                         # But let's allow it to process and then maybe block? 
-                         # For now, block Mango entrance for non-admins to be safe.
-                         # Or we could let sysadmin_manager handle it, but NeoCore controls entry.
-                         pass # Let it pass for now, as specific commands might be safe?
-                         # Actually, Mango handles raw bash, so it's safer to restrict "sysadmin" role.
-                         if not self.voice_auth_skill.check_permission(current_user, "sysadmin"):
-                             # If not sysadmin, we might skip Mango?
-                             # Let's Skip Mango if user is guest?
-                             pass
-
-                if self._handle_mango_logic(command_text):
-                    return
+                return
 
                 # --- Keyword Router (Legacy Function Calling) ---
                 router_result = self.keyword_router.process(command_text)

@@ -1,164 +1,73 @@
 import logging
-import time
 from modules.logger import app_logger
 
+# Fallback si no está transformers
 try:
-    from sentence_transformers import SentenceTransformer, util
+    from transformers import pipeline
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
-    app_logger.error("sentence-transformers not installed. DecisionRouter disabled.")
+    app_logger.error("transformers not installed. DecisionRouter disabled.")
 
 class DecisionRouter:
     """
-    Semantic Router based on Sentence Transformers.
-    Categorizes input text into high-level domains to route to the appropriate subsystem.
+    Router Semántico Discriminador usando Transformers (Classification Pipeline).
+    Clasifica la intención del usuario directamente usando las etiquetas del modelo.
     """
     def __init__(self, config_manager):
         self.config_manager = config_manager
         self.enabled = False
-        self.model = None
-        self.categories = {}
-        self.category_embeddings = {}
+        self.classifier = None
         
         self._load_config()
         if self.enabled and TRANSFORMERS_AVAILABLE:
             self._load_model()
-            self._init_categories()
             
     def _load_config(self):
         config = self.config_manager.get('decision_router', {})
         self.enabled = config.get('enabled', True)
-        self.model_path = config.get('model_path', "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-        self.confidence_threshold = config.get('confidence_threshold', 0.6)
+        self.model_path = config.get('model_path', "models/microsoft/Multilingual-MiniLM-L12-H384")
+        self.confidence_threshold = config.get('confidence_threshold', 0.4)
 
     def _load_model(self):
-        """Loads the Sentence Transformer model."""
+        """Carga el Pipeline de Clasificación de Texto."""
         try:
-            app_logger.info(f"Loading DecisionRouter Model: {self.model_path}...")
-            # Use local cache if available, or download
-            self.model = SentenceTransformer(self.model_path)
-            app_logger.info("DecisionRouter Model loaded successfully.")
+            app_logger.info(f"Cargando Router Model (Pipeline) desde: {self.model_path}...")
+            # Usamos pipeline para inferencia directa. Asume que el modelo tiene id2label configurado.
+            self.classifier = pipeline("text-classification", model=self.model_path, top_k=1)
+            app_logger.info("Router Model cargado exitosamente.")
         except Exception as e:
-            app_logger.error(f"Failed to load DecisionRouter model: {e}")
+            app_logger.error(f"Error cargando Router Model: {e}")
             self.enabled = False
-
-    def _init_categories(self):
-        """
-        Defines the categories and their anchor sentences.
-        These anchors define the 'center' of each semantic category.
-        """
-        # User defined categories
-        self.categories = {
-            "docker": [
-                "activa mango para docker",
-                "crear contenedor docker",
-                "listar imagenes de docker",
-                "estado de los contenedores",
-                "logs del contenedor",
-                "docker ps",
-                "reiniciar contenedor"
-            ],
-            "security": [
-                "activa mango seguridad",
-                "escanear red nmap",
-                "buscar puertos abiertos",
-                "analisis de vulnerabilidades",
-                "detectar intrusos",
-                "ver trafico de red",
-                "ciberseguridad"
-            ],
-            "command": [
-                "activa mango consola",
-                "ejecuta comando de sistema",
-                "abre una terminal",
-                "listar archivos del directorio",
-                "uso de cpu y memoria",
-                "actualizar el sistema",
-                "instalar paquete"
-            ],
-            "time": [
-                "qué hora es",
-                "dime la hora actual",
-                "reloj",
-                "tienes hora",
-                "que dia es hoy"
-            ],
-            "calendar": [
-                "tengo reuniones hoy",
-                "añadir evento al calendario",
-                "que tengo en la agenda",
-                "cita para mañana",
-                "revisar calendario"
-            ],
-            "search": [
-                "busca en internet",
-                "búscame informacion sobre",
-                "googlear algo",
-                "quien es",
-                "buscar online"
-            ],
-            "conversation": [
-                "hola",
-                "buenos dias",
-                "quien eres",
-                "como te llamas",
-                "cuentame un chiste",
-                "hablemos de algo",
-                "que opinas de esto",
-                "gracias",
-                "adios"
-            ],
-            "entertainment": [
-                "pon musica",
-                "reproducir video",
-                "busca en youtube",
-                "pon algo de rock",
-                "siguiente cancion",
-                "parar musica"
-            ]
-        }
-        
-        # Pre-compute embeddings for anchors
-        app_logger.info("Computing category embeddings...")
-        for category, anchors in self.categories.items():
-            self.category_embeddings[category] = self.model.encode(anchors, convert_to_tensor=True)
-        app_logger.info(f"DecisionRouter: {len(self.categories)} categories initialized.")
 
     def predict(self, text):
         """
-        Predicts the category of the given text.
-        Returns: (category, confidence_score) or (None, 0.0)
+        Clasifica el texto de entrada usando el modelo.
+        Retorna: (label, score) o (None, 0.0) si no supera el umbral.
         """
-        if not self.enabled or not self.model:
+        if not self.enabled or not self.classifier:
             return None, 0.0
 
         try:
-            # Encode input text
-            text_embedding = self.model.encode(text, convert_to_tensor=True)
+            # Pipeline retorna una lista de dicts [{'label': 'LABEL', 'score': 0.99}]
+            # Con top_k=1 retorna lista de listas? No, default es lista de dicts para 1 input.
+            results = self.classifier(text)
             
-            best_category = None
-            best_score = 0.0
+            # results es [{'label': 'malbec', 'score': 0.98}]
+            if not results:
+                return None, 0.0
+
+            best_result = results[0]
+            best_label = best_result['label']
+            best_score = best_result['score']
             
-            # Compare with each category cluster
-            for category, anchor_embeddings in self.category_embeddings.items():
-                # Compute cosine similarities
-                cosine_scores = util.cos_sim(text_embedding, anchor_embeddings)
-                
-                # Take the max score (closest match to ANY anchor in the category)
-                max_score = float(cosine_scores.max())
-                
-                if max_score > best_score:
-                    best_score = max_score
-                    best_category = category
-            
-            app_logger.info(f"DecisionRouter Prediction: '{text}' -> {best_category} ({best_score:.2f})")
+            app_logger.info(f"Router Prediction: '{text}' -> {best_label} ({best_score:.2f})")
             
             if best_score >= self.confidence_threshold:
-                return best_category, best_score
+                return best_label, best_score
             else:
-                return None, best_score
+                return "null", best_score
 
         except Exception as e:
-            app_logger.error(f"DecisionRouter Prediction Error: {e}")
+            app_logger.error(f"Error en Router Predict: {e}")
             return None, 0.0
