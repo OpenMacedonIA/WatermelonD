@@ -265,17 +265,6 @@ function install_standard() {
         [ -f "resources/tools/download_whisper_model.py" ] && $VENV_DIR/bin/python resources/tools/download_whisper_model.py
     fi
 
-    # Opción de Mango / Lime
-    echo "Seleccione el modelo de IA:"
-    echo "1) Lime (Recomendado)"
-    echo "2) Mango (Legacy)"
-    read -p "Opción [1]: " MODEL_OPT
-    MODEL_TYPE="lime"
-    if [ "$MODEL_OPT" == "2" ]; then
-        MODEL_TYPE="mango"
-    fi
-    [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --model "$MODEL_TYPE"
-
     # Nuevos Modelos Grape (HuggingFace)
     echo "Descargando modelos Grape..."
     
@@ -301,6 +290,12 @@ function install_standard() {
     if [ ! -d "models/grape-route" ]; then
         echo "Descargando modelo Decision Router (Grape-Route)..."
         git clone https://huggingface.co/jrodriiguezg/minilm-l12-grape-route models/grape-route
+    fi
+
+    # Grape-Syrah (Network)
+    if [ ! -d "models/syrah" ]; then
+        echo "Descargando Grape-Syrah..."
+        git clone https://huggingface.co/jrodriiguezg/grape-syrah models/syrah
     fi
 
     # Socket.IO

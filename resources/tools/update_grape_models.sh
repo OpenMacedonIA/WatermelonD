@@ -40,5 +40,6 @@ update_repo "$MODELS_DIR/chardonnay" "Grape-Chardonnay"
 update_repo "$MODELS_DIR/malbec" "Grape-Malbec"
 update_repo "$MODELS_DIR/pinot" "Grape-Pinot"
 update_repo "$MODELS_DIR/grape-route" "Grape-Route"
+update_repo "$MODELS_DIR/syrah" "Grape-Syrah"
 
 echo "=== Update Check Complete ==="
