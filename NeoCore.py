@@ -202,6 +202,15 @@ class NeoCore:
         self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
         self.ssh_manager = SSHManager()
         self.wifi_manager = WifiManager()
+
+        # --- Inject Managers into Web Admin (Shared State) ---
+        if WEB_ADMIN_DISPONIBLE and self.web_server:
+             self.web_server.ssh_manager = self.ssh_manager
+             # Inject others if needed, e.g. sysadmin
+             if self.sysadmin_manager:
+                 self.web_server.sys_admin = self.sysadmin_manager
+             if self.wifi_manager:
+                 self.web_server.wifi_manager = self.wifi_manager
         
         # Vision (Optional & Disabled by default to prevent Segfaults)
         if self.config.get('vision_enabled', False):
@@ -749,7 +758,33 @@ class NeoCore:
                 else:
                     try:
                         # "Capa de Ejecución": ONNX Runner
-                        generated_command = self.onnx_runner.generate_command(command_text, router_label)
+                        # INJECT CONTEXT
+                        fs_context = self._get_filesystem_context()
+
+                        # --- Context Injection for Syrah/Cabernet (Network) ---
+                        if router_label in ["syrah", "syrach", "cabernet"]:
+                            try:
+                                if self.ssh_manager and hasattr(self.ssh_manager, 'servers'):
+                                    server_entries = []
+                                    for alias, data in self.ssh_manager.servers.items():
+                                        host = data.get('host', 'unknown')
+                                        server_entries.append(f"'{alias}={host}'")
+                                    
+                                    if server_entries:
+                                        network_context_str = ", ".join(server_entries)
+                                        if fs_context.endswith("]"):
+                                            fs_context = fs_context[:-1] + ", " + network_context_str + "]"
+                                        else:
+                                            # Fallback if format is unexpected
+                                            fs_context = fs_context + f" {server_entries}"
+                            except Exception as e:
+                                self.app_logger.error(f"Error building network context: {e}")
+                        # --------------------------------------------------------
+
+                        final_prompt = f"Contexto: {fs_context} | Instrucción: {command_text}"
+                        self.app_logger.info(f"ONNX Prompt: {final_prompt}")
+
+                        generated_command = self.onnx_runner.generate_command(final_prompt, router_label)
                         self.app_logger.info(f" ONNX Generated Command: {generated_command}")
                         
                         if not generated_command:
@@ -798,6 +833,8 @@ class NeoCore:
                                 self.speak(f"Hecho: {output}")
                             else:
                                 self.speak("Comando ejecutado.")
+
+
                         else:
                             self.speak(f"Error ejecutando comando: {output}")
                     else:
@@ -1267,6 +1304,39 @@ class NeoCore:
                 
         else:
             self.speak("Vale, cancelado.")
+
+    def _get_filesystem_context(self):
+        """Generates context string with pwd and top 5 files (by size)."""
+        try:
+            cwd = os.getcwd()
+            files = []
+            try:
+                # Use scandir for better performance and stat access
+                with os.scandir(cwd) as entries:
+                    for entry in entries:
+                        # Skip hidden files
+                        if not entry.name.startswith('.'):
+                            try:
+                                stats = entry.stat()
+                                files.append((entry.name, stats.st_size))
+                            except OSError:
+                                pass # Skip files we can't access
+            except OSError:
+                app_logger.warning(f"Could not scan directory: {cwd}")
+                files = []
+            
+            # Sort by size (descending) and take top 5
+            files.sort(key=lambda x: x[1], reverse=True)
+            top_files = [f[0] for f in files[:5]]
+            
+            # Format: 'ls=file1, file2, ...'
+            ls_str = ", ".join(top_files)
+            
+            # Final format as per requirement: "Contexto: ['pwd=...', 'ls=...'] | "
+            return f"['pwd={cwd}', 'ls={ls_str}']"
+        except Exception as e:
+            app_logger.error(f"Error generating FS context: {e}")
+            return "['pwd=.', 'ls=']"
 
 if __name__ == "__main__":
     app = NeoCore()

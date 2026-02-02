@@ -16,6 +16,16 @@ class KeywordRouter:
                 'keywords': ['reinicia', 'servicio'],
                 'action': self.action_restart_service,
                 'name': 'restart_service'
+            },
+            {
+                'keywords': ['recuerda', 'servidor'],
+                'action': self.action_remember_server,
+                'name': 'remember_server_1'
+            },
+            {
+                'keywords': ['memoriza', 'servidor'],
+                'action': self.action_remember_server,
+                'name': 'remember_server_2'
             }
         ]
         logger.info("KeywordRouter inicializado con %d reglas.", len(self.rules))
@@ -83,3 +93,45 @@ class KeywordRouter:
         except Exception as e:
             logger.error(f"Error ejecutando systemctl: {e}")
             return f"Ocurrió un error intentando reiniciar {target_service}: {str(e)}"
+
+    def action_remember_server(self, text):
+        """
+        Memoriza un nuevo servidor SSH.
+        Ejemplo: "recuerda que el servidor casa está en 192.168.1.50"
+        """
+        import re
+        # Regex flexible para capturar alias e IP/Host
+        # Soporta:
+        # "recuerda que el servidor [alias] está en [host]"
+        # "memoriza servidor [alias] ip [host]"
+        # "añade servidor [alias] dirección [host]"
+        
+        pattern = r"(?:servidor)\s+([a-zA-Z0-9_-]+).*(?:en|ip|dirección|address)\s+([a-zA-Z0-9\.-]+)"
+        match = re.search(pattern, text, re.IGNORECASE)
+        
+        if match:
+            alias = match.group(1)
+            host = match.group(2)
+            
+            # Limpieza básica
+            alias = alias.strip()
+            host = host.rstrip('.') # Quitar punto final si es frase
+            
+            if self.core and hasattr(self.core, 'ssh_manager'):
+                # Por defecto usuario root si no se especifica (limitación del comando de voz simple)
+                # Podríamos intentar extraer usuario tipo 'usuario@host' en el grupo 2
+                user = "root"
+                if "@" in host:
+                    parts = host.split("@")
+                    user = parts[0]
+                    host = parts[1]
+                
+                success = self.core.ssh_manager.add_server(alias, host, user)
+                if success:
+                    return f"He memorizado el servidor {alias} con dirección {host}."
+                else:
+                    return "Hubo un problema guardando el servidor."
+            else:
+                return "Error: SSHManager no está disponible en NeoCore."
+        else:
+            return "No entendí los datos del servidor. Dime algo como: 'recuerda que el servidor casa está en 192.168.1.1'"

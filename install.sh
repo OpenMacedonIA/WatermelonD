@@ -276,6 +276,27 @@ function install_standard() {
     fi
     [ -f "resources/tools/download_mango_model.py" ] && $VENV_DIR/bin/python resources/tools/download_mango_model.py --model "$MODEL_TYPE"
 
+    # Nuevos Modelos Grape (HuggingFace)
+    echo "Descargando modelos Grape..."
+    
+    # Grape-Chardonnay
+    if [ ! -d "models/chardonnay" ]; then
+        echo "Descargando Grape-Chardonnay..."
+        git clone https://huggingface.co/jrodriiguezg/grape-chardonnay models/chardonnay
+    fi
+
+    # Grape-Malbec
+    if [ ! -d "models/malbec" ]; then
+        echo "Descargando Grape-Malbec..."
+        git clone https://huggingface.co/jrodriiguezg/grape-malbec models/malbec
+    fi
+
+    # Grape-Pinot
+    if [ ! -d "models/pinot" ]; then
+        echo "Descargando Grape-Pinot..."
+        git clone https://huggingface.co/jrodriiguezg/grape-pinot models/pinot
+    fi
+
     # Decision Router Model
     echo "Descargando modelo Decision Router (Lemon Route)..."
     [ -f "resources/tools/download_router_model.py" ] && $VENV_DIR/bin/python resources/tools/download_router_model.py

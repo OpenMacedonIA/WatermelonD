@@ -9,6 +9,7 @@
         "tio",
         "bro"
     ],
+    "neo_ssh_enabled": true,
     "secret_key": "d5a11b53c1aae0adaa3c5f08c5d64953dadeb47d7ec8103e",
     "stt": {
         "engine": "vosk",
