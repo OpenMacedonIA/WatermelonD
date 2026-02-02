@@ -1,7 +1,7 @@
 {
     "decision_router": {
         "enabled": true,
-        "model_path": "models/microsoft/Multilingual-MiniLM-L12-H384",
+        "model_path": "models/grape-route",
         "confidence_threshold": 0.4
     },
     "wake_words": [

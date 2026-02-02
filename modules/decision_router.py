@@ -26,7 +26,7 @@ class DecisionRouter:
     def _load_config(self):
         config = self.config_manager.get('decision_router', {})
         self.enabled = config.get('enabled', True)
-        self.model_path = config.get('model_path', "models/microsoft/Multilingual-MiniLM-L12-H384")
+        self.model_path = config.get('model_path', "models/grape-route")
         self.confidence_threshold = config.get('confidence_threshold', 0.4)
 
     def _load_model(self):

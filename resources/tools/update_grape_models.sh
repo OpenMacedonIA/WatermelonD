@@ -39,5 +39,6 @@ update_repo() {
 update_repo "$MODELS_DIR/chardonnay" "Grape-Chardonnay"
 update_repo "$MODELS_DIR/malbec" "Grape-Malbec"
 update_repo "$MODELS_DIR/pinot" "Grape-Pinot"
+update_repo "$MODELS_DIR/grape-route" "Grape-Route"
 
 echo "=== Update Check Complete ==="

@@ -297,9 +297,11 @@ function install_standard() {
         git clone https://huggingface.co/jrodriiguezg/grape-pinot models/pinot
     fi
 
-    # Decision Router Model
-    echo "Descargando modelo Decision Router (Lemon Route)..."
-    [ -f "resources/tools/download_router_model.py" ] && $VENV_DIR/bin/python resources/tools/download_router_model.py
+    # Decision Router Model (Grape-Route)
+    if [ ! -d "models/grape-route" ]; then
+        echo "Descargando modelo Decision Router (Grape-Route)..."
+        git clone https://huggingface.co/jrodriiguezg/minilm-l12-grape-route models/grape-route
+    fi
 
     # Socket.IO
     mkdir -p "TangerineUI/static/js"
