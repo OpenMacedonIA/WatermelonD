@@ -347,6 +347,25 @@ EOT
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
+    # Servicio Grape Updater (Auto-Update Models on Boot)
+    cat <<EOT > "$USER_HOME/.config/systemd/user/grape_updater.service"
+[Unit]
+Description=Grape Models Auto-Updater
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=$(pwd)
+ExecStart=/bin/bash $(pwd)/resources/tools/update_grape_models.sh
+SyslogIdentifier=grape_updater
+
+[Install]
+WantedBy=default.target
+EOT
+
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable grape_updater.service
+
     # --- CONFIGURACIÓN DE KIOSK ---
     if [ "$INSTALL_GUI" = true ]; then
         echo "[PASO 6/6] Configurando Kiosk (Auto-login)..."
