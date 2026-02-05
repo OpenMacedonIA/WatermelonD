@@ -36,7 +36,7 @@ if [ ! -d ".git" ]; then
     fi
 
     # 2. Definir Directorio de Instalación
-    DEFAULT_DIR="$HOME/NEOPapaya"
+    DEFAULT_DIR="$HOME/WatermelonD"
     echo "Directorio de instalación predeterminado: $DEFAULT_DIR"
     read -p "¿Deseas instalar en otro lugar? (Deja vacío para usar predeterminado): " CUSTOM_DIR
     
@@ -256,7 +256,8 @@ function install_standard() {
     [ -f "resources/tools/install_piper.py" ] && $VENV_DIR/bin/python resources/tools/install_piper.py
 
     # Gemma
-    [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
+    # Gemma (MANGO Legacy - Removed in favor of Grape)
+    # [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
 
     # Comprobación de Whisper
     read -p "¿Instalar Whisper (STT Local Avanzado - 1.5GB)? (s/n) [n]: " WHISPER_OPT
