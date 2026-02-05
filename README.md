@@ -53,8 +53,6 @@
 
 ### Installation
 
-**Quick Install (One-line command):**
-
 ```bash
 wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/next/install.sh && chmod +x install.sh && ./install.sh
 ```
@@ -122,9 +120,6 @@ Access the Web Interface at `http://localhost:5000`.
 #### Administración de Sistemas & Redes
 
 ### Instalación
-
-**Instalación Rápida (Comando único):**
-
 
 ```bash
 wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/next/install.sh && chmod +x install.sh && ./install.sh

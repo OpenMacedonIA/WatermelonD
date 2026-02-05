@@ -42,12 +42,28 @@ if [ ! -d ".git" ]; then
     read -p "¿Deseas instalar en otro lugar? (Deja vacío para usar predeterminado): " CUSTOM_DIR
     
     TARGET_DIR="${CUSTOM_DIR:-$DEFAULT_DIR}"
+
+    # 2.1 Seleccionar Rama
+    echo "----------------------------------------------------------------"
+    echo "Seleccione la rama a instalar:"
+    echo "1) Main (Estable) - Recomendado para producción"
+    echo "2) Next (Testing) - Últimas funciones (Inestable)"
+    read -p "Opción [1]: " BRANCH_OPT
+    
+    if [[ "$BRANCH_OPT" == "2" ]]; then
+        BRANCH="next"
+        echo "-> Seleccionado: NEXT (Testing)"
+    else
+        BRANCH="main"
+        echo "-> Seleccionado: MAIN (Estable)"
+    fi
+    echo "----------------------------------------------------------------"
     
     # 3. Clonar Repositorio
     if [ -d "$TARGET_DIR" ]; then
         if [ -z "$(ls -A $TARGET_DIR)" ]; then
              echo "Directorio vacío detectado. Clonando..."
-             git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+             git clone -b "$BRANCH" https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
              cd "$TARGET_DIR"
              git submodule update --init --recursive
         else
@@ -60,7 +76,7 @@ if [ ! -d ".git" ]; then
         fi
     else
         echo "Creando directorio $TARGET_DIR y clonando..."
-        git clone https://github.com/OpenMacedonIA/neo-papaya.git "$TARGET_DIR"
+        git clone -b "$BRANCH" https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
         cd "$TARGET_DIR"
         git submodule update --init --recursive
     fi
@@ -378,7 +394,11 @@ ExecStart=-/sbin/agetty --autologin $USER_NAME --noclear %I \$TERM
 EOT"
 
         # .bash_profile
-        if ! grep -q "exec startx" ~/.bash_profile; then
+        if [ -f ~/.bash_profile ]; then
+            if ! grep -q "exec startx" ~/.bash_profile; then
+                echo 'if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then exec startx; fi' >> ~/.bash_profile
+            fi
+        else
             echo 'if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then exec startx; fi' >> ~/.bash_profile
         fi
 
