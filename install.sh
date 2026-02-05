@@ -8,7 +8,7 @@
 set -e
 
 echo "========================================="
-echo "===   Instalador Unificado Neo Papaya ==="
+echo "===     Instalador WatermelonD        ==="
 echo "========================================="
 echo ""
 
