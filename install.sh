@@ -7,6 +7,7 @@
 # Detiene el script si algún comando falla
 set -e
 
+
 echo "========================================="
 echo "===     Instalador WatermelonD        ==="
 echo "========================================="
@@ -259,12 +260,12 @@ function install_standard() {
     # Gemma (MANGO Legacy - Removed in favor of Grape)
     # [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
 
-    # Comprobación de Whisper
-    read -p "¿Instalar Whisper (STT Local Avanzado - 1.5GB)? (s/n) [n]: " WHISPER_OPT
-    if [[ "$WHISPER_OPT" =~ ^[Ss]$ ]]; then
-        $VENV_DIR/bin/pip install faster-whisper
-        [ -f "resources/tools/download_whisper_model.py" ] && $VENV_DIR/bin/python resources/tools/download_whisper_model.py
-    fi
+    # Comprobación de Whisper - DESHABILITADO
+    # read -p "¿Instalar Whisper (STT Local Avanzado - 1.5GB)? (s/n) [n]: " WHISPER_OPT
+    # if [[ "$WHISPER_OPT" =~ ^[Ss]$ ]]; then
+    #     $VENV_DIR/bin/pip install faster-whisper
+    #     [ -f "resources/tools/download_whisper_model.py" ] && $VENV_DIR/bin/python resources/tools/download_whisper_model.py
+    # fi
 
     # Nuevos Modelos Grape (HuggingFace)
     echo "Descargando modelos Grape..."
