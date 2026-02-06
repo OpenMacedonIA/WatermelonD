@@ -838,6 +838,37 @@ class NeoCore:
                         self.speak("Lo siento, mis sistemas de visión no están activos.")
                         return
 
+
+                # --- CONVERSATIONAL SHORTCUTS (Before Router) ---
+                # Check if this is a simple greeting/farewell/status query
+                # Combine _check_conversational_shortcuts() with intent detection
+                shortcut_response = self._check_conversational_shortcuts(command_text)
+                if shortcut_response:
+                    # It's a greeting/farewell/thank you - respond directly
+                    self.speak(shortcut_response)
+                    return
+                
+                # Also check intent manager for saludo/despedida to catch variations
+                best_intent = self.intent_manager.get_best_intent(command_text)
+                if best_intent and best_intent.get('name') in ['saludo', 'despedida', 'agradecimiento']:
+                    # High or medium confidence greeting/farewell from intent manager
+                    confidence = best_intent.get('confidence', 0)
+                    if confidence >= 80:  # High confidence
+                        # Use shortcut response if available, otherwise generic
+                        shortcut_response = self._check_conversational_shortcuts(command_text)
+                        if shortcut_response:
+                            self.speak(shortcut_response)
+                        else:
+                            # Generic fallback
+                            if best_intent['name'] == 'saludo':
+                                nickname = self.config_manager.get('user_nickname', 'Usuario')
+                                self.speak(f"Hola {nickname}, ¿en qué puedo ayudarte?")
+                            elif best_intent['name'] == 'despedida':
+                                self.speak("Hasta luego.")
+                            else:
+                                self.speak("De nada.")
+                        return
+
                 # --- 1. NEW ROUTER ARCHITECTURE ---
                 # "Capa de Normalización"
                 command_text = self.text_normalizer.normalize(command_text)
