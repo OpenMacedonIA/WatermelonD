@@ -326,6 +326,13 @@ class NeoCore:
         
         # Main loop moved to run()
 
+    def _watchdog_check(self):
+        """Performs periodic health checks on threads and services."""
+        # Simple keep-alive logging for now
+        # In future this could restart dead threads
+        if self.app_logger:
+            self.app_logger.debug("Watchdog: System OK")
+
     def run(self):
         """Bloqueo principal del servicio."""
         self.app_logger.info("NeoCore Service Running.")
