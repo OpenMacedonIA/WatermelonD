@@ -336,9 +336,11 @@ class NeoCore:
 
     def handle_injected_command(self, data):
         """Handles commands injected via Bus (CLI/External)."""
+        self.app_logger.info(f"🔍 DEBUG: handle_injected_command called with data: {data}")
         # BusClient passes the full message payload: {type, data, context}
         # Extract the actual command text from the nested 'data' field
         text = data.get('data', {}).get('text')
+        self.app_logger.info(f"🔍 DEBUG: Extracted text: {text}")
         if text:
             self.app_logger.info(f"💉 Command Injected via Bus: '{text}'")
             # Simulate detected command
@@ -849,7 +851,7 @@ class NeoCore:
                     return
                 
                 # Also check intent manager for saludo/despedida to catch variations
-                best_intent = self.intent_manager.get_best_intent(command_text)
+                best_intent = self.intent_manager.find_best_intent(command_text)
                 if best_intent and best_intent.get('name') in ['saludo', 'despedida', 'agradecimiento']:
                     # High or medium confidence greeting/farewell from intent manager
                     confidence = best_intent.get('confidence', 0)
