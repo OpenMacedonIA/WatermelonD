@@ -564,10 +564,13 @@ class NeoCore:
         command_lower = command.lower()
         
         # --- VISUAL FEEDBACK: STT RESULT ---
+        # --- VISUAL FEEDBACK: STT RESULT ---
         if self.web_server:
              try:
+                 app_logger.info(f"Emitting STT Result: {command}")
                  self.web_server.socketio.emit('stt:result', {'text': command}, namespace='/')
-             except: pass
+             except Exception as e:
+                 app_logger.error(f"Failed to emit STT result: {e}")
         
         # Check Active Listening Window
         is_active_listening = time.time() < self.active_listening_end_time
@@ -1157,11 +1160,20 @@ class NeoCore:
                 action_type = action.get('type')
 
                 if action_type == 'speak':
-                    app_logger.info(f"Procesando evento SPEAK: {action.get('text')}")
+                    text_to_speak = action.get('text')
+                    app_logger.info(f"Procesando evento SPEAK: {text_to_speak}")
                     self.is_processing_command = True
+                    
+                    # Emit AI Response to UI
+                    if self.web_server:
+                        try:
+                            self.web_server.socketio.emit('ai:response', {'text': text_to_speak}, namespace='/')
+                        except Exception as e:
+                             app_logger.warning(f"Error emitting ai:response: {e}")
+
                     if update_face: update_face('speaking')
-                    self.last_spoken_text = action['text']
-                    self.speaker.speak(action['text'])
+                    self.last_spoken_text = text_to_speak
+                    self.speaker.speak(text_to_speak)
                 elif action_type == 'speaker_status':
                     if action['status'] == 'idle':
                         self.is_processing_command = False
