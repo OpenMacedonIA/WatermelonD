@@ -757,9 +757,8 @@ def api_ssh_delete():
 
 
 @app.route('/api/command/inject', methods=['POST'])
-@login_required
 def api_command_inject():
-    """Injects a text command into the system via the Bus."""
+    """Injects a text command into the system via the Bus. No auth required for kiosk mode."""
     try:
         data = request.json
         text = data.get('text')
