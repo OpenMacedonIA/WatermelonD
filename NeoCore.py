@@ -560,7 +560,7 @@ class NeoCore:
 
     def on_voice_command(self, command, wake_word, audio_buffer=None):
         """Callback cuando VoiceManager detecta voz."""
-        app_logger.info(f"🎤 VOICE RECEIVED: '{command}' (WW: {wake_word})")
+        app_logger.info(f" VOICE RECEIVED: '{command}' (WW: {wake_word})")
         command_lower = command.lower()
         
         # --- VISUAL FEEDBACK: STT RESULT ---
@@ -727,7 +727,7 @@ class NeoCore:
                 current_user = "unknown"
                 if self.voice_auth_skill and self.voice_auth_skill.enabled and audio_buffer is not None:
                      current_user, confidence = self.voice_auth_skill.identify_speaker(audio_buffer)
-                     app_logger.info(f"🎤 Speaker identified as: {current_user} (Conf: {confidence:.2f})")
+                     app_logger.info(f" Speaker identified as: {current_user} (Conf: {confidence:.2f})")
                 
                 # Diálogos activos
                 if self.waiting_for_timer_duration:
@@ -995,8 +995,7 @@ class NeoCore:
                         self.pending_suggestion = None
                         return
                     else:
-                        # User said something else, maybe a new command?
-                        # For now, let's assume they ignored the question or it's a new command.
+                  
                         self.pending_suggestion = None
                         # Fall through to normal processing
 
@@ -1237,11 +1236,11 @@ class NeoCore:
             # Watchdog: Check if Voice Thread is alive
             if self.voice_manager.is_listening:
                  if not hasattr(self.voice_manager, 'listener_thread') or not self.voice_manager.listener_thread.is_alive():
-                     self.app_logger.warning("🚨 Watchdog: Voice Thread Died! Restarting...")
+                     self.app_logger.warning(" Watchdog: Voice Thread Died! Restarting...")
                      self.voice_manager.stop_listening() # Reset flags
                      time.sleep(1)
                      self.voice_manager.start_listening(self.intent_manager.intents)
-                     self.app_logger.info("✅ Watchdog: Voice Thread Restarted.")
+                     self.app_logger.info(" Watchdog: Voice Thread Restarted.")
 
             time.sleep(1) # Reduced sleep for better responsiveness
 

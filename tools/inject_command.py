@@ -21,10 +21,25 @@ def inject(text):
     def on_stt(data):
         print(f"[STT CONFIRMED]: {data.get('text')}")
 
-    # Register handlers
-    bus.on('ai:response', on_response)
-    bus.on('stt:result', on_stt)
+    def on_connect():
+        print("[DEBUG] Connected to server (Event: connect)")
 
+    def on_disconnect():
+        print("[DEBUG] Disconnected (Event: disconnect)")
+
+    def on_any_event(event, data=None):
+        # Catch-all for debugging
+        if event not in ['message', 'connect', 'disconnect']:
+            print(f"[DEBUG] Received Raw Event: '{event}' Data: {data}")
+
+    # Register handlers on the RAW SIO Client, not the Bus wrapper
+    # Because NeoCore emits 'ai:response' as a raw event for the WebUI
+    bus.sio.on('ai:response', on_response)
+    bus.sio.on('stt:result', on_stt)
+    bus.sio.on('connect', on_connect)
+    bus.sio.on('disconnect', on_disconnect)
+    # Note: python-socketio client doesn't support a catch-all 'on_any_event' easily without namespace=*.
+    
     # Connect
     try:
         bus.connect()
@@ -33,6 +48,7 @@ def inject(text):
         return
 
     print(f"Injecting Command: '{text}'")
+    # This goes to the 'message' event logic in NeoCore (which triggers injection)
     bus.emit('command:inject', {'text': text})
     
     print("Waiting for response (Ctrl+C to cancel)...")
