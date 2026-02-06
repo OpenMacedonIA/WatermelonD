@@ -702,7 +702,8 @@ def api_actions():
         'update': 'sudo apt-get update && sudo apt-get upgrade -y', # Debian/Pi
         'clean': 'sudo apt-get clean && sudo apt-get autoremove -y',
         'backup': 'tar -czf backup_openkompai.tar.gz .',
-        'net_restart': 'sudo systemctl restart networking'
+        'net_restart': 'sudo systemctl restart networking',
+        'update_models': 'bash resources/tools/update_grape_models.sh'
     }
     
     # Detectar Fedora para comandos diferentes
