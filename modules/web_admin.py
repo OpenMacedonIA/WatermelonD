@@ -298,7 +298,7 @@ from modules.system_info import get_system_info
 @login_required
 def settings():
     """Renderiza y procesa la página de configuración."""
-    config = config_manager.get_all()
+    config = config_manager.get_all() or {}
     
     # List available voices
     voices_dir = os.path.join(os.getcwd(), 'piper', 'voices')
@@ -341,7 +341,7 @@ def settings():
         selected_voice = request.form.get('tts_model')
         if selected_voice:
             full_path = os.path.join(voices_dir, selected_voice)
-            current_tts = config.get('tts', {})
+            current_tts = config.get('tts', {}) if config else {}
             current_tts['piper_model'] = full_path
             config_manager.set('tts', current_tts)
 
@@ -1141,7 +1141,7 @@ def api_knowledge_delete_doc():
 @login_required
 def api_config_get():
     """Devuelve la configuración completa y listas de modelos disponibles."""
-    config = config_manager.get_all()
+    config = config_manager.get_all() or {}
     
     # List available voices
     voices_dir = os.path.join(os.getcwd(), 'piper', 'voices')

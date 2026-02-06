@@ -20,7 +20,8 @@ class ConfigManager:
         try:
             if os.path.exists(self.CONFIG_FILE):
                 with open(self.CONFIG_FILE, 'r', encoding='utf-8') as f:
-                    self._config = json.load(f)
+                    loaded = json.load(f)
+                    self._config = loaded if loaded is not None else {}
             else:
                 logger.warning(f"Config file {self.CONFIG_FILE} not found. Using defaults.")
                 self._config = {}
