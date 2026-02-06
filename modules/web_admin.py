@@ -755,6 +755,23 @@ def api_ssh_delete():
 
     return jsonify({'success': False, 'message': 'Servidor no encontrado'})
 
+
+@app.route('/api/command/inject', methods=['POST'])
+@login_required
+def api_command_inject():
+    """Injects a text command into the system via the Bus."""
+    try:
+        data = request.json
+        text = data.get('text')
+        if not text:
+            return jsonify({'success': False, 'message': 'No text provided'})
+            
+        # Emit to NeoCore
+        bus.emit('command:inject', {'text': text})
+        return jsonify({'success': True, 'message': f"Sent: {text}"})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # --- SKILLS API ---
 
 @app.route('/api/skills', methods=['GET'])
