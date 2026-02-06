@@ -546,21 +546,21 @@ class NeoCore:
         
         self.app_logger.info(f"MANGO Prompt: '{mango_prompt}'")
         
-        # --- SELF-CORRECTION LOOP ---
-        max_retries = 2
+        # --- SELF-CORRECTION LOOP (DISABLED) ---
+        max_retries = 0 # Disabled per user request
         
-        REPAIR_PROMPTS = [
-            "El comando '{cmd}' falló con error: '{err}'. Corrígelo.",
-            "Error ejecutando '{cmd}': '{err}'. Dame la solución.",
-            "Fallo: '{err}' al ejecutar '{cmd}'. Arréglalo.",
-            "Corrige el comando '{cmd}' dado este error: '{err}'",
-            "He recibido este error: '{err}' tras lanzar '{cmd}'. ¿Qué hago?",
-            "Intento hacer '{cmd}' pero sale '{err}'.",
-            "Ayuda, '{cmd}' no funciona. Error: '{err}'.",
-            "Repara este comando: '{cmd}'. El error es '{err}'.",
-            "Salida de error: '{err}' para el comando '{cmd}'.",
-            "Fix: '{cmd}' -> '{err}'."
-        ]
+        # REPAIR_PROMPTS = [
+        #     "El comando '{cmd}' falló con error: '{err}'. Corrígelo.",
+        #     "Error ejecutando '{cmd}': '{err}'. Dame la solución.",
+        #     "Fallo: '{err}' al ejecutar '{cmd}'. Arréglalo.",
+        #     "Corrige el comando '{cmd}' dado este error: '{err}'",
+        #     "He recibido este error: '{err}' tras lanzar '{cmd}'. ¿Qué hago?",
+        #     "Intento hacer '{cmd}' pero sale '{err}'.",
+        #     "Ayuda, '{cmd}' no funciona. Error: '{err}'.",
+        #     "Repara este comando: '{cmd}'. El error es '{err}'.",
+        #     "Salida de error: '{err}' para el comando '{cmd}'.",
+        #     "Fix: '{cmd}' -> '{err}'."
+        # ]
         
         attempt = 0
         command_to_run = None
