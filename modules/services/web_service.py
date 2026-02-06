@@ -32,6 +32,21 @@ class WebService:
         self.bus.on('visual:show', self.on_visual_show)
         self.bus.on('visual:close', self.on_visual_close)
 
+        # Listen for GUI text commands
+        socketio.on_event('gui:text_command', self.on_gui_text_command)
+
+    def on_gui_text_command(self, data):
+        """Injects text from GUI as if it were a spoken utterance."""
+        text = data.get('text')
+        if text:
+            logger.info(f"Injecting GUI Command: {text}")
+            # Emulate Mycroft/OVOS recognizer loop event
+            self.bus.emit("recognizer_loop:utterance", {
+                "utterances": [text],
+                "lang": "es-es",
+                "session": "gui_user"
+            })
+
     def update_face(self, state, data=None):
         if data is None: data = {}
         logger.info(f"Updating Face: {state}")

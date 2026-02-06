@@ -7,7 +7,7 @@ import time
 logger = logging.getLogger("BusClient")
 
 class BusClient:
-    def __init__(self, host='localhost', port=5000, name="UnknownClient"):
+    def __init__(self, host='localhost', port=8181, name="UnknownClient"):
         self.sio = socketio.Client()
         self.host = host
         self.port = port
@@ -88,7 +88,11 @@ class BusClient:
                 # self.connected = True # Let the event handler do this
                 break 
             except Exception as e:
-                logger.error(f"Connection failed ({url}): {e}. Retrying in 5s...")
+                if self.host != 'localhost': # Only log errors for remote connections to avoid local spam during startup
+                    logger.warning(f"Connection failed ({url}): {e}. Retrying in 5s...")
+                else:
+                    # Debug only for localhost to keep logs clean
+                    logger.debug(f"Connection failed ({url}): {e}. Retrying in 5s...")
                 time.sleep(5)
 
     def close(self):
