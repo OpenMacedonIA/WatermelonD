@@ -1,0 +1,26 @@
+[
+    {
+        "id": "ssh_bruteforce",
+        "name": "Bute Force SSH / Auth Failures",
+        "source": "log_auth",
+        "pattern": "Failed password for",
+        "threshold": 5,
+        "window_seconds": 60
+    },
+    {
+        "id": "high_cpu_load",
+        "name": "High CPU Load (Potential Crypto Mining)",
+        "source": "system_stats",
+        "metric": "cpu_percent",
+        "threshold": 95,
+        "window_seconds": 300
+    },
+    {
+        "id": "dos_syn_flood",
+        "name": "Possible SYN Flood DoS",
+        "source": "net_stats",
+        "metric": "syn_sent_count",
+        "threshold": 50,
+        "window_seconds": 10
+    }
+]

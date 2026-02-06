@@ -1,0 +1,52 @@
+{
+    "positive": [
+        "bien",
+        "bueno",
+        "genial",
+        "excelente",
+        "fantástico",
+        "estupendo",
+        "feliz",
+        "alegre",
+        "contento",
+        "gracias",
+        "correcto",
+        "perfecto",
+        "maravilloso",
+        "increíble",
+        "amor",
+        "gustar",
+        "bonito",
+        "hermoso"
+    ],
+    "negative": [
+        "mal",
+        "malo",
+        "horrible",
+        "triste",
+        "pena",
+        "problema",
+        "error",
+        "fallo",
+        "feo",
+        "desastre",
+        "peor",
+        "equivocado",
+        "inútil",
+        "lento"
+    ],
+    "angry": [
+        "odio",
+        "furia",
+        "mierda",
+        "estúpido",
+        "imbécil",
+        "cállate",
+        "idiota",
+        "maldito",
+        "rabia",
+        "molesto",
+        "harto",
+        "basura"
+    ]
+}
