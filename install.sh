@@ -182,14 +182,14 @@ function install_standard() {
     fi
 
     # Minimal / Optimize (Mínimo / Optimizar)
-    read -p "¿Aplicar optimizaciones de sistema (hostname COLEGA, limpiar bloatware)? (s/n) [n]: " OPTIMIZE_OPT
+    read -p "¿Aplicar optimizaciones de sistema (hostname OpenMacendonIA, limpiar bloatware)? (s/n) [n]: " OPTIMIZE_OPT
     OPTIMIZE_OPT=${OPTIMIZE_OPT:-n}
 
     if [[ "$OPTIMIZE_OPT" =~ ^[Ss]$ ]]; then
         echo "-> Se aplicarán optimizaciones."
-        sudo hostnamectl set-hostname COLEGA
-        if ! grep -q "127.0.1.1.*COLEGA" /etc/hosts; then
-            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tCOLEGA/g' /etc/hosts
+        sudo hostnamectl set-hostname OpenMacendonIA
+        if ! grep -q "127.0.1.1.*OpenMacendonIA" /etc/hosts; then
+            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tOpenMacendonIA/g' /etc/hosts
         fi
         sudo apt-get purge -y libreoffice* aisleriot gnomine mahjongg quadrapassel *sudoku* || true
         sudo apt-get autoremove -y
