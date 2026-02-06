@@ -9,8 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from modules.bus_client import BusClient
 
 def inject(text):
-    bus = BusClient(name="Injector")
-    print(f"Connecting to Message Bus...")
+    bus = BusClient(name="Injector", port=5000)
+    print(f"Connecting to Message Bus at port 5000...")
     # Quick connect
     bus.connect()
     print(f"Injecting Command: '{text}'")

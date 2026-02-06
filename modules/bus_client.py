@@ -7,7 +7,7 @@ import time
 logger = logging.getLogger("BusClient")
 
 class BusClient:
-    def __init__(self, host='localhost', port=8181, name="UnknownClient"):
+    def __init__(self, host='localhost', port=5000, name="UnknownClient"):
         self.sio = socketio.Client()
         self.host = host
         self.port = port
