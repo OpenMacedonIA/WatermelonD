@@ -258,7 +258,17 @@ function install_standard() {
         mkdir -p "$dir"
         chmod 775 "$dir"
     done
-    [ ! -f "config/config.json" ] && echo "{}" > config/config.json
+    # Config initialization (use .example as template)
+    if [ ! -f "config/config.json" ]; then
+        if [ -f "config/config.json.example" ]; then
+            echo "Creando config.json desde template..."
+            cp config/config.json.example config/config.json
+            echo "config.json creado. Editar para personalizar."
+        else
+            echo "ADVERTENCIA: config.json.example no encontrado. Creando config vacio."
+            echo "{}" > config/config.json
+        fi
+    fi
 
     # --- INICIALIZACIÓN BD ---
     echo "[PASO 3.2/6] Inicializando BD..."

@@ -1,0 +1,34 @@
+{
+    "decision_router": {
+        "enabled": true,
+        "model_path": "models/grape-route",
+        "confidence_threshold": 0.4
+    },
+    "wake_words": [
+        "neo",
+        "tio",
+        "bro"
+    ],
+    "neo_ssh_enabled": true,
+    "secret_key": "CHANGE_THIS_SECRET_KEY_ON_FIRST_RUN",
+    "stt": {
+        "engine": "vosk",
+        "input_device_index": null
+    },
+    "web_admin": {
+        "host": "0.0.0.0",
+        "port": 5000,
+        "debug": false
+    },
+    "audio": {
+        "jack_no_start_server": "1",
+        "driver": "alsa"
+    },
+    "ai_model_path": "models/gemma-2b-it-q4_k_m.gguf",
+    "vision_enabled": false,
+    "experimental": {
+        "voice_auth_enabled": false
+    },
+    "user_nickname": "User",
+    "admin_pass": "changeme"
+}
