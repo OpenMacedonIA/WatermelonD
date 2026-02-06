@@ -21,30 +21,26 @@ def inject(text):
     def on_stt(data):
         print(f"[STT CONFIRMED]: {data.get('text')}")
 
-    def on_connect():
-        print("[DEBUG] Connected to server (Event: connect)")
-
-    def on_disconnect():
-        print("[DEBUG] Disconnected (Event: disconnect)")
-
-    def on_any_event(event, data=None):
-        # Catch-all for debugging
-        if event not in ['message', 'connect', 'disconnect']:
-            print(f"[DEBUG] Received Raw Event: '{event}' Data: {data}")
-
-    # Register handlers on the RAW SIO Client, not the Bus wrapper
-    # Because NeoCore emits 'ai:response' as a raw event for the WebUI
+    # Register handlers on the RAW SIO Client for specific events
+    # We DO NOT register 'connect'/'disconnect' here to avoid overwriting BusClient's own handlers
     bus.sio.on('ai:response', on_response)
     bus.sio.on('stt:result', on_stt)
-    bus.sio.on('connect', on_connect)
-    bus.sio.on('disconnect', on_disconnect)
-    # Note: python-socketio client doesn't support a catch-all 'on_any_event' easily without namespace=*.
     
     # Connect
     try:
         bus.connect()
     except Exception as e:
         print(f"Error connecting: {e}")
+        return
+
+    # Wait for connection state to be confirmed (BusClient handler sets connected=True)
+    timeout = 5
+    while not bus.connected and timeout > 0:
+        time.sleep(0.1)
+        timeout -= 0.1
+    
+    if not bus.connected:
+        print("Error: Connected to socket but BusClient state is not 'connected'.")
         return
 
     print(f"Injecting Command: '{text}'")
