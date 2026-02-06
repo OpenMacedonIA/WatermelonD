@@ -79,6 +79,7 @@ class BusClient:
     def connect(self):
         """Connect to the bus with retry logic."""
         url = f"http://{self.host}:{self.port}"
+        print(f"DEBUG: BusClient connecting to {url}")
         
         while not self.connected:
             try:
