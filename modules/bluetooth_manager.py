@@ -35,7 +35,7 @@ class BluetoothManager:
             self.thread.start()
             
         except AttributeError:
-            logger.error("Bluetooth not supported: socket.AF_BLUETOOTH missing.")
+            logger.info("Bluetooth not supported: socket.AF_BLUETOOTH missing. (Bluetooth disabled)")
             self.server_sock = None
             return
         except Exception as e:

@@ -35,7 +35,7 @@ class HealthManager:
             'ssh', 'sshd',                        # Remote Access
             'fail2ban', 'ufw',                    # Security
             'docker',                             # Containers
-            'bluetooth', 'avahi-daemon'           # Hardware/Discovery
+            # 'bluetooth', 'avahi-daemon'           # Hardware/Discovery (Disabled: unsupported env)
         ]
         
         # Historial de incidentes
@@ -108,8 +108,9 @@ class HealthManager:
             if name not in self.monitored_services and name != 'cron': # cron a veces viene por defecto
                 continue
 
-            if status != 'active':
-                logger.warning(f"Service DOWN detected: {name}")
+            if status != 'active' and status != 'activating':
+                # Ignore 'activating' because it might just be starting up.
+                logger.warning(f"Service DOWN detected: {name} (Status: {status})")
                 self._handle_failure(name)
             else:
                 # Si está activo, reseteamos contadores si ha pasado tiempo suficiente
@@ -141,8 +142,12 @@ class HealthManager:
                 logger.error(f"Recovery failed for {service_name}: {msg}")
                 self._log_incident(service_name, "RECOVERY_FAILED")
         else:
-            logger.critical(f"Give up on {service_name}. Max attempts reached.")
-            # Aquí podríamos enviar una notificación urgente al usuario
+            # STOP SPAMMING: If max attempts reached, log once and do nothing.
+            # We check if we already logged the "Give up" message to avoid repeating it every 30s
+            if attempts == self.max_attempts:
+                 logger.critical(f"Give up on {service_name}. Max attempts reached. Will not try again until cooldown or manual fix.")
+                 self.recovery_attempts[service_name] = attempts + 1 # Increment once more to silence this block
+            # If attempts > max_attempts, we do nothing (silent ignore)
 
     def _analyze_risks(self):
         """
