@@ -8,6 +8,7 @@ from modules.logger import app_logger
 try:
     import onnxruntime as ort
     from transformers import AutoTokenizer
+    import numpy as np
     ONNX_AVAILABLE = True
 except ImportError:
     ONNX_AVAILABLE = False
@@ -73,18 +74,37 @@ class SpecificModelRunner:
             return
 
         model_dir = os.path.join(self.models_base_path, label)
-        model_file = os.path.join(model_dir, "model.onnx")
         
-        if not os.path.exists(model_dir) or not os.path.exists(model_file):
-            raise FileNotFoundError(f"Model files not found for {label}")
-
-        app_logger.info(f"Cargando Modelo ({label}) en RAM...")
-        tokenizer = AutoTokenizer.from_pretrained(model_dir)
-        session = ort.InferenceSession(model_file)
+        # Check for encoder-decoder architecture (T5-style models)
+        encoder_file = os.path.join(model_dir, "encoder_model_quantized.onnx")
+        decoder_file = os.path.join(model_dir, "decoder_model_quantized.onnx")
+        single_model_file = os.path.join(model_dir, "model.onnx")
         
-        self.sessions[label] = session
-        self.tokenizers[label] = tokenizer
-        self.last_access[label] = time.time()
+        if not os.path.exists(model_dir):
+            raise FileNotFoundError(f"Model directory not found: {model_dir}")
+        
+        # Determine model type
+        if os.path.exists(encoder_file) and os.path.exists(decoder_file):
+            app_logger.info(f"Cargando Modelo Encoder-Decoder ({label}) en RAM...")
+            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            encoder_session = ort.InferenceSession(encoder_file)
+            decoder_session = ort.InferenceSession(decoder_file)
+            
+            # Store as tuple (encoder, decoder)
+            self.sessions[label] = (encoder_session, decoder_session)
+            self.tokenizers[label] = tokenizer
+            self.last_access[label] = time.time()
+            
+        elif os.path.exists(single_model_file):
+            app_logger.info(f"Cargando Modelo Single ({label}) en RAM...")
+            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            session = ort.InferenceSession(single_model_file)
+            
+            self.sessions[label] = session
+            self.tokenizers[label] = tokenizer
+            self.last_access[label] = time.time()
+        else:
+            raise FileNotFoundError(f"No valid ONNX model files found in {model_dir}")
 
     def _manage_memory(self, target_label):
         """Asegura espacio para el nuevo modelo aplicando política LRU."""
@@ -123,19 +143,71 @@ class SpecificModelRunner:
             session = self.sessions[label]
             tokenizer = self.tokenizers[label]
             
-            input_ids = tokenizer(text, return_tensors="np").input_ids.astype("int64")
-            
-            output_names = [output.name for output in session.get_outputs()]
-            input_feed = {session.get_inputs()[0].name: input_ids}
-            outputs = session.run(output_names, input_feed)
-            
-            logits = outputs[0] 
-            predicted_ids = logits.argmax(axis=-1)
-            command = tokenizer.decode(predicted_ids[0], skip_special_tokens=True)
+            # Check if encoder-decoder (tuple) or single model
+            if isinstance(session, tuple):
+                # Encoder-Decoder T5-style model
+                encoder_session, decoder_session = session
+                
+                # Tokenize input
+                inputs = tokenizer(text, return_tensors="np", padding=True, truncation=True)
+                input_ids = inputs["input_ids"].astype("int64")
+                attention_mask = inputs["attention_mask"].astype("int64")
+                
+                # Run encoder
+                encoder_outputs = encoder_session.run(
+                    None,
+                    {
+                        "input_ids": input_ids,
+                        "attention_mask": attention_mask
+                    }
+                )
+                encoder_hidden_states = encoder_outputs[0]
+                
+                # Prepare decoder input (start with pad token)
+                decoder_input_ids = np.array([[tokenizer.pad_token_id]], dtype=np.int64)
+                
+                # Simple greedy decoding (max 50 tokens)
+                max_length = 50
+                generated_ids = []
+                for _ in range(max_length):
+                    decoder_outputs = decoder_session.run(
+                        None,
+                        {
+                            "input_ids": decoder_input_ids,
+                            "encoder_hidden_states": encoder_hidden_states,
+                            "encoder_attention_mask": attention_mask
+                        }
+                    )
+                    logits = decoder_outputs[0]
+                    next_token_id = logits[0, -1, :].argmax()
+                    
+                    if next_token_id == tokenizer.eos_token_id:
+                        break
+                    
+                    generated_ids.append(int(next_token_id))
+                    decoder_input_ids = np.concatenate([
+                        decoder_input_ids,
+                        np.array([[next_token_id]], dtype=np.int64)
+                    ], axis=1)
+                
+                command = tokenizer.decode(generated_ids, skip_special_tokens=True)
+            else:
+                # Single model (legacy path)
+                input_ids = tokenizer(text, return_tensors="np").input_ids.astype("int64")
+                
+                output_names = [output.name for output in session.get_outputs()]
+                input_feed = {session.get_inputs()[0].name: input_ids}
+                outputs = session.run(output_names, input_feed)
+                
+                logits = outputs[0] 
+                predicted_ids = logits.argmax(axis=-1)
+                command = tokenizer.decode(predicted_ids[0], skip_special_tokens=True)
             
             app_logger.info(f"Runner ({label}): '{text}' -> '{command}'")
             return command.strip()
 
         except Exception as e:
             app_logger.error(f"Error en inferencia ({label}): {e}")
+            import traceback
+            app_logger.error(traceback.format_exc())
             raise RuntimeError(f"Error ejecutando modelo {label}: {e}")
