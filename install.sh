@@ -154,7 +154,7 @@ function install_standard() {
 
     else
         echo "----------------------------------------------------------------"
-        echo "⚠️  Sistema NO-Debian detectado."
+        echo "  Sistema NO-Debian detectado."
         echo "Para garantizar la compatibilidad, se recomienda usar Distrobox."
         echo "----------------------------------------------------------------"
         chmod +x setup_distrobox.sh
@@ -212,7 +212,7 @@ function install_standard() {
     
     # 1. Instalar uv si no existe
     if ! command -v uv &> /dev/null; then
-        echo "Instalando uv (pip con esteroides)..."
+        echo "Instalando uv..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
         source $HOME/.cargo/env
     fi
@@ -438,7 +438,7 @@ EOT
     [ -f "resources/tools/password_helper.py" ] && $VENV_DIR/bin/python resources/tools/password_helper.py --user admin --password admin
 
     echo ""
-    echo "✅ Instalación Completa Finalizada."
+    echo " Instalación Completa Finalizada."
 }
 
 function install_web_client() {
@@ -464,7 +464,7 @@ function install_web_client() {
     echo "python3 TangerineUI/app.py" >> run_client.sh
     chmod +x run_client.sh
     
-    echo "✅ Listo. Ejecuta ./run_client.sh para iniciar."
+    echo "Listo. Ejecuta ./run_client.sh para iniciar."
 }
 
 function install_satellite() {
