@@ -146,7 +146,7 @@ function install_standard() {
             libfann-dev swig nmap whois mosquitto mosquitto-clients
             libbluetooth-dev build-essential libssl-dev zlib1g-dev
             libbz2-dev libreadline-dev libsqlite3-dev libffi-dev
-            liblzma-dev ffmpeg
+            liblzma-dev ffmpeg git-lfs
         )
         
         sudo apt-get update
@@ -284,7 +284,12 @@ function install_standard() {
 
     # Gemma
     # Gemma (MANGO Legacy - Removed in favor of Grape)
-    # [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
+    if [ ! -d "models/gemma-2-2b-it-Q4_K_M.gguf" ]; then
+         [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
+    fi
+
+    # Configurar Git LFS para modelos
+    git lfs install
 
     # Comprobación de Whisper - DESHABILITADO
     # read -p "¿Instalar Whisper (STT Local Avanzado - 1.5GB)? (s/n) [n]: " WHISPER_OPT
@@ -315,6 +320,9 @@ function install_standard() {
     fi
 
     # Decision Router Model (Grape-Route)
+    # Removing potential bad clones (HTML files) from non-LFS downloads
+    [ -d "models/grape-route" ] && rm -rf "models/grape-route"
+
     if [ ! -d "models/grape-route" ]; then
         echo "Descargando modelo Decision Router (Grape-Route)..."
         git clone https://huggingface.co/jrodriiguezg/minilm-l12-grape-route models/grape-route
