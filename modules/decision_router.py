@@ -49,15 +49,17 @@ class DecisionRouter:
             return None, 0.0
 
         try:
-            # Pipeline retorna una lista de dicts [{'label': 'LABEL', 'score': 0.99}]
-            # Con top_k=1 retorna lista de listas? No, default es lista de dicts para 1 input.
+            # Pipeline with top_k=1 retorna [[{'label': 'LABEL', 'score': 0.99}]]
+            # Es una lista de listas porque puede procesar múltiples inputs
             results = self.classifier(text)
             
-            # results es [{'label': 'malbec', 'score': 0.98}]
-            if not results:
+            # results es [[{'label': 'malbec', 'score': 0.98}]]
+            # Necesitamos acceder al primer elemento de la lista externa y luego al primer resultado
+            if not results or not results[0]:
                 return None, 0.0
 
-            best_result = results[0]
+            # Obtener el primer (y único) resultado de la lista interna
+            best_result = results[0][0]  # First input [0], first prediction [0]
             best_label = best_result['label']
             best_score = best_result['score']
             
@@ -70,4 +72,6 @@ class DecisionRouter:
 
         except Exception as e:
             app_logger.error(f"Error en Router Predict: {e}")
+            import traceback
+            app_logger.error(traceback.format_exc())
             return None, 0.0

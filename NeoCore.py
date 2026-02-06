@@ -845,6 +845,19 @@ class NeoCore:
                 # "Capa de Clasificación (Router)"
                 router_label, router_score = self.decision_router.predict(command_text)
                 
+                app_logger.info(f"🧭 ROUTER Decision: label='{router_label}', score={router_score:.3f}")
+                
+                # Emit router decision to UI/CLI (even for null)
+                if self.web_server:
+                    try:
+                        self.web_server.socketio.emit('router:decision', {
+                            'category': router_label if router_label else 'null', 
+                            'score': router_score if router_score else 0.0,
+                            'command': command_text
+                        }, namespace='/')
+                    except Exception as e:
+                        app_logger.debug(f"Failed to emit router decision: {e}")
+                
                 # Handling 'null' category (Restart Loop)
                 if router_label == "null" or router_label is None:
                     self.speak("No he entendido el comando. Reiniciando.")
@@ -853,16 +866,6 @@ class NeoCore:
 
                 app_logger.info(f"🎯 ROUTER SELECTED: {router_label} ({router_score:.2f})")
                 
-                # Emit router decision to UI/CLI
-                if self.web_server:
-                    try:
-                        self.web_server.socketio.emit('router:decision', {
-                            'category': router_label, 
-                            'score': router_score,
-                            'command': command_text
-                        }, namespace='/')
-                    except:
-                        pass
 
                 # "Capa de Ejecución de Modelos Específicos"
                 generated_command = None
