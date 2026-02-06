@@ -851,7 +851,18 @@ class NeoCore:
                     app_logger.info("Router returned NULL. Restarting listen loop.")
                     return # Vuelve al bucle principal
 
-                app_logger.info(f" ROUTER SELECTED: {router_label} ({router_score:.2f})")
+                app_logger.info(f"🎯 ROUTER SELECTED: {router_label} ({router_score:.2f})")
+                
+                # Emit router decision to UI/CLI
+                if self.web_server:
+                    try:
+                        self.web_server.socketio.emit('router:decision', {
+                            'category': router_label, 
+                            'score': router_score,
+                            'command': command_text
+                        }, namespace='/')
+                    except:
+                        pass
 
                 # "Capa de Ejecución de Modelos Específicos"
                 generated_command = None
