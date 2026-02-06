@@ -456,6 +456,25 @@ EOT
         chmod 600 config/certs/neo.key
     fi
 
+    # Configurar sudoers para acciones sin contraseña
+    echo "[PASO 5.5/6] Configurando sudoers para WatermelonD..."
+    SUDOERS_FILE="/etc/sudoers.d/watermelond"
+    
+    sudo bash -c "cat > $SUDOERS_FILE" <<EOT
+# WatermelonD - Comandos sin contraseña para operaciones administrativas
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/apt-get update
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/apt-get upgrade
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/apt-get clean
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/apt-get autoremove
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/dnf update
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/dnf clean
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart networking
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart NetworkManager
+EOT
+    
+    sudo chmod 440 "$SUDOERS_FILE"
+    echo "Sudoers configurado en $SUDOERS_FILE"
+
     # Contraseña
     [ -f "resources/tools/password_helper.py" ] && $VENV_DIR/bin/python resources/tools/password_helper.py --user admin --password admin
 
