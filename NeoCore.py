@@ -30,6 +30,7 @@ from modules.ssh_manager import SSHManager
 from modules.wifi_manager import WifiManager
 # from modules.vision import VisionManager # Lazy load to prevent CV2 segfaults
 from modules.file_manager import FileManager
+from modules.bus_client import BusClient
 from modules.cast_manager import CastManager
 from modules.utils import load_json_data
 from modules.mqtt_manager import MQTTManager
@@ -167,6 +168,12 @@ class NeoCore:
             self.app_logger.error(f"❌ Failed to initialize VoiceManager: {e}. Using Mock.")
             self.voice_manager = type('MockVoice', (object,), {'start_listening': lambda self, i: None, 'stop_listening': lambda self: None, 'set_processing': lambda self, p: None, 'is_listening': False})()
             self.audio_input_enabled = False
+
+        # --- Bus Client (CLI / External Injection) ---
+        self.bus = BusClient(name="NeoCore")
+        self.bus.on('command:inject', self.handle_injected_command)
+        # Start bus thread
+        threading.Thread(target=self.bus.run_forever, daemon=True).start()
         
         # Update Web Admin Status
         if WEB_ADMIN_DISPONIBLE:
@@ -325,6 +332,15 @@ class NeoCore:
         self.start_background_tasks()
         
         # Main loop moved to run()
+
+    def handle_injected_command(self, data):
+        """Handles commands injected via Bus (CLI/External)."""
+        text = data.get('text')
+        if text:
+            self.app_logger.info(f"Command Injected via Bus: {text}")
+            # Simulate detected command
+            # Use 'neo' as detected wake word to ensure processing
+            self.on_voice_command(text, 'neo')
 
     def _watchdog_check(self):
         """Performs periodic health checks on threads and services."""
