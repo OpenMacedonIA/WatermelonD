@@ -29,5 +29,6 @@
     "experimental": {
         "voice_auth_enabled": false
     },
+    "user_nickname": "Usuario",
     "admin_pass": "admin"
 }

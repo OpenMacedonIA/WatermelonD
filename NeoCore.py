@@ -336,22 +336,70 @@ class NeoCore:
         except KeyboardInterrupt:
             self.on_closing()
 
-    def _watchdog_check(self):
-        """Monitor critical threads and restart them if necessary."""
-        # 1. Event Queue Thread
-        if self._thread_events and not self._thread_events.is_alive():
-            app_logger.critical("⚠ Event Queue Thread died! Restarting...")
-            self._thread_events = threading.Thread(target=self.process_event_queue, daemon=True, name="Events_Loop")
-            self._thread_events.start()
+    def _check_conversational_shortcuts(self, text):
+        """
+        Verifica si el texto coincide con patrones simples de saludo/despedida/estado
+        para evitar llamar al LLM innecesariamente.
+        """
+        import re
+        import random
+        
+        text = text.lower().strip()
+        nickname = self.config_manager.get('user_nickname', 'Usuario')
+        
+        # 1. SALUDOS
+        if re.search(r'^(hola|buenas|hey|hi|qué pasa|que pasa|buenos días|buenas tardes|buenas noches)', text):
+            responses = [
+                f"Hola {nickname}, ¿en qué puedo ayudarte?",
+                f"Buenas, {nickname}.",
+                f"Aquí estoy, {nickname}.",
+                f"Hola {nickname}, sistemas listos."
+            ]
+            return random.choice(responses)
+            
+        # 2. ESTADO DEL SISTEMA (Smart Check)
+        if re.search(r'(cómo|como|qué|que) (estás|estas|tal|te sientes|vamos)|reporte de estado|status', text):
+            # Obtener métricas reales si es posible
+            status_msg = f"Todo operativo, {nickname}."
+            
+            if self.sysadmin_manager:
+                try:
+                    cpu = self.sysadmin_manager.get_cpu_usage()
+                    ram = self.sysadmin_manager.get_ram_usage()
+                    temp = self.sysadmin_manager.get_cpu_temp()
+                    
+                    details = []
+                    if cpu: details.append(f"CPU al {cpu}%")
+                    if ram: details.append(f"RAM al {ram}%")
+                    if temp and "N/A" not in str(temp): details.append(f"Temperatura {temp}")
+                    
+                    if details:
+                        status_msg = f"Sistemas operativos, {nickname}. " + ", ".join(details) + "."
+                except Exception as e:
+                    self.app_logger.error(f"Error getting stats for greeting: {e}")
+            
+            return status_msg
+            
+        # 3. DESPEDIDAS
+        if re.search(r'^(adiós|chao|hasta luego|bai|nos vemos|apágate|descansa)', text):
+            responses = [
+                f"Hasta luego, {nickname}.",
+                f"Nos vemos, {nickname}.",
+                f"Quedo a la espera, {nickname}.",
+                "Cerrando canales de comunicación."
+            ]
+            return random.choice(responses)
 
-        # 2. Proactive Thread
-        if self._thread_proactive and not self._thread_proactive.is_alive():
-            app_logger.warning("⚠ Proactive Thread died! Restarting...")
-            self._thread_proactive = threading.Thread(target=self.proactive_update_loop, daemon=True, name="Proactive_Loop")
-            self._thread_proactive.start()
-
-        # Web Admin is managed by Flask internal server, bit harder to restart cleanly from here without re-import, 
-        # but usually it doesn't crash silently.
+        # 4. AGRADECIMIENTOS
+        if re.search(r'(gracias|muchas gracias)', text):
+             responses = [
+                 f"De nada, {nickname}.",
+                 "Para eso estoy.",
+                 "Un placer."
+             ]
+             return random.choice(responses)
+            
+        return None
 
     def start_background_tasks(self):
         """Inicia los hilos en segundo plano."""
@@ -778,7 +826,14 @@ class NeoCore:
                 generated_command = None
 
                 # Specific Logic for Non-Technical Categories
+                # Specific Logic for Non-Technical Categories
                 if router_label == "gemma":
+                     # --- FAST PATH COMPARATOR ---
+                     shortcut_response = self._check_conversational_shortcuts(command_text)
+                     if shortcut_response:
+                         self.speak(shortcut_response)
+                         return
+
                      # Fallback to chat/general queries
                      final_response = self.chat_manager.get_response(command_text)
                      self.speak(final_response)
