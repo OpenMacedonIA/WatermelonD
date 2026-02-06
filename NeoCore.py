@@ -336,12 +336,16 @@ class NeoCore:
 
     def handle_injected_command(self, data):
         """Handles commands injected via Bus (CLI/External)."""
-        text = data.get('text')
+        # BusClient passes the full message payload: {type, data, context}
+        # Extract the actual command text from the nested 'data' field
+        text = data.get('data', {}).get('text')
         if text:
-            self.app_logger.info(f"Command Injected via Bus: {text}")
+            self.app_logger.info(f"💉 Command Injected via Bus: '{text}'")
             # Simulate detected command
             # Use 'neo' as detected wake word to ensure processing
             self.on_voice_command(text, 'neo')
+        else:
+            self.app_logger.warning(f"Received command:inject with no text: {data}")
 
     def _watchdog_check(self):
         """Performs periodic health checks on threads and services."""
