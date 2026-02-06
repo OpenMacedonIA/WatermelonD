@@ -107,7 +107,7 @@ app_logger.info("El registro de logs ha sido iniciado (desde NeoCore Refactored)
 
 class NeoCore:
     """
-    Controlador principal de Neo (Refactored).
+    Controlador principal de Neo.
     Orquesta VoiceManager, IntentManager, AI Engine y Skills.
     """
     def __init__(self):
@@ -172,6 +172,7 @@ class NeoCore:
         # --- Bus Client (CLI / External Injection) ---
         self.bus = BusClient(name="NeoCore")
         self.bus.on('command:inject', self.handle_injected_command)
+        app_logger.info(f"BusClient configured for {self.bus.host}:{self.bus.port}. Starting thread.")
         # Start bus thread
         threading.Thread(target=self.bus.run_forever, daemon=True).start()
         
