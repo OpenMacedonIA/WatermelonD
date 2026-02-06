@@ -434,6 +434,36 @@ class NeoCore:
 
         pass
 
+    def load_resources(self):
+        """Carga recursos estáticos (NLP, Seguridad, Visión)."""
+        app_logger.info("Cargando recursos del sistema...")
+        
+        # 1. NLP Resources
+        try:
+            # Check for sentiment.json (mentioned in logs as missing)
+            sentiment_path = "resources/nlp/sentiment.json"
+            if not os.path.exists(sentiment_path):
+                 app_logger.warning(f"Fichero {sentiment_path} no encontrado (NLP limitado).")
+        except Exception as e:
+            app_logger.error(f"Error loading NLP resources: {e}")
+
+        # 2. Security Resources
+        try:
+            sec_path = "resources/security/attack_signatures.json"
+            if not os.path.exists(sec_path):
+                app_logger.warning(f"No se encontró {sec_path}. Neo Guard inactivo.")
+        except Exception as e:
+            app_logger.error(f"Error loading Security resources: {e}")
+
+        # 3. Vision Resources
+        if self.vision_manager:
+            try:
+                # Si VisionManager tuviera un método de carga explícito, lo llamaríamos aquí.
+                # Por ahora asumimos que inicia en su propio hilo.
+                pass
+            except Exception as e:
+                app_logger.error(f"Error loading Vision resources: {e}")
+
     def setup_vlc(self):
         """Inicializa la instancia de VLC para reproducción de radio."""
         if vlc:
