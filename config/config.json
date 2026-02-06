@@ -7,7 +7,10 @@
     "wake_words": [
         "neo",
         "tio",
-        "bro"
+        "bro",
+        "Wamd",
+        "wamd",
+        "WAMD"
     ],
     "neo_ssh_enabled": true,
     "secret_key": "d5a11b53c1aae0adaa3c5f08c5d64953dadeb47d7ec8103e",
@@ -29,6 +32,6 @@
     "experimental": {
         "voice_auth_enabled": false
     },
-    "user_nickname": "Usuario",
+    "user_nickname": "Dave",
     "admin_pass": "admin"
 }
