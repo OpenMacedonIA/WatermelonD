@@ -207,40 +207,46 @@ function install_standard() {
     fi
 
     # --- CONFIGURACIÓN DE PYTHON ---
-    echo "[PASO 3/6] Configurando Python 3.10..."
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-
-    if ! command -v pyenv 1>/dev/null 2>&1; then
-        echo "Instalando Pyenv..."
-        curl https://pyenv.run | bash
-        
-        if ! grep -q 'export PYENV_ROOT="$HOME/.pyenv"' ~/.bashrc; then
-            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-            echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-            echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-        fi
-    fi
-    eval "$(pyenv init -)"
+    # --- CONFIGURACIÓN DE PYTHON CON UV ---
+    echo "[PASO 3/6] Configurando Python 3.10 con uv..."
     
-    PYTHON_VERSION="3.10.13"
-    if ! pyenv versions | grep -q $PYTHON_VERSION; then
-        echo "Compilando Python $PYTHON_VERSION..."
-        pyenv install $PYTHON_VERSION
+    # 1. Instalar uv si no existe
+    if ! command -v uv &> /dev/null; then
+        echo "Instalando uv (pip con esteroides)..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        source $HOME/.cargo/env
     fi
+
+    # Asegurar que uv está en PATH (por si acaso el source falló en subshell)
+    export PATH="$HOME/.cargo/bin:$PATH"
+
+    # 2. Utilizar uv para gestionar Python
+    # uv python install 3.10  <-- Opcional, pero uv puede gestionar versiones de python también
+    # Por ahora mantenemos la lógica pero dejamos que uv maneje el venv
     
     VENV_DIR="$(pwd)/venv"
     if [ -d "$VENV_DIR" ]; then
-        echo "Recreando entorno virtual..."
+        echo "Recreando entorno virtual con uv..."
         rm -rf "$VENV_DIR"
     fi
-    $HOME/.pyenv/versions/$PYTHON_VERSION/bin/python -m venv $VENV_DIR
     
-    echo "Instalando dependencias Python..."
-    $VENV_DIR/bin/pip install -U pip --no-cache-dir
-    $VENV_DIR/bin/python resources/tools/install_fann_fix.py
-    $VENV_DIR/bin/pip install -r requirements.txt --no-cache-dir
-    $VENV_DIR/bin/pip install Flask-WTF eventlet --no-cache-dir
+    echo "Creando venv con Python 3.10..."
+    # uv venv crea el entorno. Podemos especificar versión si queremos, pero usará la del sistema o descargará una
+    uv venv "$VENV_DIR" --python 3.10
+    
+    echo "Instalando dependencias con uv..."
+    source "$VENV_DIR/bin/activate"
+    
+    # uv pip install es mucho más rápido
+    uv pip install --upgrade pip
+    
+    # Ejecutar script de arreglo de fann antes de instalar requirements si es necesario
+    # Nota: install_fann_fix.py usa 'pip' internamente? Si es así, podría fallar si no está en PATH
+    # o si usa el pip del venv. Como estamos en venv activado, 'python' es el del venv.
+    python resources/tools/install_fann_fix.py
+    
+    uv pip install -r requirements.txt
+    uv pip install Flask-WTF eventlet
 
     # --- DIRECTORIOS ---
     DIRS=("logs" "config" "database" "models" "piper/voices" "docs/brain_memory")
