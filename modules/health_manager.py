@@ -109,7 +109,7 @@ class HealthManager:
                 continue
 
             if status != 'active':
-                logger.warning(f"⚠️ Service DOWN detected: {name}")
+                logger.warning(f"Service DOWN detected: {name}")
                 self._handle_failure(name)
             else:
                 # Si está activo, reseteamos contadores si ha pasado tiempo suficiente
@@ -122,7 +122,7 @@ class HealthManager:
         attempts = self.recovery_attempts.get(service_name, 0)
         
         if attempts < self.max_attempts:
-            logger.info(f"🚑 Attempting recovery for {service_name} ({attempts + 1}/{self.max_attempts})")
+            logger.info(f"Attempting recovery for {service_name} ({attempts + 1}/{self.max_attempts})")
             
             # Registrar incidente antes de recuperar (para tener contexto del crash)
             self._log_incident(service_name, "CRASH_DETECTED")
@@ -135,13 +135,13 @@ class HealthManager:
             self.last_recovery_time[service_name] = time.time()
 
             if success:
-                logger.info(f"✅ Recovery successful for {service_name}")
+                logger.info(f"Recovery successful for {service_name}")
                 self._log_incident(service_name, "RECOVERY_SUCCESS")
             else:
-                logger.error(f"❌ Recovery failed for {service_name}: {msg}")
+                logger.error(f"Recovery failed for {service_name}: {msg}")
                 self._log_incident(service_name, "RECOVERY_FAILED")
         else:
-            logger.critical(f"💀 Give up on {service_name}. Max attempts reached.")
+            logger.critical(f"Give up on {service_name}. Max attempts reached.")
             # Aquí podríamos enviar una notificación urgente al usuario
 
     def _analyze_risks(self):
@@ -156,7 +156,7 @@ class HealthManager:
             
             # Regla Heurística 1: Alta Carga Persistente
             if cpu > 90 or ram > 90:
-                logger.warning("🔥 System Stress: High load components risking stability.")
+                logger.warning("System Stress: High load components risking stability.")
                 # Si tuviéramos un sistema de mensajería al usuario, aquí enviaríamos "High Load Alert"
                 
             # Regla Heurística 2: Patrón de fallo recurrente (Aprendizaje simple)
@@ -165,7 +165,7 @@ class HealthManager:
             recent_crashes = [i for i in self.incident_history if (time.time() - i['timestamp']) < 86400 and i['event'] == 'CRASH_DETECTED']
             
             if len(recent_crashes) > 5:
-                logger.warning("🔮 Prediction: System instability detected. High frequency of crashes in last 24h.")
+                logger.warning("Prediction: System instability detected. High frequency of crashes in last 24h.")
                 
         except Exception:
             pass

@@ -18,7 +18,7 @@ if command -v firefox &> /dev/null; then
     firefox --kiosk "$URL" &
 elif command -v chromium-browser &> /dev/null; then
     echo "Usando Chromium..."
-    chromium-browser --kiosk --app="$URL" &
+    chromium-browser --kiosk "$URL" &
 elif command -v chromium &> /dev/null; then
     echo "Usando Chromium..."
     chromium --kiosk --app="$URL" &

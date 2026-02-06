@@ -47,7 +47,7 @@ openbox &
 
 # Esperar a que el servidor Flask esté listo (puerto 5000)
 echo "Esperando a Neo Core inicie..."
-while ! curl -s http://localhost:5000 > /dev/null; do
+while ! curl -s http://localhost:5000/face > /dev/null; do
     sleep 2
 done
 
