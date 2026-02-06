@@ -10,6 +10,10 @@ import pypdf
 # Configure logger
 logger = logging.getLogger("KnowledgeBase")
 
+# Suppress HuggingFace Transformers warnings (position_ids UNEXPECTED)
+import transformers
+transformers.logging.set_verbosity_error()
+
 class KnowledgeBase:
     def __init__(self, docs_path: str = "docs", db_path: str = "database/knowledge_db"):
         self.docs_path = docs_path

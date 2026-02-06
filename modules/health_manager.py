@@ -130,10 +130,12 @@ class HealthManager:
             # Intentar reinicio
             success, msg = self.sys_admin.control_service(service_name, 'restart')
             
+            # Increment attempts regardless of outcome to avoid infinite loops
+            self.recovery_attempts[service_name] = attempts + 1
+            self.last_recovery_time[service_name] = time.time()
+
             if success:
                 logger.info(f"✅ Recovery successful for {service_name}")
-                self.recovery_attempts[service_name] = attempts + 1
-                self.last_recovery_time[service_name] = time.time()
                 self._log_incident(service_name, "RECOVERY_SUCCESS")
             else:
                 logger.error(f"❌ Recovery failed for {service_name}: {msg}")
