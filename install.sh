@@ -214,11 +214,15 @@ function install_standard() {
     if ! command -v uv &> /dev/null; then
         echo "Instalando uv..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
-        source $HOME/.cargo/env
+        if [ -f "$HOME/.local/bin/env" ]; then
+            source "$HOME/.local/bin/env"
+        elif [ -f "$HOME/.cargo/env" ]; then
+            source "$HOME/.cargo/env"
+        fi
     fi
 
-    # Asegurar que uv está en PATH (por si acaso el source falló en subshell)
-    export PATH="$HOME/.cargo/bin:$PATH"
+    # Asegurar que uv está en PATH (por si acaso el source falló en subshell o no persistió)
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
     # 2. Utilizar uv para gestionar Python
     # uv python install 3.10  <-- Opcional, pero uv puede gestionar versiones de python también
