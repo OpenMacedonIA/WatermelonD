@@ -16,21 +16,26 @@ class AIEngine:
         
         if model_path and os.path.exists(model_path):
             self.model_path = model_path
-            app_logger.info(f"Usando modelo configurado: {self.model_path}")
+            app_logger.info(f"AI Engine configurado con: {self.model_path} (Lazy Loading)")
         elif os.path.exists("models/gemma-2b-tio.gguf"):
             self.model_path = "models/gemma-2b-tio.gguf"
-            app_logger.info("Usando modelo Fine-Tuned TIO.")
+            app_logger.info("Configurado modelo Fine-Tuned TIO (Lazy Loading).")
         elif os.path.exists("models/gemma-2-2b-it-Q8_0.gguf"):
             self.model_path = "models/gemma-2-2b-it-Q8_0.gguf"
-            app_logger.info("Usando modelo Gemma Q8.")
+            app_logger.info("Configurado modelo Gemma Q8 (Lazy Loading).")
         else:
             self.model_path = self.default_path
-            app_logger.info(f"Usando modelo por defecto: {self.model_path}")
+            app_logger.info(f"Configurado modelo por defecto: {self.model_path} (Lazy Loading)")
 
         self.llm = None
         self.is_ready = False
         
-        if LLAMA_AVAILABLE:
+        # NOTE: Model is NOT loaded here. It will be loaded on first use.
+
+    def _ensure_model_loaded(self):
+        """Carga el modelo si aún no está en memoria."""
+        if not self.llm and LLAMA_AVAILABLE:
+            app_logger.info("⚠️ Disparando carga perezosa (Lazy Load) del modelo AI...")
             self.load_model()
 
     def load_model(self):
@@ -68,6 +73,8 @@ class AIEngine:
 
     def generate_response(self, prompt, max_tokens=150):
         """Genera una respuesta usando el modelo (Raw Completion)."""
+        self._ensure_model_loaded()
+        
         if not self.is_ready:
             return "Lo siento, mi cerebro de IA no está disponible en este momento."
 
@@ -91,6 +98,8 @@ class AIEngine:
 
     def generate_response_stream(self, prompt, max_tokens=150):
         """Genera una respuesta en streaming (yields chunks)."""
+        self._ensure_model_loaded()
+
         if not self.is_ready:
             yield "Lo siento, mi cerebro de IA no está disponible."
             return
