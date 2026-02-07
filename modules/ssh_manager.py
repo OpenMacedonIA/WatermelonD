@@ -2,7 +2,7 @@ import paramiko
 import json
 import os
 import logging
-import base64
+from modules.crypto_utils import get_crypto
 from modules.config_manager import ConfigManager
 
 logger = logging.getLogger("SSHManager")
@@ -31,23 +31,18 @@ class SSHManager:
         return {}
     
     def _obfuscate(self, text):
-        """Simple obfuscation to avoid plain text storage."""
-        if not text: return None
-        # Base64 encode
-        encoded = base64.b64encode(text.encode()).decode()
-        # Add a simple prefix to identify
-        return f"ENC:{encoded}"
+        """Encrypt password using Fernet (replaces Base64)."""
+        if not text:
+            return None
+        crypto = get_crypto()
+        return crypto.encrypt(text)
 
     def _deobfuscate(self, text):
-        """Reverses obfuscation."""
-        if not text: return None
-        if text.startswith("ENC:"):
-            try:
-                raw = text.split("ENC:")[1]
-                return base64.b64decode(raw).decode()
-            except:
-                return text # Fallback if decode fails
-        return text # Fallback for legacy plain text
+        """Decrypt password (supports Fernet and legacy Base64)."""
+        if not text:
+            return None
+        crypto = get_crypto()
+        return crypto.decrypt(text)
 
     def _save_servers(self):
         try:

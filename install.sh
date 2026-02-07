@@ -735,7 +735,7 @@ function setup_ssh_servers_whiptail() {
             
             # Ofuscar contraseña con base64
             ENC_PASS=$(echo -n "$SSH_PASS" | base64)
-            python3 -c "import json; data=json.load(open('jsons/servers.json')); data['$SSH_ALIAS']={'host':'$SSH_HOST','user':'$SSH_USER','port':$SSH_PORT,'key_path':None,'password':'ENC:$ENC_PASS'}; json.dump(data, open('jsons/servers.json','w'), indent=4)"
+            python3 -c "import json; data=json.load(open('jsons/servers.json')); data['$SSH_ALIAS']={'host':'$SSH_HOST','user':'$SSH_USER','port':$SSH_PORT,'key_path':None,'password':'$ENC_PASS'}; json.dump(data, open('jsons/servers.json','w'), indent=4)"
         fi
         
         whiptail --msgbox "✓ Servidor '$SSH_ALIAS' añadido correctamente" 8 50
