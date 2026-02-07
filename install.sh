@@ -252,7 +252,7 @@ function install_standard() {
     python resources/tools/install_fann_fix.py
     
     uv pip install -r requirements.txt
-    uv pip install Flask-WTF eventlet
+    uv pip install Flask-WTF eventlet Flask-Limiter
 
     # --- DIRECTORIOS ---
     DIRS=("logs" "config" "database" "models" "piper/voices" "docs/brain_memory")
