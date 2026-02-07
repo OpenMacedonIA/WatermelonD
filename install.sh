@@ -497,6 +497,35 @@ EOT
     if command -v openssl >/dev/null 2>&1 && [ ! -f "config/certs/neo.key" ]; then
         openssl req -x509 -newkey rsa:4096 -keyout "config/certs/neo.key" -out "config/certs/neo.crt" -days 3650 -nodes -subj "/CN=$(hostname)"
         chmod 600 config/certs/neo.key
+        
+        # Show certificate information to user
+        CERT_PATH="$(pwd)/config/certs/neo.crt"
+        echo ""
+        echo "================================================================"
+        echo "   CERTIFICADO HTTPS GENERADO"
+        echo "================================================================"
+        echo ""
+        echo "[INFO] Se ha generado un certificado SSL autofirmado para HTTPS"
+        echo "       Ubicación: $CERT_PATH"
+        echo ""
+        echo "[IMPORTANTE] Para evitar advertencias de seguridad en navegadores:"
+        echo ""
+        echo "  1. En navegadores (Chrome/Firefox):"
+        echo "     - Copia el certificado a tu máquina cliente"
+        echo "     - Agrégalo como 'Autoridad de certificación raíz de confianza'"
+        echo ""
+        echo "  2. Linux (máquina cliente):"
+        echo "     sudo cp $CERT_PATH /usr/local/share/ca-certificates/watermelond.crt"
+        echo "     sudo update-ca-certificates"
+        echo ""
+        echo "  3. Windows (máquina cliente):"
+        echo "     - Abre el archivo .crt"
+        echo "     - Instalar certificado → Equipo local"
+        echo "     - Colocar en 'Entidades de certificación raíz de confianza'"
+        echo ""
+        echo "================================================================"
+        echo ""
+        read -p "Presiona ENTER para continuar..."
     fi
 
     # Configurar sudoers para acciones sin contraseña
