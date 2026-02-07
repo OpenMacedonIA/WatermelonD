@@ -1138,7 +1138,7 @@ class NeoCore:
             filename = f"resultado_{int(time.time())}.txt"
             filepath = os.path.join(os.getcwd(), filename)
             try:
-                with open(filepath, 'w') as f:
+                with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(result_text)
                 self.speak(f"La salida es muy larga ({len(result_text)} caracteres). La he guardado en el archivo {filename}.")
             except Exception as e:
