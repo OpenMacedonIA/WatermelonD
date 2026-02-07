@@ -948,6 +948,42 @@ def api_mqtt_generate_installer():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/mqtt/agent/<agent_id>/command', methods=['POST'])
+@login_required
+def api_mqtt_send_command(agent_id):
+    """Send a command to a specific agent."""
+    try:
+        from modules.mqtt_manager import mqtt_manager
+        
+        data = request.json
+        command = data.get('command')
+        params = data.get('params', {})
+        
+        if not command:
+            return jsonify({'success': False, 'message': 'Command is required'})
+        
+        # Validate command
+        valid_commands = ['ping', 'get_status', 'reboot', 'shutdown', 'restart_agent', 'update_config']
+        if command not in valid_commands:
+            return jsonify({'success': False, 'message': f'Invalid command. Valid: {valid_commands}'})
+        
+        # Send command via MQTT manager
+        if hasattr(bus, 'mqtt_manager') and bus.mqtt_manager:
+            command_id = bus.mqtt_manager.send_command(agent_id, command, params)
+            if command_id:
+                return jsonify({
+                    'success': True,
+                    'command_id': command_id,
+                    'message': f'Command {command} sent to {agent_id}'
+                })
+            else:
+                return jsonify({'success': False, 'message': 'MQTT not connected'})
+        else:
+            return jsonify({'success': False, 'message': 'MQTT manager not available'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 # --- SKILLS API ---
 
 @app.route('/api/skills', methods=['GET'])

@@ -54,6 +54,38 @@ class MQTTManager:
         self.running = False
         self.client.loop_stop()
         self.client.disconnect()
+    
+    def send_command(self, agent_id, command, params=None):
+        """
+        Send a command to a specific agent
+        
+        Args:
+            agent_id: Agent hostname/ID
+            command: Command name (reboot, shutdown, ping, etc.)
+            params: Optional parameters dict
+        Returns:
+            Command ID for tracking
+        """
+        import uuid
+        import time as tm
+        
+        command_id = str(uuid.uuid4())[:8]
+        topic = f"tio/agents/{agent_id}/commands"
+        
+        payload = {
+            "command": command,
+            "params": params or {},
+            "id": command_id,
+            "timestamp": tm.time()
+        }
+        
+        if self.client and self.connected:
+            self.client.publish(topic, json.dumps(payload))
+            logger.info(f"Sent command '{command}' to agent '{agent_id}' (ID: {command_id})")
+            return command_id
+        else:
+            logger.error("Cannot send command: MQTT client not connected")
+            return None
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -79,7 +111,7 @@ class MQTTManager:
             if len(parts) < 4: return
             
             agent_name = parts[2]
-            msg_type = parts[3] # telemetry or alerts
+            msg_type = parts[3] # telemetry, alerts, or responses
             
             logger.debug(f"MQTT Msg from {agent_name} ({msg_type}): {payload}")
             
@@ -102,6 +134,15 @@ class MQTTManager:
                     'agent': agent_name,
                     'data': payload
                 })
+            
+            elif msg_type == 'responses':
+                # Command responses -> Forward to UI/logs
+                self.event_queue.put({
+                    'type': 'mqtt_response',
+                    'agent': agent_name,
+                    'response': payload
+                })
+                logger.info(f"Command response from {agent_name}: {payload}")
                 
         except Exception as e:
             logger.error(f"Error parsing MQTT message: {e}")
