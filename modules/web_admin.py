@@ -393,6 +393,12 @@ def training():
     """Renderiza la página de entrenamiento."""
     return render_template('training.html', page='training', config=config_manager.get_all())
 
+@app.route('/agents')
+@login_required
+def agents():
+    """Renderiza la página de gestión de agentes MQTT."""
+    return render_template('agents.html', page='agents')
+
 @app.route('/face')
 def face():
     """Renderiza la interfaz visual (Ojos). No requiere login para funcionar en modo Kiosk."""
@@ -791,6 +797,156 @@ def api_command_inject():
         return jsonify({'success': True, 'message': f"Sent: {text}"})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# --- MQTT AGENTS API ---
+
+@app.route('/api/mqtt/agents', methods=['GET'])
+@login_required
+def api_mqtt_agents():
+    """Returns list of registered MQTT agents and their status."""
+    mqtt_config = config_manager.get('mqtt', {})
+    agents = mqtt_config.get('agents', {})
+    
+    # Get live status from MQTT manager if available
+    # For now, we'll return the stored agent data
+    return jsonify(agents)
+
+@app.route('/api/mqtt/broker/info', methods=['GET'])
+@login_required
+def api_mqtt_broker_info():
+    """Returns MQTT broker information."""
+    import socket
+    
+    mqtt_config = config_manager.get('mqtt', {})
+    broker_address = mqtt_config.get('broker_address', '0.0.0.0')
+    broker_port = mqtt_config.get('broker_port', 1883)
+    
+    # Get local IP addresses
+    def get_local_ips():
+        """Get all local IP addresses"""
+        ips = []
+        try:
+            hostname = socket.gethostname()
+            # Get primary IP
+            primary_ip = socket.gethostbyname(hostname)
+            ips.append(primary_ip)
+            
+            # Try to get all IPs
+            import netiface as ni
+            for interface in ni.interfaces():
+                try:
+                    addrs = ni.ifaddresses(interface)
+                    if ni.AF_INET in addrs:
+                        for addr in addrs[ni.AF_INET]:
+                            ip = addr['addr']
+                            if ip not in ips and not ip.startswith('127.'):
+                                ips.append(ip)
+                except:
+                    pass
+        except:
+            # Fallback method
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ip = s.getsockname()[0]
+                s.close()
+                if ip not in ips:
+                    ips.append(ip)
+            except:
+                pass
+        
+        return ips
+    
+    local_ips = get_local_ips()
+    
+    return jsonify({
+        'broker_address': broker_address,
+        'broker_port': broker_port,
+        'local_ips': local_ips,
+        'enabled': mqtt_config.get('enabled', True)
+    })
+
+@app.route('/api/mqtt/agent/register', methods=['POST'])
+@login_required
+def api_mqtt_agent_register():
+    """Register a new MQTT agent."""
+    data = request.json
+    agent_id = data.get('agent_id')
+    
+    if not agent_id:
+        return jsonify({'success': False, 'message': 'agent_id is required'})
+    
+    mqtt_config = config_manager.get('mqtt', {})
+    agents = mqtt_config.get('agents', {})
+    
+    # Add or update agent
+    agents[agent_id] = {
+        'id': agent_id,
+        'registered_at': time.time(),
+        'last_seen': time.time(),
+        'status': 'registered'
+    }
+    
+    mqtt_config['agents'] = agents
+    config_manager.set('mqtt', mqtt_config)
+    
+    return jsonify({'success': True, 'agent': agents[agent_id]})
+
+@app.route('/api/mqtt/agent/<agent_id>', methods=['DELETE'])
+@login_required
+def api_mqtt_agent_delete(agent_id):
+    """Delete/unregister an MQTT agent."""
+    mqtt_config = config_manager.get('mqtt', {})
+    agents = mqtt_config.get('agents', {})
+    
+    if agent_id in agents:
+        del agents[agent_id]
+        mqtt_config['agents'] = agents
+        config_manager.set('mqtt', mqtt_config)
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Agent not found'})
+
+@app.route('/api/mqtt/generate_installer', methods=['POST'])
+@login_required
+def api_mqtt_generate_installer():
+    """Generate a custom installer script with broker IP pre-configured."""
+    try:
+        mqtt_config = config_manager.get('mqtt', {})
+        broker_port = mqtt_config.get('broker_port', 1883)
+        
+        # Get local IP
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        broker_ip = s.getsockname()[0]
+        s.close()
+        
+        # Read the template installer
+        installer_path = os.path.join(os.getcwd(), 'modules', 'BerryConnect', 'PiZero', 'install.sh')
+        if not os.path.exists(installer_path):
+            return jsonify({'success': False, 'message': 'Installer template not found'})
+        
+        with open(installer_path, 'r') as f:
+            installer_content = f.read()
+        
+        # Create pre-configured version
+        preconfigured = installer_content.replace(
+            'BROKER_IP=${BROKER_IP:-192.168.1.100}',
+            f'BROKER_IP={broker_ip}'
+        ).replace(
+            'BROKER_PORT=${BROKER_PORT:-1883}',
+            f'BROKER_PORT={broker_port}'
+        )
+        
+        return jsonify({
+            'success': True,
+            'installer': preconfigured,
+            'broker_ip': broker_ip,
+            'broker_port': broker_port
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 # --- SKILLS API ---
 

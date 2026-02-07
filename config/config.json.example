@@ -30,5 +30,11 @@
         "voice_auth_enabled": false
     },
     "user_nickname": "User",
-    "admin_pass": "changeme"
+    "admin_pass": "changeme",
+    "mqtt": {
+        "broker_address": "0.0.0.0",
+        "broker_port": 1883,
+        "enabled": true,
+        "agents": {}
+    }
 }
