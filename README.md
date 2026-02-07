@@ -1,4 +1,4 @@
-# WatermelonD (v3.0-Dev)
+# WatermelonD (v3.0-RC)
 
 [English](#english) | [Español](#español)
 
@@ -6,7 +6,7 @@
 
 ## English
 
-> **Dev Status**: This is the **WatermelonD** development branch. We are transitioning from the legacy "NeoPapaya" architecture to the new modular **WatermelonD** system.
+> **RC Status**: This is the **WatermelonD** release candidate branch. Stable and ready for testing before final release.
 
 
 
@@ -16,6 +16,14 @@
 ![Status](https://img.shields.io/badge/Status-Beta-yellow)
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-green)
+
+### Recent Improvements (February 2026)
+
+* **Security**: Fernet encryption (AES-128) for SSH passwords (replaced Base64)
+* **Quality**: Removed emojis from logs for terminal compatibility
+* **Reliability**: UTF-8 encoding explicit in file operations
+* **Performance**: WiFi interface caching to reduce log spam
+* **UX**: HTTPS certificate installation instructions in installer
 
 ### New in v2.5.0 (Experimental)
 
@@ -54,14 +62,14 @@
 ### Installation
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/next/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
 # Clone the repository
-git clone -b next https://github.com/OpenMacedonIA/WatermelonD
+git clone -b rc https://github.com/OpenMacedonIA/WatermelonD
 cd WatermelonD
 
 # Run the installer
@@ -77,7 +85,7 @@ Access the Web Interface at `http://localhost:5000`.
 
 ## Español
 
-> **Estado Dev**: Esta es la rama de desarrollo de **WatermelonD**. Estamos transicionando de la arquitectura "NeoPapaya" al nuevo sistema modular **WatermelonD**.
+> **Estado RC**: Esta es la rama candidata a release de **WatermelonD**. Estable y lista para pruebas antes del lanzamiento final.
 
 
 **WatermelonD** es un asistente personal proactivo y modular diseñado para ejecutarse localmente.
@@ -85,6 +93,14 @@ Access the Web Interface at `http://localhost:5000`.
 ![Status](https://img.shields.io/badge/Status-Beta-yellow)
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-green)
+
+### Mejoras Recientes (Febrero 2026)
+
+* **Seguridad**: Encriptacion Fernet (AES-128) para contrasenas SSH (reemplaza Base64)
+* **Calidad**: Eliminados emojis de logs para compatibilidad con terminales
+* **Confiabilidad**: Encoding UTF-8 explicito en operaciones de archivo
+* **Rendimiento**: Cache de interfaz WiFi para reducir spam en logs
+* **UX**: Instrucciones de instalacion de certificados HTTPS en el instalador
 
 ### Novedades en v2.5.0 (Experimental)
 
@@ -122,13 +138,13 @@ Access the Web Interface at `http://localhost:5000`.
 ### Instalación
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/next/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
-git clone -b next https://github.com/OpenMacedonIA/WatermelonD
+git clone -b rc https://github.com/OpenMacedonIA/WatermelonD
 cd WatermelonD
 ./install.sh
 ```
