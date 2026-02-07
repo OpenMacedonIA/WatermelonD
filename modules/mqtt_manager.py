@@ -70,7 +70,7 @@ class MQTTManager:
         import time as tm
         
         command_id = str(uuid.uuid4())[:8]
-        topic = f"tio/agents/{agent_id}/commands"
+        topic = f"wamd/agents/{agent_id}/commands"
         
         payload = {
             "command": command,
@@ -92,7 +92,7 @@ class MQTTManager:
             logger.info("Connected to MQTT Broker!")
             self.connected = True
             # Subscribe to all agent topics
-            client.subscribe("tio/agents/#")
+            client.subscribe("wamd/agents/#")
         else:
             logger.error(f"Failed to connect, return code {rc}")
             self.connected = False
@@ -106,7 +106,7 @@ class MQTTManager:
             topic = msg.topic
             payload = json.loads(msg.payload.decode())
             
-            # Topic format: tio/agents/{hostname}/{type}
+            # Topic format: wamd/agents/{hostname}/{type}
             parts = topic.split('/')
             if len(parts) < 4: return
             
