@@ -91,14 +91,14 @@ pip install -r requirements.txt
 echo '--- Descargando Modelos AI ---'
 # Crear directorios de config/modelos si es necesario
 if [ ! -d "models" ]; then mkdir -p models; fi
-if [ ! -d "vosk-models" ]; then mkdir -p vosk-models; fi
+if [ ! -d "models/sherpa" ]; then mkdir -p models/sherpa; fi
 
 # Ejecutar Descargadores usando el python/venv del contenedor
 echo 'Descargando Gemma...'
 python3 resources/tools/download_model.py
 
-# echo 'Descargando Whisper...'
-# python3 resources/tools/download_whisper_model.py
+echo 'Descargando Sherpa-ONNX Whisper Medium...'
+python3 resources/tools/download_sherpa_model.py --model medium
 
 echo 'Descargando MANGO (T5)...'
 # Por defecto MANGO (Main/v1) por estabilidad a menos que se especifique otra cosa

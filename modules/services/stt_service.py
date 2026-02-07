@@ -22,12 +22,6 @@ logger = logging.getLogger("STTService")
 
 # Optional Imports
 try:
-    import vosk
-    VOSK_AVAILABLE = True
-except ImportError:
-    VOSK_AVAILABLE = False
-
-try:
     import sherpa_onnx
     SHERPA_AVAILABLE = True
 except ImportError:
@@ -40,8 +34,6 @@ class STTService:
         self.config = self.config_manager.get('stt', {})
         
         # Models
-        self.vosk_model = None
-        self.vosk_recognizer = None
         self.sherpa_recognizer = None
         
         # Post-processor for error correction
@@ -54,61 +46,44 @@ class STTService:
         self.bus.on('recognizer_loop:audio', self.on_audio)
 
     def setup_stt(self):
-        engine = self.config.get('engine', 'vosk') # Default to vosk if not set
+        engine = 'sherpa'
         logger.info(f"Setting up STT Engine: {engine}")
-        
-        if engine == 'sherpa':
-            self.setup_sherpa()
-        else:
-            self.setup_vosk()
-
-    def setup_vosk(self):
-        if not VOSK_AVAILABLE:
-            logger.error("Vosk not installed.")
-            return
-        
-        # Search paths for Vosk model
-        possible_paths = [
-            self.config.get('model_path'),
-            "vosk-models/es",
-            "resources/vosk-models/es",
-            "/usr/share/vosk/models/es"
-        ]
-        
-        model_path = None
-        for p in possible_paths:
-            if p and os.path.exists(p):
-                model_path = p
-                logger.info(f"Found Vosk model at: {model_path}")
-                break
-        
-        if model_path:
-            try:
-                self.vosk_model = vosk.Model(model_path)
-                # self.vosk_recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000) # Removed: Instantiated per request
-                logger.info("Vosk Model loaded.")
-            except Exception as e:
-                logger.error(f"Failed to load Vosk: {e}")
-        else:
-            logger.error(f"Vosk model not found in any of: {possible_paths}")
+        self.setup_sherpa()
 
     def setup_sherpa(self):
         if not SHERPA_AVAILABLE:
             logger.error("Sherpa-ONNX not installed.")
             return
         
-        model_dir = self.config.get('sherpa_model_path', "models/sherpa")
-        encoder = os.path.join(model_dir, "tiny-encoder.onnx")
-        decoder = os.path.join(model_dir, "tiny-decoder.onnx")
-        tokens = os.path.join(model_dir, "tiny-tokens.txt")
+        model_dir = self.config.get('sherpa_model_path', "models/sherpa/sherpa-onnx-whisper-medium")
         
+        # Auto-detect model if path points to generic dir but specific model exists
+        if model_dir == "models/sherpa" and os.path.exists("models/sherpa/sherpa-onnx-whisper-medium"):
+             model_dir = "models/sherpa/sherpa-onnx-whisper-medium"
+        
+        encoder = os.path.join(model_dir, "encoder.onnx")
+        decoder = os.path.join(model_dir, "decoder.onnx")
+        tokens = os.path.join(model_dir, "tokens.txt")
+        
+        # Fallback for old file names (tiny-encoder.onnx, etc)
+        if not os.path.exists(encoder):
+            # Try finding any *encoder.onnx
+            files = os.listdir(model_dir) if os.path.exists(model_dir) else []
+            for f in files:
+                if f.endswith("encoder.onnx"): encoder = os.path.join(model_dir, f)
+                if f.endswith("decoder.onnx"): decoder = os.path.join(model_dir, f)
+                if f.endswith("tokens.txt"): tokens = os.path.join(model_dir, f)
+
         if os.path.exists(encoder):
             try:
+                # Determine thread count
+                num_threads = int(self.config.get('num_threads', 2))
+                
                 self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
                     encoder=encoder, decoder=decoder, tokens=tokens,
-                    language="es", task="transcribe", num_threads=1
+                    language="es", task="transcribe", num_threads=num_threads
                 )
-                logger.info("Sherpa-ONNX loaded.")
+                logger.info(f"Sherpa-ONNX loaded from {model_dir}")
             except Exception as e:
                 logger.error(f"Failed to load Sherpa: {e}")
         else:
@@ -132,8 +107,6 @@ class STTService:
             text = ""
             if self.sherpa_recognizer:
                 text = self.transcribe_sherpa(raw_data, rate)
-            elif self.vosk_model:
-                text = self.transcribe_vosk(raw_data, rate)
             
             if text:
                 self.process_text(text)
@@ -148,30 +121,7 @@ class STTService:
         self.sherpa_recognizer.decode_stream(s)
         return s.result.text.strip()
 
-    def transcribe_vosk(self, raw_data, rate):
-        if not self.vosk_model:
-            return ""
-            
-        try:
-            # Create a fresh recognizer for each utterance to avoid C++ state corruption/assertions
-            # This prevents "ASSERTION_FAILED (VoskAPI:TraceBackBestPath())" crashes
-            rec = vosk.KaldiRecognizer(self.vosk_model, rate)
-            
-            # Feed the entire audio chunk
-            rec.AcceptWaveform(raw_data)
-            
-            # Get result
-            res = json.loads(rec.FinalResult())
-            text = res.get('text', '')
-            
-            if text:
-                logger.info(f"Vosk FinalResult: '{text}'")
-                
-            return text
-            
-        except Exception as e:
-            logger.error(f"Vosk Transcription Error: {e}")
-            return ""
+
 
     def check_wake_word(self, text):
         wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro'])

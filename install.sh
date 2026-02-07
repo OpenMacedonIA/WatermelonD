@@ -311,14 +311,17 @@ function install_standard() {
     # --- MODELOS ---
     echo "[PASO 4/6] Configurando Modelos..."
     
-    # Vosk
-    if [ ! -d "vosk-models/es" ]; then
-        echo "Descargando Vosk ES..."
-        mkdir -p vosk-models
-        wget -q -O vosk.zip https://alphacephei.com/vosk/models/vosk-model-es-0.42.zip
-        unzip -q vosk.zip -d vosk-models/
-        mv vosk-models/vosk-model-es-0.42 vosk-models/es
-        rm vosk.zip
+    # Sherpa-ONNX (Default STT Engine)
+    if [ ! -d "models/sherpa/sherpa-onnx-whisper-medium" ]; then
+        echo "Descargando Sherpa-ONNX Whisper Medium..."
+        if [ -f "resources/tools/download_sherpa_model.py" ]; then
+            $VENV_DIR/bin/python resources/tools/download_sherpa_model.py --model medium
+        else
+            echo "ERROR: No se encontró el script de descarga de Sherpa-ONNX."
+            echo "Instalación continúa, pero STT no funcionará hasta descargar el modelo."
+        fi
+    else
+        echo "✓ Sherpa-ONNX Whisper Medium ya instalado"
     fi
 
     # Piper
