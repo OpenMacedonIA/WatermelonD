@@ -6,7 +6,8 @@ logger = logging.getLogger("WifiManager")
 
 class WifiManager:
     def __init__(self):
-        pass
+        self._wireless_interface_cache = None
+        self._interface_check_done = False
 
     def scan(self):
         """
@@ -85,7 +86,7 @@ class WifiManager:
         try:
             interface = self._get_wireless_interface()
             if not interface:
-                logger.warning("No wireless interface found for iwlist")
+                # Only log once, not every time
                 return None
 
             cmd = ["sudo", "iwlist", interface, "scan"]
@@ -161,7 +162,7 @@ class WifiManager:
         try:
             interface = self._get_wireless_interface()
             if not interface:
-                logger.warning("No wireless interface found for iw")
+                # Only log once, not every time
                 return None
 
             cmd = ["sudo", "iw", "dev", interface, "scan"]
@@ -228,7 +229,11 @@ class WifiManager:
             return None
 
     def _get_wireless_interface(self):
-        """Get the wireless interface name (wlan0, wlp3s0, etc)"""
+        """Get the wireless interface name (wlan0, wlp3s0, etc) - cached"""
+        # Return cached result if we already checked
+        if self._interface_check_done:
+            return self._wireless_interface_cache
+        
         try:
             # Try ip link show
             result = subprocess.run(["ip", "link", "show"], capture_output=True, text=True, timeout=5)
@@ -238,6 +243,8 @@ class WifiManager:
                 if match:
                     interface = match.group(1)
                     logger.info(f"Found wireless interface: {interface}")
+                    self._wireless_interface_cache = interface
+                    self._interface_check_done = True
                     return interface
             
             # Fallback: try common names
@@ -245,13 +252,20 @@ class WifiManager:
                 check = subprocess.run(["ip", "link", "show", iface], capture_output=True, timeout=2)
                 if check.returncode == 0:
                     logger.info(f"Found wireless interface (fallback): {iface}")
+                    self._wireless_interface_cache = iface
+                    self._interface_check_done = True
                     return iface
             
-            logger.error("No wireless interface found")
+            # No interface found - log only ONCE
+            logger.warning("No wireless interface found (Ethernet-only system or VM)")
+            self._interface_check_done = True
+            self._wireless_interface_cache = None
             return None
 
         except Exception as e:
             logger.error(f"Error finding wireless interface: {e}")
+            self._interface_check_done = True
+            self._wireless_interface_cache = None
             return None
 
     def connect(self, ssid, password):

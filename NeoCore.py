@@ -856,7 +856,7 @@ class NeoCore:
                 best_intent = self.intent_manager.find_best_intent(command_text)
                 if best_intent and best_intent.get('name') in ['saludo', 'despedida', 'agradecimiento']:
                     # High or medium confidence greeting/farewell from intent manager
-                    confidence = best_intent.get('confidence', 0)
+                    confidence = float(best_intent.get('confidence', 0))
                     if confidence >= 80:  # High confidence
                         # Use shortcut response if available, otherwise generic
                         shortcut_response = self._check_conversational_shortcuts(command_text)
@@ -928,11 +928,14 @@ class NeoCore:
                 else:
                     try:
                         # "Capa de Ejecución": ONNX Runner
-                        # INJECT CONTEXT
-                        fs_context = self._get_filesystem_context()
+                        # INJECT CONTEXT based on router type
 
-                        # --- Context Injection for Syrah/Cabernet (Network) ---
+                        # --- Context Injection Strategy ---
+                        # Network models (syrah/cabernet): ONLY network aliases
+                        # Other models: Full filesystem context (pwd + ls)
                         if router_label in ["syrah", "syrach", "cabernet"]:
+                            # Network models: Only SSH/network aliases
+                            fs_context = "[]"
                             try:
                                 if self.ssh_manager and hasattr(self.ssh_manager, 'servers'):
                                     server_entries = []
@@ -942,13 +945,12 @@ class NeoCore:
                                     
                                     if server_entries:
                                         network_context_str = ", ".join(server_entries)
-                                        if fs_context.endswith("]"):
-                                            fs_context = fs_context[:-1] + ", " + network_context_str + "]"
-                                        else:
-                                            # Fallback if format is unexpected
-                                            fs_context = fs_context + f" {server_entries}"
+                                        fs_context = f"[{network_context_str}]"
                             except Exception as e:
                                 self.app_logger.error(f"Error building network context: {e}")
+                        else:
+                            # Other models get full filesystem context
+                            fs_context = self._get_filesystem_context()
                         # --------------------------------------------------------
 
                         final_prompt = f"Contexto: {fs_context} | Instrucción: {command_text}"

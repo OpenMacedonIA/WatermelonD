@@ -215,6 +215,17 @@ function install_standard() {
         sudo systemctl enable mosquitto
         sudo systemctl start mosquitto
     fi
+    
+    # --- CONFIGURAR PERMISOS DE RED ---
+    # Agregar usuario al grupo netdev para NetworkManager (escaneo WiFi, etc.)
+    echo "Configurando permisos de red..."
+    if ! groups $USER | grep -q netdev; then
+        sudo usermod -aG netdev $USER
+        echo "✓ Usuario agregado al grupo 'netdev' (NetworkManager)"
+        echo "⚠️  NOTA: Debes cerrar sesión y volver a entrar para que los cambios surtan efecto"
+    else
+        echo "✓ Usuario ya pertenece al grupo 'netdev'"
+    fi
 
     # --- CONFIGURACIÓN DE PYTHON ---
     # --- CONFIGURACIÓN DE PYTHON CON UV ---
