@@ -1054,16 +1054,43 @@ def api_files_save():
 @app.route('/api/visual/content', methods=['GET'])
 def api_visual_content():
     """Sirve contenido visual (imágenes, PDFs) para la interfaz facial."""
-    # No requiere login estricto para que el frontend (ojos) pueda cargarlo, 
-    # pero idealmente debería estar protegido o ser local.
-    # Asumimos que la petición viene de localhost o red confiable.
+    # Security: Add path validation
     path = request.args.get('path')
-    if not path or not os.path.exists(path):
-        return "File not found", 404
+    
+    if not path:
+        return jsonify({'error': 'No path specified'}), 400
+    
+    # Resolve to absolute path to prevent traversal
+    try:
+        abs_path = os.path.realpath(path)
+    except Exception as e:
+        app_logger.warning(f"Invalid path provided: {path}, error: {e}")
+        return jsonify({'error': 'Invalid path'}), 400
+    
+    # Define allowed base directories
+    ALLOWED_DIRS = [
+        os.path.expanduser('~'),  # User home directory
+        '/tmp',                   # Temp directory
+        os.getcwd()               # Current working directory
+    ]
+    
+    # Check if path is within allowed directories
+    if not any(abs_path.startswith(os.path.realpath(d)) for d in ALLOWED_DIRS):
+        app_logger.warning(f"Access denied - path outside allowed dirs: {abs_path}")
+        return jsonify({'error': 'Access denied'}), 403
+    
+    if not os.path.exists(abs_path):
+        return jsonify({'error': 'File not found'}), 404
         
-    # Seguridad básica: evitar ../.. fuera de home si es posible, 
-    # pero el asistente debe poder mostrar cualquier cosa.
-    return send_file(path)
+    if not os.path.isfile(abs_path):
+        return jsonify({'error': 'Path is not a file'}), 400
+    
+    # Serve the file
+    try:
+        return send_file(abs_path)
+    except Exception as e:
+        app_logger.error(f"Error serving file {abs_path}: {e}")
+        return jsonify({'error': 'Error serving file'}), 500
 
 # --- KNOWLEDGE API ---
 

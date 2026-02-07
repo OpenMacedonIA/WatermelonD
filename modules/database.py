@@ -139,6 +139,19 @@ class DatabaseManager:
         ''')
 
         conn.commit()
+        
+        # Create indices for frequently queried columns
+        try:
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_interactions_timestamp ON interactions(timestamp DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_episodic_timestamp ON episodic_memory(timestamp DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_concepts_frequency ON concepts(frequency DESC)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_files_name ON files_index(name)')
+            logger.info("Database indices created successfully.")
+        except sqlite3.Error as e:
+            logger.warning(f"Error creating indices: {e}")
+        
+        conn.commit()
+        
         # FTS5 Virtual Tables for Fast Search
         try:
             # Facts FTS

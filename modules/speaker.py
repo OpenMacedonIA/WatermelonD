@@ -116,8 +116,14 @@ class Speaker:
         return False
 
     def _process_queue(self):
+        """Procesa la cola de habla (TTS)."""
         while True:
-            item = self.speak_queue.get()
+            # Blocking get with timeout - prevents CPU spinning
+            try:
+                item = self.speak_queue.get(timeout=1.0)
+            except queue.Empty:
+                # No items in queue, loop continues
+                continue
             
             # Handle WAV file directly
             if isinstance(item, dict) and item.get('type') == 'wav':
@@ -146,6 +152,7 @@ class Speaker:
                 if self.engine == 'dummy':
                     # print(f"\n[T.I.O. DICE]: {text}\n") # Reduced verbosity
                     time.sleep(1) 
+
                     # Logic continues to finally block
                 
                 else:

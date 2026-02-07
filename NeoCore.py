@@ -1278,8 +1278,11 @@ class NeoCore:
                 self.morning_summary_sent_today = False
 
             if current_time - last_hourly_check > 3600: 
-                self.check_calendar_events()
+                self._check_hourly_tasks()
                 last_hourly_check = current_time
+            
+            # Sleep to prevent CPU spinning
+            time.sleep(0.5)  # Check every 500ms instead of continuous loop
             
             # Tareas horarias (limpieza, mantenimiento)
             if int(time.time()) % 3600 == 0:
