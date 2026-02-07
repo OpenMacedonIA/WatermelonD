@@ -1,0 +1,261 @@
+# GRAPE-SECURE: Training Data Specification
+# Formato JSON: {"instruction": "Contexto: [...] | Comando en lenguaje natural", "cmd": "comando_shell"}
+# Categoría: SECURE (seguridad, antivirus, IDS, auditoría, hardening)
+# NO incluir: UFW, nmap (eso es categoría NETWORK/Syrah)
+
+# ============================================
+# 1. ANTIVIRUS (ClamAV)
+# ============================================
+
+{"instruction": "Escanea mis descargas por virus", "cmd": "clamscan --infected ~/Downloads/"}
+{"instruction": "Busca malware en descargas de forma recursiva", "cmd": "clamscan -r ~/Downloads/"}
+{"instruction": "Contexto: ['file=documento.pdf'] | Analiza este archivo", "cmd": "clamscan ~/Downloads/documento.pdf"}
+{"instruction": "Escanea todo el sistema por virus", "cmd": "clamscan -r /home/"}
+{"instruction": "Actualiza las firmas del antivirus", "cmd": "sudo freshclam"}
+{"instruction": "Muestra el estado del daemon de ClamAV", "cmd": "systemctl status clamav-daemon"}
+{"instruction": "Lista los archivos en cuarentena", "cmd": "ls -lh ~/.watermelond/quarantine/"}
+{"instruction": "Contexto: ['file=virus.exe.quarantine'] | Elimina este archivo de cuarentena", "cmd": "rm ~/.watermelond/quarantine/virus.exe.quarantine"}
+{"instruction": "Escanea solo archivos infectados en home", "cmd": "clamscan --infected -r /home/"}
+{"instruction": "Analiza documentos por malware", "cmd": "clamscan -r ~/Documentos/"}
+
+
+# ============================================
+# 2. DETECCIÓN DE INTRUSIONES (fail2ban)
+# ============================================
+
+{"instruction": "Muestra el estado de fail2ban", "cmd": "sudo fail2ban-client status"}
+{"instruction": "Lista las cárceles activas", "cmd": "sudo fail2ban-client status | grep 'Jail list'"}
+{"instruction": "Muestra IPs bloqueadas en SSH", "cmd": "sudo fail2ban-client status sshd"}
+{"instruction": "Contexto: ['ip=192.168.1.100'] | Desbloquea esta IP", "cmd": "sudo fail2ban-client set sshd unbanip 192.168.1.100"}
+{"instruction": "Revisa intentos de login fallidos", "cmd": "sudo fail2ban-client status sshd"}
+{"instruction": "Cuántas IPs están bloqueadas", "cmd": "sudo fail2ban-client status sshd | grep 'Currently banned'"}
+{"instruction": "Recarga la configuración de fail2ban", "cmd": "sudo fail2ban-client reload"}
+{"instruction": "Contexto: ['ip=10.0.0.50'] | Banea esta IP manualmente", "cmd": "sudo fail2ban-client set sshd banip 10.0.0.50"}
+{"instruction": "Lista todas las jails configuradas", "cmd": "sudo fail2ban-client status"}
+{"instruction": "Muestra log de fail2ban", "cmd": "sudo tail -50 /var/log/fail2ban.log"}
+
+
+# ============================================
+# 3. AUDITORÍA DE SEGURIDAD (Lynis)
+# ============================================
+
+{"instruction": "Ejecuta una auditoría completa del sistema", "cmd": "sudo lynis audit system"}
+{"instruction": "Escaneo rápido de vulnerabilidades", "cmd": "sudo lynis audit system --quick"}
+{"instruction": "Revisa la configuración de seguridad", "cmd": "sudo lynis show settings"}
+{"instruction": "Muestra el último reporte de auditoría", "cmd": "cat /var/log/lynis-report.dat"}
+{"instruction": "Auditoría silenciosa y rápida", "cmd": "sudo lynis audit system --quick --quiet"}
+{"instruction": "Muestra sugerencias de hardening", "cmd": "sudo lynis show suggestions"}
+{"instruction": "Auditoría solo de permisos", "cmd": "sudo lynis audit system --tests FILE"}
+
+
+# ============================================
+# 4. DETECCIÓN DE ROOTKITS
+# ============================================
+
+{"instruction": "Busca rootkits en el sistema", "cmd": "sudo chkrootkit"}
+{"instruction": "Escanea con rkhunter", "cmd": "sudo rkhunter --check --skip-keypress"}
+{"instruction": "Actualiza base de datos de rootkits", "cmd": "sudo rkhunter --update"}
+{"instruction": "Escaneo silencioso de rootkits", "cmd": "sudo chkrootkit -q"}
+{"instruction": "Reporte de advertencias de rkhunter", "cmd": "sudo rkhunter --check --report-warnings-only"}
+{"instruction": "Actualiza propiedades de archivos rkhunter", "cmd": "sudo rkhunter --propupd"}
+
+
+# ============================================
+# 5. INTEGRIDAD DE ARCHIVOS (AIDE)
+# ============================================
+
+{"instruction": "Inicializa base de datos de integridad", "cmd": "sudo aideinit"}
+{"instruction": "Verifica integridad de archivos críticos", "cmd": "sudo aide --check"}
+{"instruction": "Actualiza base de datos de AIDE", "cmd": "sudo aide --update"}
+{"instruction": "Compara archivos del sistema", "cmd": "sudo aide --check"}
+{"instruction": "Genera nueva base de datos AIDE", "cmd": "sudo aide --init"}
+
+
+# ============================================
+# 6. ANÁLISIS DE LOGS DE SEGURIDAD
+# ============================================
+
+{"instruction": "Muestra últimos intentos de login fallidos", "cmd": "sudo grep 'Failed password' /var/log/auth.log | tail -20"}
+{"instruction": "Revisa logs de autenticación recientes", "cmd": "sudo tail -50 /var/log/auth.log"}
+{"instruction": "Busca actividad sospechosa en logs", "cmd": "sudo grep -i 'refused' /var/log/syslog"}
+{"instruction": "Muestra accesos SSH exitosos", "cmd": "sudo grep 'Accepted' /var/log/auth.log | tail -10"}
+{"instruction": "Busca errores de seguridad en auth", "cmd": "sudo grep -iE 'error|fail|denied' /var/log/auth.log | tail -20"}
+{"instruction": "Lista logins de root", "cmd": "sudo grep 'root' /var/log/auth.log | tail -20"}
+{"instruction": "Muestra intentos de sudo", "cmd": "sudo grep 'sudo' /var/log/auth.log | tail -30"}
+
+
+# ============================================
+# 7. AUDITORÍA DE USUARIOS Y PRIVILEGIOS
+# (Solo auditoría de seguridad, gestión general va a TEMPRANILLO)
+# ============================================
+
+
+
+# SOLO comandos de AUDITORÍA DE SEGURIDAD:
+{"instruction": "Lista usuarios con privilegios sudo", "cmd": "grep -Po '^sudo.+:\\K.*$' /etc/group"}
+{"instruction": "Revisa usuarios con shell de login", "cmd": "cat /etc/passwd | grep /bin/bash"}
+{"instruction": "Busca archivos con bit SUID peligrosos", "cmd": "find / -perm -4000 -type f 2>/dev/null"}
+{"instruction": "Muestra último login de cada usuario", "cmd": "lastlog"}
+{"instruction": "Busca archivos world-writable", "cmd": "find / -type f -perm -002 2>/dev/null"}
+{"instruction": "Lista archivos sin dueño o grupo", "cmd": "find / -nouser -o -nogroup 2>/dev/null"}
+{"instruction": "Muestra usuarios que pueden hacer sudo", "cmd": "grep '^sudo:' /etc/group"}
+{"instruction": "Lista procesos de root con red", "cmd": "ps aux | grep root | grep -E 'LISTEN|ESTABLISHED'"}
+
+
+
+# ============================================
+# 8. SELINUX / APPARMOR (MAC)
+# ============================================
+
+{"instruction": "Muestra el estado de SELinux", "cmd": "sestatus"}
+{"instruction": "Activa modo enforcing de SELinux", "cmd": "sudo setenforce 1"}
+{"instruction": "Desactiva SELinux temporalmente", "cmd": "sudo setenforce 0"}
+{"instruction": "Estado de AppArmor", "cmd": "sudo apparmor_status"}
+{"instruction": "Lista perfiles de AppArmor", "cmd": "sudo aa-status"}
+{"instruction": "Recarga perfiles de AppArmor", "cmd": "sudo systemctl reload apparmor"}
+{"instruction": "Muestra violaciones de SELinux", "cmd": "sudo ausearch -m avc -ts recent"}
+
+
+# ============================================
+# 9. MONITOREO DE PROCESOS SOSPECHOSOS
+# (Solo auditoría de seguridad, no diagnóstico general)
+# ============================================
+
+
+
+# SOLO comandos de AUDITORÍA DE SEGURIDAD:
+{"instruction": "Procesos con mayor uso de CPU", "cmd": "ps aux --sort=-%cpu | head -10"}
+{"instruction": "Busca procesos sospechosos en tmp", "cmd": "ps aux | grep -iE 'nc|ncat|netcat|/tmp'"}
+{"instruction": "Lista conexiones TCP establecidas sospechosas", "cmd": "sudo netstat -ntp | grep ESTABLISHED"}
+{"instruction": "Procesos con mayor uso de memoria", "cmd": "ps aux --sort=-%mem | head -10"}
+{"instruction": "Busca shells inversas activas", "cmd": "ps aux | grep -iE 'bash -i|sh -i|/dev/tcp'"}
+{"instruction": "Lista procesos escuchando en puertos no estándar", "cmd": "sudo netstat -tulpn | grep -vE ':(22|80|443|53) '"}
+
+
+
+# ============================================
+# 10. ACTUALIZACIONES DE SEGURIDAD
+# ============================================
+
+{"instruction": "Lista actualizaciones de seguridad disponibles", "cmd": "apt list --upgradable | grep -i security"}
+{"instruction": "Instala solo parches de seguridad", "cmd": "sudo apt upgrade -y --security"}
+{"instruction": "Revisa vulnerabilidades conocidas", "cmd": "sudo check-support-status"}
+{"instruction": "Muestra paquetes sin actualizar", "cmd": "apt list --upgradable"}
+{"instruction": "Actualiza lista de paquetes", "cmd": "sudo apt update"}
+
+
+# ============================================
+# 11. CERTIFICADOS SSL/TLS
+# ============================================
+
+{"instruction": "Contexto: ['host=localhost', 'port=443'] | Verifica certificado SSL", "cmd": "openssl s_client -connect localhost:443 -servername localhost"}
+{"instruction": "Contexto: ['host=localhost', 'port=443'] | Revisa expiración del certificado", "cmd": "echo | openssl s_client -connect localhost:443 2>/dev/null | openssl x509 -noout -dates"}
+{"instruction": "Lista certificados del sistema", "cmd": "ls -la /etc/ssl/certs/"}
+{"instruction": "Contexto: ['cert=/etc/ssl/certs/neo.crt'] | Valida este certificado", "cmd": "openssl verify /etc/ssl/certs/neo.crt"}
+{"instruction": "Contexto: ['cert=/etc/ssl/certs/neo.crt'] | Muestra información del certificado", "cmd": "openssl x509 -in /etc/ssl/certs/neo.crt -text -noout"}
+
+
+# ============================================
+# 12. HARDENING Y VALIDACIÓN DE CONFIGURACIÓN
+# (Solo validación de seguridad, configuración general va a CABERNET/TEMPRANILLO)
+# ============================================
+
+
+
+# SOLO comandos de VALIDACIÓN DE SEGURIDAD:
+{"instruction": "Revisa configuración activa de SSH", "cmd": "sudo sshd -T"}
+{"instruction": "Valida sintaxis de configuración SSH", "cmd": "sudo sshd -t"}
+{"instruction": "Contexto: ['param=PermitRootLogin'] | Verifica parámetro SSH", "cmd": "sudo sshd -T | grep PermitRootLogin"}
+{"instruction": "Lista puertos en escucha del sistema", "cmd": "sudo ss -tlnp"}
+{"instruction": "Verifica si PasswordAuthentication está deshabilitado", "cmd": "sudo sshd -T | grep PasswordAuthentication"}
+
+
+
+# ============================================
+# 13. MALWARE DETECTION (Linux Malware Detect)
+# ============================================
+
+{"instruction": "Escanea home por malware con maldet", "cmd": "sudo maldet -a /home/"}
+{"instruction": "Actualiza firmas de maldet", "cmd": "sudo maldet -u"}
+{"instruction": "Lista archivos en cuarentena de maldet", "cmd": "sudo maldet --quarantine-list"}
+{"instruction": "Escaneo rápido de directorios web", "cmd": "sudo maldet -a /var/www/"}
+
+
+# ============================================
+# 14. ANÁLISIS FORENSE BÁSICO
+# ============================================
+
+{"instruction": "Muestra archivos modificados en las últimas 24h", "cmd": "find /etc /home -type f -mtime 0 2>/dev/null"}
+{"instruction": "Lista archivos accedidos recientemente", "cmd": "find /home -type f -atime -1 2>/dev/null"}
+{"instruction": "Busca scripts en /tmp", "cmd": "find /tmp -type f -name '*.sh' -o -name '*.py' 2>/dev/null"}
+{"instruction": "Muestra procesos en estado zombie", "cmd": "ps aux | grep 'Z'"}
+
+
+# ============================================
+# 15. TRIPWIRE (Integridad Alternativa)
+# ============================================
+
+{"instruction": "Inicializa base de datos de Tripwire", "cmd": "sudo tripwire --init"}
+{"instruction": "Ejecuta comprobación de integridad", "cmd": "sudo tripwire --check"}
+{"instruction": "Actualiza base de datos de Tripwire", "cmd": "sudo tripwire --update"}
+{"instruction": "Muestra reporte de Tripwire", "cmd": "sudo tripwire --print-report"}
+
+
+# ============================================
+# 16. TIGER (Security Audit)
+# ============================================
+
+{"instruction": "Ejecuta auditoría con Tiger", "cmd": "sudo tiger"}
+{"instruction": "Escaneo de seguridad completo con Tiger", "cmd": "sudo tiger -c /etc/tiger/tigerrc"}
+{"instruction": "Muestra último reporte de Tiger", "cmd": "cat /var/log/tiger/*"}
+
+
+# ============================================
+# 17. COMANDOS COMBINADOS (PIPELINES)
+# ============================================
+
+{"instruction": "Muestra IPs que más intentos de login tienen", "cmd": "sudo grep 'Failed password' /var/log/auth.log | awk '{print $11}' | sort | uniq -c | sort -nr | head -10"}
+{"instruction": "Lista usuarios que más usan sudo", "cmd": "sudo grep 'sudo' /var/log/auth.log | awk '{print $5}' | sort | uniq -c | sort -nr"}
+{"instruction": "Busca archivos grandes modificados hoy", "cmd": "find /home -type f -mtime 0 -size +10M 2>/dev/null"}
+{"instruction": "Procesos usando más recursos", "cmd": "ps aux --sort=-%mem,-%cpu | head -15"}
+
+
+# ============================================
+# 18. FUNCIONES PYTHON (SecuritySkill)
+# ============================================
+
+{"instruction": "Escanea mis descargas con ClamAV", "cmd": "SecuritySkill.scan_downloads()"}
+{"instruction": "Lista archivos en cuarentena", "cmd": "SecuritySkill.list_quarantine()"}
+{"instruction": "Actualiza firmas de antivirus", "cmd": "SecuritySkill.update_virus_signatures()"}
+{"instruction": "Dame el estado de seguridad", "cmd": "SecuritySkill.security_status()"}
+{"instruction": "Contexto: ['file=documento.pdf'] | Escanea este archivo", "cmd": "SecuritySkill.scan_file('documento.pdf')"}
+
+
+# ============================================
+# NOTAS PARA ENTRENAMIENTO
+# ============================================
+#
+# HERRAMIENTAS CUBIERTAS:
+# ✅ ClamAV - Antivirus
+# ✅ fail2ban - IDS/IPS
+# ✅ Lynis - Auditoría
+# ✅ chkrootkit/rkhunter - Rootkits
+# ✅ AIDE - Integridad de archivos
+# ✅ SELinux/AppArmor - MAC
+# ✅ Linux Malware Detect - Malware
+# ✅ Tripwire - Integridad
+# ✅ Tiger - Auditoría
+# ✅ SecuritySkill - Funciones Python
+#
+#
+# FORMATO JSON:
+# {"instruction": "Contexto: [...] | Comando", "cmd": "shell_command"}
+#
+# CONTEXTO: Opcional, para parámetros variables
+# Ejemplos:
+# - ['ip=192.168.1.1']
+# - ['file=documento.pdf']
+# - ['host=localhost', 'port=443']
+#
+# TOTAL: ~120 ejemplos base
+# OBJETIVO: Expandir a 400-600 pares para buen entrenamiento

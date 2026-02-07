@@ -5,6 +5,7 @@ import logging
 import os
 import psutil
 from collections import deque
+from modules.virus_scanner import VirusScanner
 
 logger = logging.getLogger("NeoGuard")
 
@@ -20,7 +21,11 @@ class Guard:
         
         # Estado para contadores de ventana de tiempo
         # Estructura: { "signature_id": [timestamp1, timestamp2, ...] }
-        self.state = {} 
+        self.state = {}
+        
+        # Virus Scanner (ClamAV Integration)
+        self.virus_scanner = VirusScanner()
+        self.scanned_files = set()  # Track ya escaneados para no repetir 
 
     def load_signatures(self):
         if not os.path.exists(SIGNATURES_FILE):
@@ -67,8 +72,11 @@ class Guard:
 
                 # 2. Analizar Sistema (Metric-based Signatures)
                 self.check_system_signatures()
+                
+                # 3. Escanear descargas (Virus Scanner)
+                self.scan_recent_downloads()
 
-                time.sleep(1) # Intervalo de chequeo
+                time.sleep(5) # Intervalo de chequeo (cada 5 segundos)
             except Exception as e:
                 logger.error(f"Error en ciclo de Neo Guard: {e}")
                 time.sleep(5)
@@ -149,4 +157,63 @@ class Guard:
             'type': 'speak', 
             'text': msg,
             'priority': 'high'
+        })
+    
+    def scan_recent_downloads(self):
+        """Escanea archivos recién descargados por virus."""
+        if not self.virus_scanner.clamav_available:
+            return
+        
+        downloads_dir = os.path.expanduser("~/Downloads")
+        if not os.path.exists(downloads_dir):
+            return
+        
+        now = time.time()
+        
+        try:
+            for filename in os.listdir(downloads_dir):
+                filepath = os.path.join(downloads_dir, filename)
+                
+                # Solo archivos
+                if not os.path.isfile(filepath):
+                    continue
+                
+                # Skip si ya fue escaneado
+                if filepath in self.scanned_files:
+                    continue
+                
+                # Solo archivos recientes (últimos 10 minutos)
+                mtime = os.path.getmtime(filepath)
+                if now - mtime > 600:
+                    continue
+                
+                # Escanear archivo
+                is_infected, virus_name = self.virus_scanner.scan_file(filepath)
+                
+                # Marcar como escaneado
+                self.scanned_files.add(filepath)
+                
+                if is_infected:
+                    self.trigger_virus_alert(filepath, virus_name)
+                    
+        except Exception as e:
+            logger.error(f"Error escaneando descargas: {e}")
+    
+    def trigger_virus_alert(self, filepath, virus_name):
+        """Alerta cuando se detecta un virus."""
+        filename = os.path.basename(filepath)
+        msg = f"ALERTA DE VIRUS: {virus_name} detectado en {filename}"
+        logger.error(msg)
+        
+        # Mover a cuarentena
+        if self.virus_scanner.quarantine_file(filepath):
+            msg += ". Archivo movido a cuarentena."
+        else:
+            msg += ". No se pudo mover a cuarentena."
+        
+        # Alerta de voz urgente
+        self.event_queue.put({
+            'type': 'speak',
+            'text': msg,
+            'priority': 'critical'
         })

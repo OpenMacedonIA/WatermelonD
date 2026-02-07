@@ -157,6 +157,8 @@ function install_standard() {
             liblzma-dev ffmpeg git-lfs bluez bluez-tools
             evince okular feh eog xdg-utils
             wireless-tools iw
+            # Security Tools (Antivirus, IDS, Audit, Rootkits)
+            clamav clamav-daemon fail2ban lynis chkrootkit rkhunter aide tripwire tiger
         )
         
         sudo apt-get update

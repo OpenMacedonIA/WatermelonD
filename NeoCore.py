@@ -61,6 +61,11 @@ except ImportError:
     Brain = None
 
 try:
+    from modules.secure_intent_matcher import SecureIntentMatcher
+except ImportError:
+    SecureIntentMatcher = None
+
+try:
     import modules.web_admin as web_admin_module
     from modules.web_admin import run_server, update_face, set_audio_status
     WEB_ADMIN_DISPONIBLE = True
@@ -933,7 +938,86 @@ class NeoCore:
                         # --- Context Injection Strategy ---
                         # Network models (syrah/cabernet): ONLY network aliases
                         # Other models: Full filesystem context (pwd + ls)
-                        if router_label in ["syrah", "syrach", "cabernet"]:
+                        # =========================
+                        # SECURE CATEGORY HANDLER
+                        # =========================
+                        if router_label == "secure":
+                            app_logger.info(f"🔒 SECURE category detected. Using SecureIntentMatcher...")
+                            
+                            if not self.secure_intent_matcher:
+                                self.speak("El sistema de seguridad no está disponible.")
+                                return
+                            
+                            # Intentar match con SecureIntentMatcher
+                            match_result = self.secure_intent_matcher.match_intent(command_text)
+                            
+                            if match_result:
+                                cmd, context, category, is_python = match_result
+                                
+                                app_logger.info(f"✅ Intent matched: category={category}, context={context}")
+                                
+                                # Si es función Python (SecuritySkill)
+                                if is_python:
+                                    try:
+                                        # Parsear: SecuritySkill.method()
+                                        if 'SecuritySkill.' in cmd:
+                                            method_name = cmd.split('SecuritySkill.')[1].replace('()', '')
+                                            
+                                            # Ejecutar método del SecuritySkill
+                                            if hasattr(self, 'skills_manager') and self.skills_manager:
+                                                from modules.BlueberrySkills.security import SecuritySkill
+                                                # Crear instancia temporal si no existe
+                                                skill = SecuritySkill(self)
+                                                if hasattr(skill, method_name):
+                                                    method = getattr(skill, method_name)
+                                                    method(command_text, "")
+                                                    return
+                                        
+                                        self.speak("Función de seguridad no disponible.")
+                                        return
+                                        
+                                    except Exception as e:
+                                        app_logger.error(f"Error ejecutando función Python: {e}")
+                                        self.speak("Error ejecutando comando de seguridad.")
+                                        return
+                                
+                                # Si es comando shell
+                                else:
+                                    # Comandos destructivos requieren confirmación
+                                    destructive_keywords = ['rm', 'delete', 'ban', 'block', 'kill']
+                                    needs_confirmation = any(kw in cmd.lower() for kw in destructive_keywords)
+                                    
+                                    if needs_confirmation:
+                                        # Guardar para confirmación
+                                        self.pending_mango_command = cmd
+                                        self.speak(f"Voy a ejecutar: {cmd}. ¿Confirmas?")
+                                        return
+                                    else:
+                                        # Ejecutar directo
+                                        success, output = self.sysadmin_manager.run_command(cmd)
+                                        
+                                        if success:
+                                            # Filtrar output largo
+                                            if len(output) > 500:
+                                                lines = output.split('\n')
+                                                summary = '\n'.join(lines[:10])
+                                                self.speak(f"Comando ejecutado. Primeras líneas: {summary}")
+                                            else:
+                                                self.speak(f"Resultado: {output}")
+                                        else:
+                                            self.speak(f"Error: {output}")
+                                        
+                                        return
+                            else:
+                                # No hay match en SecureIntentMatcher
+                                app_logger.warning(f"❌ No intent match for secure command: {command_text}")
+                                self.speak("No reconozco ese comando de seguridad. ¿Puedes reformularlo?")
+                                return
+                        
+                        # =========================
+                        # NETWORK/SYSTEM CATEGORIES
+                        # =========================
+                        elif router_label in ["syrah", "syrach", "cabernet"]:
                             # Network models: Only SSH/network aliases
                             fs_context = "[]"
                             try:

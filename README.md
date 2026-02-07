@@ -43,9 +43,7 @@
 #### Hybrid Intelligence
 
 * **Local LLM**: Integration with **Gemma 2B** (4-bit) for fluid conversations.
-* **SysAdmin AI**: **Lime + Grape Models** (T5) for robust Natural Language instruction processing.
-* **Memory (Brain)**: Long-term memory system and alias learning.
-* **RAG (Retrieval-Augmented Generation)**: Query local documents.
+* **SysAdmin AI (BrainNut)**: **Lime + Grape Models** (T5) for Natural Language to Bash translation.
 
 #### Natural Interaction
 
@@ -118,8 +116,7 @@ Access the Web Interface at `http://localhost:5000`.
 #### Inteligencia Híbrida
 
 * **LLM Local**: **Gemma 2B** para conversaciones.
-* **SysAdmin AI**: **Lime + Modelos Grape** (T5) para procesamiento robusto de instrucciones.
-* **Memoria (Brain)**: Memoria a largo plazo y RAG.
+* **SysAdmin AI (BrainNut)**: **Lime + Modelos Grape** (T5) para traduccion lenguaje natural a Bash.
 
 #### Interacción Natural
 
@@ -127,13 +124,11 @@ Access the Web Interface at `http://localhost:5000`.
 * **Habla**: Síntesis natural con **Piper TTS**.
 * **Interfaz Visual**: "Cara" reactiva que muestra estados del asistente.
 
-#### Advanced Capabilities
+#### Seguridad y Automatizacion
 
-* **WatermelonGuard**: Monitor de seguridad en tiempo real.
-* **Auto-Diagnóstico**: Análisis de logs asistido por IA.
-* **Multi-Room**: Control de dispositivos Cast.
-
-#### Administración de Sistemas & Redes
+* **WatermelonGuard**: IDS que detecta brute-force SSH, DoS y anomalias del sistema.
+* **Auto-Diagnostico**: Analisis de logs asistido por IA.
+* **Multi-Room Cast**: Control de dispositivos Chromecast (requiere pychromecast).
 
 ### Instalación
 
