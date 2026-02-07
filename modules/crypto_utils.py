@@ -48,7 +48,7 @@ class PasswordCrypto:
         
         # Derive key using PBKDF2
         salt = b'watermelond_ssh_password_salt_v1'
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
