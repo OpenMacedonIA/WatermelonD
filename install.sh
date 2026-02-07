@@ -148,6 +148,7 @@ function install_standard() {
             libbz2-dev libreadline-dev libsqlite3-dev libffi-dev
             liblzma-dev ffmpeg git-lfs bluez bluez-tools
             evince okular feh eog xdg-utils
+            wireless-tools iw
         )
         
         sudo apt-get update
@@ -365,8 +366,10 @@ function install_standard() {
     
     # Crear servicios
     mkdir -p "$USER_HOME/.config/systemd/user"
+    echo ""
+    echo "Configurando servicios systemd..."
     
-    # Servicio Core
+    # neo.service
     cat <<EOT > "$USER_HOME/.config/systemd/user/neo.service"
 [Unit]
 Description=Neo Core Backend Service (WatermelonD)
@@ -384,6 +387,17 @@ SyslogIdentifier=watermelon_core
 [Install]
 WantedBy=default.target
 EOT
+
+    # Configure sudo for WiFi scanning (no password required)
+    echo "Configurando permisos sudo para escaneo WiFi..."
+    sudo tee /etc/sudoers.d/watermelond-wifi > /dev/null <<EOF
+# WatermelonD WiFi Scanning - No password required
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/iwlist * scan
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/iw dev * scan
+$USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi *
+EOF
+    sudo chmod 0440 /etc/sudoers.d/watermelond-wifi
+    echo "✓ Permisos de escaneo WiFi configurados"
 
     # Recargar y Habilitar (Solo Core)
     sudo loginctl enable-linger $USER_NAME
