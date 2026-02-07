@@ -280,6 +280,15 @@ function install_standard() {
         fi
     fi
 
+    # --- PERSONALIZACIÓN INTERACTIVA (NUEVA SECCIÓN) ---
+    if whiptail --title "Personalización" --yesno \
+        "¿Deseas personalizar la configuración del sistema?\n\nPuedes elegir entre modo simple o avanzado." \
+        12 60; then
+        configure_personalization
+    else
+        whiptail --msgbox "Saltando personalización.\n\nPuedes editar config/config.json manualmente después de la instalación." 10 60
+    fi
+
     # --- INICIALIZACIÓN BD ---
     echo "[PASO 3.2/6] Inicializando BD..."
     # (Autocuración eliminada por brevedad, asumiendo que el archivo existe o el usuario lo restaura)
@@ -502,8 +511,323 @@ EOT
     [ -f "resources/tools/password_helper.py" ] && $VENV_DIR/bin/python resources/tools/password_helper.py --user admin --password admin
 
     echo ""
-    echo " Instalación Completa Finalizada."
+    echo "✅ Instalación Completa Finalizada."
 }
+
+# ==============================================================================
+# FUNCIONES DE PERSONALIZACIÓN
+# ==============================================================================
+
+function configure_personalization() {
+    # Seleccionar modo de configuración
+    CONFIG_MODE=$(whiptail --title "Modo de Configuración" --menu \
+        "Elige el nivel de personalización:" 15 70 2 \
+        "1" "Simple - Solo opciones esenciales (Recomendado)" \
+        "2" "Avanzado - Todas las opciones disponibles" \
+        3>&1 1>&2 2>&3)
+    
+    # Si el usuario cancela, usar modo simple por defecto
+    if [ $? -ne 0 ]; then
+        whiptail --msgbox "Usando configuración simple por defecto." 8 50
+        CONFIG_MODE="1"
+    fi
+    
+    # Variables globales para configuración
+    USER_NICKNAME="Usuario"
+    CUSTOM_WAKE_WORDS=""
+    WEB_PORT="5000"
+    
+    if [ "$CONFIG_MODE" = "1" ]; then
+        configure_simple_mode
+    else
+        configure_advanced_mode
+    fi
+    
+    # Aplicar todas las configuraciones
+    apply_personalization_config
+}
+
+function configure_simple_mode() {
+    whiptail --title "Modo Simple" --msgbox \
+        "Configuraremos solo las opciones esenciales:\n\n• Nombre de usuario\n• Palabras de activación\n• Puerto web (opcional)" \
+        12 60
+    
+    # 1. Nombre de Usuario
+    USER_NICKNAME=$(whiptail --inputbox \
+        "¿Cómo quieres que te llame el asistente?" \
+        10 60 "Usuario" 3>&1 1>&2 2>&3)
+    
+    if [ $? -ne 0 ] || [ -z "$USER_NICKNAME" ]; then
+        USER_NICKNAME="Usuario"
+    fi
+    
+    # 2. Wake Words Personalizadas (Opcional)
+    if whiptail --title "Palabras de Activación" --yesno \
+        "Palabras actuales: neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
+        10 60; then
+        
+        CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
+            "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,hola" \
+            12 60 "" 3>&1 1>&2 2>&3)
+    fi
+    
+    # 3. Puerto Web Admin (Opcional)
+    if whiptail --title "Puerto Web" --yesno \
+        "El puerto por defecto es 5000.\n\n¿Deseas cambiarlo?" \
+        10 60; then
+        
+        WEB_PORT=$(whiptail --inputbox \
+            "Puerto para la interfaz web:" \
+            10 60 "5000" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$WEB_PORT" ]; then
+            WEB_PORT="5000"
+        fi
+    fi
+    
+    whiptail --msgbox "Configuración simple completada." 8 50
+}
+
+function configure_advanced_mode() {
+    whiptail --title "Modo Avanzado" --msgbox \
+        "Configuraremos todas las opciones disponibles:\n\n• Nombre de usuario\n• Palabras de activación\n• Servidores SSH\n• Alias de red\n• Puerto web\n• Preferencias TTS" \
+        14 60
+    
+    # 1. Nombre de Usuario
+    USER_NICKNAME=$(whiptail --inputbox \
+        "¿Cómo quieres que te llame el asistente?" \
+        10 60 "Usuario" 3>&1 1>&2 2>&3)
+    
+    if [ $? -ne 0 ] || [ -z "$USER_NICKNAME" ]; then
+        USER_NICKNAME="Usuario"
+    fi
+    
+    # 2. Wake Words Personalizadas
+    if whiptail --title "Palabras de Activación" --yesno \
+        "Palabras actuales: neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
+        10 60; then
+        
+        CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
+            "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,hola,jarvis" \
+            12 60 "" 3>&1 1>&2 2>&3)
+    fi
+    
+    # 3. Servidores SSH
+    if whiptail --title "Servidores SSH" --yesno \
+        "¿Deseas configurar servidores SSH remotos?\n\nPuedes agregar servidores como 'syrah' para control remoto." \
+        12 60; then
+        
+        setup_ssh_servers_whiptail
+    fi
+    
+    # 4. Alias de Red
+    if whiptail --title "Alias de Red" --yesno \
+        "¿Deseas configurar alias de red?\n\nEjemplo: router=192.168.1.1, nas=192.168.1.50" \
+        12 60; then
+        
+        setup_network_aliases_whiptail
+    fi
+    
+    # 5. Puerto Web Admin
+    WEB_PORT=$(whiptail --inputbox \
+        "Puerto para la interfaz web:" \
+        10 60 "5000" 3>&1 1>&2 2>&3)
+    
+    if [ $? -ne 0 ] || [ -z "$WEB_PORT" ]; then
+        WEB_PORT="5000"
+    fi
+    
+    # 6. Preferencias TTS (Solo informar por ahora)
+    whiptail --title "Configuración TTS" --msgbox \
+        "Las preferencias de voz TTS se pueden configurar después de la instalación editando:\n\nconfig/config.json\n\nCampo: 'tts.piper_model'" \
+        12 60
+    
+    whiptail --msgbox "Configuración avanzada completada." 8 50
+}
+
+function setup_ssh_servers_whiptail() {
+    mkdir -p jsons
+    echo "{}" > jsons/servers.json
+    
+    while true; do
+        # Preguntar si desea añadir otro servidor
+        if [ -f "jsons/servers.json" ] && [ "$(cat jsons/servers.json)" != "{}" ]; then
+            if ! whiptail --title "Servidores SSH" --yesno \
+                "¿Deseas añadir otro servidor SSH?" 8 50; then
+                break
+            fi
+        fi
+        
+        # Alias del servidor
+        SSH_ALIAS=$(whiptail --inputbox \
+            "Alias del servidor (ej: syrah, produccion, desarrollo):" \
+            10 60 "" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$SSH_ALIAS" ]; then
+            break
+        fi
+        
+        # Host/IP
+        SSH_HOST=$(whiptail --inputbox \
+            "Host o dirección IP del servidor:" \
+            10 60 "" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$SSH_HOST" ]; then
+            continue
+        fi
+        
+        # Usuario
+        SSH_USER=$(whiptail --inputbox \
+            "Usuario SSH:" \
+            10 60 "root" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$SSH_USER" ]; then
+            SSH_USER="root"
+        fi
+        
+        # Puerto
+        SSH_PORT=$(whiptail --inputbox \
+            "Puerto SSH:" \
+            10 60 "22" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$SSH_PORT" ]; then
+            SSH_PORT="22"
+        fi
+        
+        # Método de autenticación
+        SSH_AUTH=$(whiptail --title "Autenticación SSH" --menu \
+            "Selecciona el método de autenticación:" 12 70 2 \
+            "1" "Clave SSH (Recomendado)" \
+            "2" "Contraseña" \
+            3>&1 1>&2 2>&3)
+        
+        if [ "$SSH_AUTH" = "1" ]; then
+            SSH_KEY=$(whiptail --inputbox \
+                "Ruta a la clave privada SSH:\n\nEjemplo: ~/.ssh/id_rsa" \
+                12 60 "$HOME/.ssh/id_rsa" 3>&1 1>&2 2>&3)
+            
+            if [ $? -ne 0 ] || [ -z "$SSH_KEY" ]; then
+                whiptail --msgbox "Clave SSH no proporcionada. Servidor no añadido." 8 50
+                continue
+            fi
+            
+            python3 -c "import json; data=json.load(open('jsons/servers.json')); data['$SSH_ALIAS']={'host':'$SSH_HOST','user':'$SSH_USER','port':$SSH_PORT,'key_path':'$SSH_KEY','password':None}; json.dump(data, open('jsons/servers.json','w'), indent=4)"
+        else
+            SSH_PASS=$(whiptail --passwordbox \
+                "Contraseña SSH para $SSH_USER@$SSH_HOST:" \
+                10 60 3>&1 1>&2 2>&3)
+            
+            if [ $? -ne 0 ] || [ -z "$SSH_PASS" ]; then
+                whiptail --msgbox "Contraseña no proporcionada. Servidor no añadido." 8 50
+                continue
+            fi
+            
+            # Ofuscar contraseña con base64
+            ENC_PASS=$(echo -n "$SSH_PASS" | base64)
+            python3 -c "import json; data=json.load(open('jsons/servers.json')); data['$SSH_ALIAS']={'host':'$SSH_HOST','user':'$SSH_USER','port':$SSH_PORT,'key_path':None,'password':'ENC:$ENC_PASS'}; json.dump(data, open('jsons/servers.json','w'), indent=4)"
+        fi
+        
+        whiptail --msgbox "✓ Servidor '$SSH_ALIAS' añadido correctamente" 8 50
+    done
+    
+    # Mostrar resumen
+    if [ -f "jsons/servers.json" ] && [ "$(cat jsons/servers.json)" != "{}" ]; then
+        SERVER_COUNT=$(python3 -c "import json; print(len(json.load(open('jsons/servers.json'))))")
+        whiptail --msgbox "Configuración SSH completada.\n\nServidores añadidos: $SERVER_COUNT" 10 50
+    fi
+}
+
+function setup_network_aliases_whiptail() {
+    whiptail --title "Alias de Red" --msgbox \
+        "Configura alias para dispositivos de red.\n\nEjemplos:\n• router = 192.168.1.1\n• nas = 192.168.1.50\n• servidor = 10.0.0.100" \
+        14 60
+    
+    while true; do
+        # Preguntar si desea añadir otro alias
+        CURRENT_ALIASES=$(python3 -c "import json; data=json.load(open('config/skills.json')); print(len(data.get('network',{}).get('config',{}).get('aliases',{})))" 2>/dev/null || echo "0")
+        
+        if [ "$CURRENT_ALIASES" -gt "0" ]; then
+            if ! whiptail --title "Alias de Red" --yesno \
+                "Alias configurados: $CURRENT_ALIASES\n\n¿Deseas añadir otro?" 10 50; then
+                break
+            fi
+        fi
+        
+        # Nombre del alias
+        ALIAS_NAME=$(whiptail --inputbox \
+            "Nombre del alias (ej: router, nas, servidor):" \
+            10 60 "" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$ALIAS_NAME" ]; then
+            break
+        fi
+        
+        # IP del dispositivo
+        ALIAS_IP=$(whiptail --inputbox \
+            "Dirección IP de '$ALIAS_NAME':" \
+            10 60 "" 3>&1 1>&2 2>&3)
+        
+        if [ $? -ne 0 ] || [ -z "$ALIAS_IP" ]; then
+            continue
+        fi
+        
+        # Agregar a skills.json usando Python
+        python3 -c "import json; data=json.load(open('config/skills.json')); data.setdefault('network',{}).setdefault('config',{}).setdefault('aliases',{})['$ALIAS_NAME']='$ALIAS_IP'; json.dump(data, open('config/skills.json','w'), indent=4, ensure_ascii=False)"
+        
+        whiptail --msgbox "✓ Alias '$ALIAS_NAME' → '$ALIAS_IP' añadido" 8 50
+    done
+    
+    # Mostrar resumen
+    if [ "$CURRENT_ALIASES" -gt "0" ]; then
+        whiptail --msgbox "Configuración de alias de red completada.\n\nTotal de alias: $CURRENT_ALIASES" 10 50
+    fi
+}
+
+function apply_personalization_config() {
+    # Crear/Actualizar config.json con las personalizaciones
+    python3 << EOF
+import json
+import os
+
+config_path = 'config/config.json'
+if os.path.exists(config_path):
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+else:
+    config = {}
+
+# Aplicar user_nickname
+config['user_nickname'] = "$USER_NICKNAME"
+
+# Aplicar wake_words personalizadas
+default_wake_words = ['neo', 'tio', 'bro']
+if "$CUSTOM_WAKE_WORDS".strip():
+    custom = [w.strip() for w in "$CUSTOM_WAKE_WORDS".split(',')]
+    config['wake_words'] = default_wake_words + custom
+else:
+    config['wake_words'] = default_wake_words
+
+# Aplicar puerto web admin
+if 'web_admin' not in config:
+    config['web_admin'] = {}
+config['web_admin']['port'] = int("$WEB_PORT")
+config['web_admin']['host'] = '0.0.0.0'
+config['web_admin']['debug'] = False
+
+# Guardar
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=4, ensure_ascii=False)
+
+print("✓ Configuración personalizada guardada")
+EOF
+    
+    whiptail --msgbox "¡Personalización completada!\n\nTu nombre: $USER_NICKNAME\nPuerto web: $WEB_PORT" 10 50
+}
+
+# ==============================================================================
+# FIN FUNCIONES DE PERSONALIZACIÓN
+# ==============================================================================
+
 
 function install_web_client() {
     echo "========================================="
