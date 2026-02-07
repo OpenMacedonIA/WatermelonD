@@ -109,36 +109,9 @@ class SpecificModelRunner:
                 del self.tokenizers[label]
                 del self.last_access[label]
 
+
     def _load_model_into_memory(self, label):
         """Carga física del modelo. No gestiona eviction."""
-        if label in self.sessions:
-            self.last_access[label] = time.time()
-            return
-
-        model_dir = os.path.join(self.models_base_path, label)
-        
-        # Check for encoder-decoder architecture (T5-style models)
-        encoder_file = os.path.join(model_dir, "encoder_model_quantized.onnx")
-        decoder_file = os.path.join(model_dir, "decoder_model_quantized.onnx")
-        single_model_file = os.path.join(model_dir, "model.onnx")
-        
-        if not os.path.exists(model_dir):
-            raise FileNotFoundError(f"Model directory not found: {model_dir}")
-        
-        # Determine model type
-        if os.path.exists(encoder_file) and os.path.exists(decoder_file):
-            app_logger.info(f"Cargando Modelo Encoder-Decoder ({label}) en RAM...")
-            tokenizer = AutoTokenizer.from_pretrained(model_dir)
-            encoder_session = ort.InferenceSession(encoder_file)
-            decoder_session = ort.InferenceSession(decoder_file)
-            
-            # Store as tuple (encoder, decoder)
-            self.sessions[label] = (encoder_session, decoder_session)
-            self.tokenizers[label] = tokenizer
-            self.last_access[label] = time.time()
-            
-        elif os.path.exists(single_model_file):
-            app_logger.info(f"Cargando Modelo Single ({label}) en RAM...")
         with self._cleanup_lock:
             if label in self.sessions:
                 self.last_access[label] = time.time()
