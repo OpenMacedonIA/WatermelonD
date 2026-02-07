@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_file, send_from_directory, abort
 import base64
 from flask_socketio import SocketIO, emit
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import functools
 import os
 import json
@@ -41,6 +43,14 @@ csrf = CSRFProtect(app)
 # Initialize SocketIO
 # Revert to threading for compatibility with PyAudio/Voice Threads
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
+
+# Initialize Rate Limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"  # Use Redis in production: "redis://localhost:6379"
+)
 
 # Global System Status
 AUDIO_STATUS = {'output': False, 'input': False}
@@ -545,12 +555,14 @@ def api_network():
 
 @app.route('/api/network/speedtest', methods=['POST'])
 @login_required
+@limiter.limit("3 per hour")
 def api_network_speedtest():
     """API para ejecutar test de velocidad."""
     return jsonify(sys_admin.run_speedtest())
 
 @app.route('/api/wifi/scan', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute")
 def api_wifi_scan():
     """API para escanear redes WiFi."""
     result = wifi_manager.scan()
@@ -564,6 +576,7 @@ def api_wifi_scan():
 
 @app.route('/api/wifi/connect', methods=['POST'])
 @login_required
+@limiter.limit("5 per minute")
 def api_wifi_connect():
     """API para conectar a una red WiFi."""
     data = request.json
@@ -631,8 +644,9 @@ def api_config_save():
 
 @app.route('/api/terminal', methods=['POST'])
 @login_required
+@limiter.limit("30 per minute")
 def api_terminal():
-    """API para ejecutar comandos de terminal con estado (cwd) por sesión."""
+    """API para ejecutar comandos en la terminal con estado (cwd) por sesión."""
     data = request.json
     cmd = data.get('command')
     term_id = str(data.get('term_session', '1')) # Default to session 1

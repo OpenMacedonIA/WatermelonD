@@ -38,3 +38,4 @@ Flask-APScheduler
 pypdf
 SQLAlchemy
 requests
+Flask-Limiter

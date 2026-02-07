@@ -88,3 +88,4 @@ Thumbs.db
 
 # User Requested Ignore
 # resources/
+.env
