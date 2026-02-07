@@ -7,10 +7,10 @@ sys.path.append(os.getcwd())
 from test_lime_interactive import LimeTester
 
 def run_tests():
-    print("--- 🍈 INICIANDO CARGA DEL MODELO ---")
+    print("--- [LIME] INICIANDO CARGA DEL MODELO ---")
     tester = LimeTester()
     if not tester.load_model():
-        print("❌ Error cargando el modelo.")
+        print("[ERROR] Error cargando el modelo.")
         return
 
     # ==========================================

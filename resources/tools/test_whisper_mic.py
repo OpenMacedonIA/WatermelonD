@@ -13,9 +13,9 @@ try:
     from faster_whisper import WhisperModel
     print("Loading model 'small' on cpu (int8)...")
     model = WhisperModel("small", device="cpu", compute_type="int8")
-    print("✅ Model loaded.")
+    print("[OK] Model loaded.")
 except Exception as e:
-    print(f"❌ Failed to load model: {e}")
+    print(f"[ERROR] Failed to load model: {e}")
     sys.exit(1)
 
 # 2. Record Audio
@@ -32,7 +32,7 @@ if len(sys.argv) > 1:
     device_index = int(sys.argv[1])
     print(f"Using Input Device Index: {device_index}")
 
-print(f"\n🎤 Recording for {RECORD_SECONDS} seconds... SPEAK NOW!")
+print(f"\n[MIC] Recording for {RECORD_SECONDS} seconds... SPEAK NOW!")
 try:
     stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True,
                     frames_per_buffer=CHUNK, input_device_index=device_index)
@@ -43,13 +43,13 @@ try:
         frames.append(data)
         if i % 10 == 0: print(".", end="", flush=True)
     
-    print("\n✅ Recording complete.")
+    print("\n[OK] Recording complete.")
     
     stream.stop_stream()
     stream.close()
     p.terminate()
 except Exception as e:
-    print(f"\n❌ Recording failed: {e}")
+    print(f"\n[ERROR] Recording failed: {e}")
     sys.exit(1)
 
 # 3. Transcribe
@@ -69,8 +69,8 @@ try:
         print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
         text += segment.text
         
-    print(f"✅ Transcription time: {time.time() - start_time:.2f}s")
+    print(f"[OK] Transcription time: {time.time() - start_time:.2f}s")
     print(f"RESULT: '{text.strip()}'")
 
 except Exception as e:
-    print(f"❌ Transcription failed: {e}")
+    print(f"[ERROR] Transcription failed: {e}")

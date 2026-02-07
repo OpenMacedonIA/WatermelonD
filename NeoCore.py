@@ -138,9 +138,9 @@ class NeoCore:
         try:
             self.speaker = Speaker(self.event_queue)
             self.audio_output_enabled = True
-            self.app_logger.info("✅ Audio Output (Speaker) initialized successfully.")
+            self.app_logger.info("[OK] Audio Output (Speaker) initialized successfully.")
         except Exception as e:
-            self.app_logger.error(f"❌ Failed to initialize Speaker: {e}. Using Mock.")
+            self.app_logger.error(f"[ERROR] Failed to initialize Speaker: {e}. Using Mock.")
             self.speaker = type('MockSpeaker', (object,), {'speak': lambda self, t: self.app_logger.info(f"[MOCK SPEAK]: {t}"), 'play_random_filler': lambda self: None, 'is_busy': False})()
             self.audio_output_enabled = False
         
@@ -164,9 +164,9 @@ class NeoCore:
                 update_face
             )
             self.audio_input_enabled = True
-            self.app_logger.info("✅ Audio Input (VoiceManager) initialized successfully.")
+            self.app_logger.info("[OK] Audio Input (VoiceManager) initialized successfully.")
         except Exception as e:
-            self.app_logger.error(f"❌ Failed to initialize VoiceManager: {e}. Using Mock.")
+            self.app_logger.error(f"[ERROR] Failed to initialize VoiceManager: {e}. Using Mock.")
             self.voice_manager = type('MockVoice', (object,), {'start_listening': lambda self, i: None, 'stop_listening': lambda self: None, 'set_processing': lambda self, p: None, 'is_listening': False})()
             self.audio_input_enabled = False
 
@@ -191,7 +191,7 @@ class NeoCore:
                 
                 socket_handler = SocketLogHandler(self.web_server.socketio)
                 self.app_logger.addHandler(socket_handler)
-                self.app_logger.info("✅ Log Streaming to WebClient enabled.")
+                self.app_logger.info("[OK] Log Streaming to WebClient enabled.")
             except Exception as e:
                 self.app_logger.warning(f"Could not attach Socket Log Handler: {e}")
         else:
@@ -902,7 +902,7 @@ class NeoCore:
                     fallback_result = self.execute_command(command_text)
                     if fallback_result:
                         # Found a matching intent!
-                        app_logger.info(f"✅ Intent fallback succeeded for '{command_text}'")
+                        app_logger.info(f"[OK] Intent fallback succeeded for '{command_text}'")
                         self.speak(fallback_result if isinstance(fallback_result, str) else "Hecho")
                         return
                     

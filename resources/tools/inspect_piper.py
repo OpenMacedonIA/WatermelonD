@@ -4,15 +4,15 @@ import sys
 
 try:
     from piper import PiperVoice
-    print("✅ 'piper' module imported.")
+    print("[OK] 'piper' module imported.")
 except ImportError as e:
-    print(f"❌ Failed to import 'piper': {e}")
+    print(f"[ERROR] Failed to import 'piper': {e}")
     sys.exit(1)
 
 MODEL_PATH = "piper/voices/es_ES-davefx-medium.onnx"
 
 if not os.path.exists(MODEL_PATH):
-    print(f"❌ Model not found at {MODEL_PATH}")
+    print(f"[ERROR] Model not found at {MODEL_PATH}")
     sys.exit(1)
 
 try:

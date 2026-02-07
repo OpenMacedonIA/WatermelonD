@@ -53,10 +53,10 @@ class LimeTester:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_path).to(self.device)
             
-            logger.info("✅ Model loaded successfully!")
+            logger.info("[OK] Model loaded successfully!")
             return True
         except Exception as e:
-            logger.error(f"❌ Error loading model: {e}")
+            logger.error(f"[ERROR] Error loading model: {e}")
             return False
 
     def get_context(self):
@@ -188,7 +188,7 @@ def run_benchmark(tester):
         tester.infer(req, context_override=[])
 
 def main():
-    print("\n🍈 === Lime T5 Interactive Tester === 🍈")
+    print("\n[LIME] === Lime T5 Interactive Tester === [LIME]")
     
     import argparse
     parser = argparse.ArgumentParser()
@@ -210,7 +210,7 @@ def main():
     
     while True:
         try:
-            user_input = input("\n📝 Request > ")
+            user_input = input("\n[INFO] Request > ")
             if user_input.lower() in ['exit', 'quit']:
                 break
             

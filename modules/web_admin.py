@@ -1251,8 +1251,8 @@ def run_server():
         # ssl_context = (cert_file, key_file) # Disabled for Kiosk compatibility
         ssl_context = None 
     else:
-        print("⚠️  HTTPS Disabled. Certs not found in config/certs/")
+        print("[WARN] HTTPS Disabled. Certs not found in config/certs/")
         
-    print(f"🚀 Neo Web Admin running on https://{host}:{port}" if ssl_context else f"🚀 Neo Web Admin running on http://{host}:{port}")
+    print(f"[START] Neo Web Admin running on https://{host}:{port}" if ssl_context else f"[START] Neo Web Admin running on http://{host}:{port}")
     
     socketio.run(app, host=host, port=port, debug=debug_mode, use_reloader=False, ssl_context=ssl_context, allow_unsafe_werkzeug=True)

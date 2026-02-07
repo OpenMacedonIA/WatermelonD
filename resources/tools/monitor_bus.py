@@ -24,14 +24,14 @@ connected = False
 def connect():
     global connected
     connected = True
-    print("\n✅ Connected to Message Bus!")
+    print("\n[OK] Connected to Message Bus!")
     print("Waiting for messages... (Ctrl+C to stop)\n")
 
 @sio.event
 def disconnect():
     global connected
     connected = False
-    print("\n❌ Disconnected from Message Bus")
+    print("\n[ERROR] Disconnected from Message Bus")
 
 @sio.event
 def message(data):

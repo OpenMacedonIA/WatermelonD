@@ -43,13 +43,13 @@ def install_piper():
     print(f"Testing binary: {piper_bin}")
     try:
         subprocess.run([piper_bin, '--version'], check=True)
-        print("✅ Piper installed and working!")
+        print("[OK] Piper installed and working!")
         return True
     except subprocess.CalledProcessError:
-        print("❌ Piper binary failed to run (Segfault or other error).")
+        print("[ERROR] Piper binary failed to run (Segfault or other error).")
         return False
     except OSError as e:
-        print(f"❌ Could not run piper: {e}")
+        print(f"[ERROR] Could not run piper: {e}")
         return False
 
 if __name__ == "__main__":

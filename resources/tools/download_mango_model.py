@@ -33,7 +33,7 @@ def download_mango():
         files = os.listdir(target_dir)
         # Look for critical model files
         if any(f.endswith(".bin") or f.endswith(".safetensors") for f in files) and "config.json" in files:
-            print(f"✅ {model_name} already exists in {target_dir}. Skipping download.")
+            print(f"[OK] {model_name} already exists in {target_dir}. Skipping download.")
             return
 
     print(f"⬇️ Downloading {repo_id} (Branch: {revision}) to {target_dir}...")
@@ -48,10 +48,10 @@ def download_mango():
             resume_download=True,         # Resume if interrupted
             ignore_patterns=[".gitattributes", "README.md", "*.onnx", "*.tflite"] # Optimize size
         )
-        print(f"✅ Successfully downloaded {model_name} to {path}")
+        print(f"[OK] Successfully downloaded {model_name} to {path}")
         
     except Exception as e:
-        print(f"❌ Error downloading model: {e}")
+        print(f"[ERROR] Error downloading model: {e}")
         print("   Please check your internet connection or install manually.")
         exit(1)
 

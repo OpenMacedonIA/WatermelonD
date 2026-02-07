@@ -35,7 +35,7 @@ class AIEngine:
     def _ensure_model_loaded(self):
         """Carga el modelo si aún no está en memoria."""
         if not self.llm and LLAMA_AVAILABLE:
-            app_logger.info("⚠️ Disparando carga perezosa (Lazy Load) del modelo AI...")
+            app_logger.info("[WARN] Disparando carga perezosa (Lazy Load) del modelo AI...")
             self.load_model()
 
     def load_model(self):

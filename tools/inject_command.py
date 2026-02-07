@@ -21,10 +21,10 @@ def inject(text):
         response_received = True
 
     def on_stt(data):
-        print(f"\n🎤 [COMMAND RECEIVED]: {data.get('text')}")
+        print(f"\n[MIC] [COMMAND RECEIVED]: {data.get('text')}")
 
     def on_command_execution(data):
-        print(f"\n⚙️  [EXECUTING]: {data.get('cmd')}")
+        print(f"\n[EXEC]  [EXECUTING]: {data.get('cmd')}")
     
     def on_command_output(data):
         output = data.get('output', '')
@@ -48,7 +48,7 @@ def inject(text):
     try:
         bus.connect()
     except Exception as e:
-        print(f"❌ Error connecting: {e}")
+        print(f"[ERROR] Error connecting: {e}")
         return
 
     # Wait for connection state to be confirmed
@@ -58,10 +58,10 @@ def inject(text):
         timeout -= 0.1
     
     if not bus.connected:
-        print("❌ Error: Connected to socket but BusClient state is not 'connected'.")
+        print("[ERROR] Error: Connected to socket but BusClient state is not 'connected'.")
         return
 
-    print(f"\n💉 Injecting Command: '{text}'")
+    print(f"\n[INJECT] Injecting Command: '{text}'")
     bus.emit('command:inject', {'text': text})
     
     print("⏳ Waiting for response (Ctrl+C to cancel)...")
@@ -72,13 +72,13 @@ def inject(text):
             time.sleep(0.1)
         
         if not response_received:
-            print("\n⚠️  No response received within 15 seconds.")
+            print("\n[WARN] No response received within 15 seconds.")
     except KeyboardInterrupt:
-        print("\n❌ Cancelled.")
+        print("\n[ERROR] Cancelled.")
     finally:
         if bus.connected:
             bus.close()
-        print("\n✅ Done.")
+        print("\n[OK] Done.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

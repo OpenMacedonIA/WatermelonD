@@ -17,15 +17,15 @@ def run_test(name, cmd, ignore_fail=False):
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         if result.returncode == 0:
-            print(f"✅ PASS")
+            print(f"[OK] PASS")
             return True
         else:
-            print(f"❌ FAIL")
+            print(f"[ERROR] FAIL")
             print(f"   Error: {result.stderr.strip()}")
             print(f"   Output: {result.stdout.strip()}")
             return False
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f"[ERROR] ERROR: {e}")
         return False
 
 def main():
@@ -44,7 +44,7 @@ def main():
     if check_command('pactl'):
         run_test("PulseAudio Info", "pactl info")
     else:
-        print("⚠️ 'pactl' not found. Skipping.")
+        print("[WARN] 'pactl' not found. Skipping.")
 
     if check_command('aplay'):
         run_test("ALSA Playback Devices", "aplay -l")
@@ -63,40 +63,40 @@ def main():
         
         # Check permissions
         if os.access(piper_bin, os.X_OK):
-            print("✅ Piper is executable")
+            print("[OK] Piper is executable")
         else:
-            print("❌ Piper is NOT executable. Attempting fix...")
+            print("[ERROR] Piper is NOT executable. Attempting fix...")
             try:
                 os.chmod(piper_bin, 0o755)
-                print("✅ Permissions fixed.")
+                print("[OK] Permissions fixed.")
             except Exception as e:
-                print(f"❌ Failed to fix permissions: {e}")
+                print(f"[ERROR] Failed to fix permissions: {e}")
 
         # Test Execution
         model_path = os.path.join(project_root, 'piper', 'voices', 'es_ES-davefx-medium.onnx')
         if os.path.exists(model_path):
-            print(f"✅ Voice model found: {model_path}")
+            print(f"[OK] Voice model found: {model_path}")
             test_cmd = f'echo "Hola, esto es una prueba." | "{piper_bin}" --model "{model_path}" --output_file /dev/null'
             run_test("Piper Generation (Dry Run)", test_cmd)
         else:
-            print(f"❌ Voice model NOT found at: {model_path}")
+            print(f"[ERROR] Voice model NOT found at: {model_path}")
     else:
-        print(f"❌ Piper binary NOT found at: {piper_bin}")
+        print(f"[ERROR] Piper binary NOT found at: {piper_bin}")
 
     # 4. Check Service File (User Mode)
     print_header("4. Service Configuration (User Mode)")
     user_service_file = os.path.expanduser("~/.config/systemd/user/neo.service")
     if os.path.exists(user_service_file):
-        print(f"✅ User Service file found at {user_service_file}")
+        print(f"[OK] User Service file found at {user_service_file}")
         try:
             with open(user_service_file, 'r') as f:
                 content = f.read()
                 if "XDG_RUNTIME_DIR" in content:
                     print("ℹ️ Note: XDG_RUNTIME_DIR is not strictly needed in user service file (it's inherited), but good if present in install script logic.")
         except Exception as e:
-            print(f"⚠️ Cannot read service file: {e}")
+            print(f"[WARN] Cannot read service file: {e}")
     else:
-        print(f"❌ User Service file NOT found at {user_service_file}")
+        print(f"[ERROR] User Service file NOT found at {user_service_file}")
 
     # 5. Interactive Audio Test
     print_header("5. Interactive Audio Test")
@@ -121,7 +121,7 @@ def main():
             print("Skipping playback test (Piper not ready).")
 
     except Exception as e:
-        print(f"❌ Audio Test Failed: {e}")
+        print(f"[ERROR] Audio Test Failed: {e}")
 
     print_header("DIAGNOSTIC COMPLETE")
 

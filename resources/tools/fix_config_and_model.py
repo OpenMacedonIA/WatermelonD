@@ -30,7 +30,7 @@ def fix_config():
         current_stt["engine"] = "vosk"
         current_stt["input_device_index"] = 10
         cm.set("stt", current_stt)
-        print("✅ Config updated: STT=vosk, Device=10")
+        print("[OK] Config updated: STT=vosk, Device=10")
     else:
         print("Config already correct.")
 
@@ -54,7 +54,7 @@ def download_model():
     # Execute using the SAME interpreter as this script (which should be the venv one)
     try:
         subprocess.check_call([sys.executable, downloader])
-        print("\n✅ Model download completed successfully!")
+        print("\n[OK] Model download completed successfully!")
     except subprocess.CalledProcessError as e:
         logger.error(f"Model download failed with code {e.returncode}")
     except Exception as e:

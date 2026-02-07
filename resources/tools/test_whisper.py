@@ -8,9 +8,9 @@ print("--- Faster-Whisper Test ---")
 
 try:
     from faster_whisper import WhisperModel
-    print("✅ 'faster_whisper' module imported.")
+    print("[OK] 'faster_whisper' module imported.")
 except ImportError as e:
-    print(f"❌ Failed to import 'faster_whisper': {e}")
+    print(f"[ERROR] Failed to import 'faster_whisper': {e}")
     sys.exit(1)
 
 MODEL_SIZE = "medium"
@@ -21,9 +21,9 @@ print(f"Loading model '{MODEL_SIZE}' on {DEVICE} ({COMPUTE_TYPE})...")
 try:
     start_time = time.time()
     model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
-    print(f"✅ Model loaded in {time.time() - start_time:.2f}s")
+    print(f"[OK] Model loaded in {time.time() - start_time:.2f}s")
 except Exception as e:
-    print(f"❌ Failed to load model: {e}")
+    print(f"[ERROR] Failed to load model: {e}")
     sys.exit(1)
 
 # Generate dummy audio (1 second of silence + some noise)
@@ -47,10 +47,10 @@ try:
         print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
         text += segment.text
         
-    print(f"✅ Transcription complete in {time.time() - start_time:.2f}s")
+    print(f"[OK] Transcription complete in {time.time() - start_time:.2f}s")
     print(f"Result: '{text}'")
 except Exception as e:
-    print(f"❌ Transcription failed: {e}")
+    print(f"[ERROR] Transcription failed: {e}")
     sys.exit(1)
 
 print("\n🎉 Faster-Whisper seems operational.")

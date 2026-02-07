@@ -25,9 +25,9 @@ class PluginLoader:
                     self._load_single_plugin(plugin_name)
                     count += 1
                 except Exception as e:
-                    app_logger.error(f"❌ Error cargando plugin '{plugin_name}': {e}")
+                    app_logger.error(f"[ERROR] Error cargando plugin '{plugin_name}': {e}")
         
-        app_logger.info(f"✅ Se han cargado {count} plugins externos.")
+        app_logger.info(f"[OK] Se han cargado {count} plugins externos.")
 
     def _load_single_plugin(self, name):
         """Carga un módulo dinámicamente e instancia su clase principal."""
@@ -56,5 +56,5 @@ class PluginLoader:
                     break
             
             if not class_found:
-                app_logger.warning(f"⚠️ El plugin '{name}' no tiene función setup() ni clase *Skill.")
+                app_logger.warning(f"[WARN] El plugin '{name}' no tiene función setup() ni clase *Skill.")
 

@@ -74,9 +74,9 @@ def benchmark_model(model_size, device="cpu", compute_type="int8"):
         logger.info(f"Real Time Factor (RTF): {rtf:.2f}")
         
         if rtf < 1.0:
-            logger.info("✅ RESULTADO: El modelo es MÁS RÁPIDO que el tiempo real. Apto para uso.")
+            logger.info("[OK] RESULTADO: El modelo es MÁS RÁPIDO que el tiempo real. Apto para uso.")
         else:
-            logger.warning("⚠️ RESULTADO: El modelo es MÁS LENTO que el tiempo real. Puede haber latencia.")
+            logger.warning("[WARN] RESULTADO: El modelo es MÁS LENTO que el tiempo real. Puede haber latencia.")
             
         # Limpieza
         if audio_file == "temp_benchmark.wav":
@@ -117,7 +117,7 @@ def main():
         if args.auto_configure and rtf < 1.0:
             update_config(args.model, args.device, args.quantization)
         elif args.auto_configure:
-            print("⚠️ No se actualizó la configuración porque el rendimiento no es óptimo (RTF > 1.0).")
+            print("[WARN] No se actualizó la configuración porque el rendimiento no es óptimo (RTF > 1.0).")
 
 def update_config(model, device, compute_type):
     import json
@@ -141,10 +141,10 @@ def update_config(model, device, compute_type):
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=4)
             
-        print(f"✅ config.json actualizado: engine='hybrid', model='{model}'")
+        print(f"[OK] config.json actualizado: engine='hybrid', model='{model}'")
         
     except Exception as e:
-        print(f"❌ Error actualizando config.json: {e}")
+        print(f"[ERROR] Error actualizando config.json: {e}")
 
 if __name__ == "__main__":
     main()

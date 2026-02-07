@@ -76,7 +76,7 @@ def check_audio_input(model, device_index):
                         frames_per_buffer=4096, input_device_index=device_index)
         stream.start_stream()
         
-        print("\n✅ LISTENING... Say something (Press Ctrl+C to stop manually if it hangs)")
+        print("\n[OK] LISTENING... Say something (Press Ctrl+C to stop manually if it hangs)")
         for i in range(0, 50): # Listen for ~5-10 seconds
             data = stream.read(4000, exception_on_overflow=False)
             if recognizer.AcceptWaveform(data):
