@@ -406,9 +406,10 @@
         "enséñamelo",
         "abre el archivo",
         "ponlo en pantalla",
-        "quiero verlo"
+        "quiero verlo",
+        "muéstrame el archivo"
       ],
-      "action": "visual_show",
+      "action": "visual_show_file",
       "responses": [
         "Aquí lo tienes.",
         "Mostrando en pantalla."
@@ -421,7 +422,11 @@
         "cierra la imagen",
         "quita eso",
         "vuelve a pantalla completa",
-        "deja de mostrarlo"
+        "deja de mostrarlo",
+        "cierra la pantalla",
+        "cierra el visor",
+        "cierra eso",
+        "vale perfecto"
       ],
       "action": "visual_close",
       "responses": [

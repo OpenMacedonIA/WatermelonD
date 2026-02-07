@@ -147,6 +147,7 @@ function install_standard() {
             libbluetooth-dev build-essential libssl-dev zlib1g-dev
             libbz2-dev libreadline-dev libsqlite3-dev libffi-dev
             liblzma-dev ffmpeg git-lfs bluez bluez-tools
+            evince okular feh eog xdg-utils
         )
         
         sudo apt-get update

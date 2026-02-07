@@ -26,6 +26,7 @@ from modules.BlueberrySkills.files import FilesSkill
 from modules.BlueberrySkills.finder import FinderSkill
 from modules.BlueberrySkills.docker import DockerSkill
 from modules.BlueberrySkills.diagnosis import DiagnosisSkill
+from modules.BlueberrySkills.visual import VisualSkill
 from modules.ssh_manager import SSHManager
 from modules.wifi_manager import WifiManager
 # from modules.vision import VisionManager # Lazy load to prevent CV2 segfaults
@@ -279,8 +280,9 @@ class NeoCore:
         self.skills_ssh = SSHSkill(self)
         self.skills_files = FilesSkill(self)
         self.skills_docker = DockerSkill(self)
-        self.skills_docker = DockerSkill(self)
         self.skills_finder = FinderSkill(self)
+        self.skills_visual = VisualSkill(self)
+        self.skills_diagnosis = DiagnosisSkill(self)
 
         # --- Dynamic Plugins (Extensions) ---
         self.plugin_loader = PluginLoader(self)
@@ -891,31 +893,36 @@ class NeoCore:
                     except Exception as e:
                         app_logger.debug(f"Failed to emit router decision: {e}")
                 
-                # Handling 'null' category (Restart Loop)
-                if router_label == "null" or router_label is None:
-                    self.speak("No he entendido el comando. Reiniciando.")
-                    app_logger.info("Router returned NULL. Restarting listen loop.")
-                    return # Vuelve al bucle principal
+                # Handling 'null' or 'gemma' category - Try intent fallback first
+                if router_label in ["null", "gemma", None]:
+                    # --- INTENT FALLBACK ---
+                    # Try to match with registered intents/actions before giving up
+                    app_logger.info(f"Router returned {router_label}. Trying intent fallback...")
+                    
+                    fallback_result = self.execute_command(command_text)
+                    if fallback_result:
+                        # Found a matching intent!
+                        app_logger.info(f"✅ Intent fallback succeeded for '{command_text}'")
+                        self.speak(fallback_result if isinstance(fallback_result, str) else "Hecho")
+                        return
+                    
+                    # Still not found - handle as conversational
+                    if router_label == "gemma":
+                        # --- FAST PATH COMPARATOR ---
+                        shortcut_response = self._check_conversational_shortcuts(command_text)
+                        if shortcut_response:
+                            self.speak(shortcut_response)
+                            return
 
-                app_logger.info(f"🎯 ROUTER SELECTED: {router_label} ({router_score:.2f})")
-                
-
-                # "Capa de Ejecución de Modelos Específicos"
-                generated_command = None
-
-                # Specific Logic for Non-Technical Categories
-                # Specific Logic for Non-Technical Categories
-                if router_label == "gemma":
-                     # --- FAST PATH COMPARATOR ---
-                     shortcut_response = self._check_conversational_shortcuts(command_text)
-                     if shortcut_response:
-                         self.speak(shortcut_response)
-                         return
-
-                     # Fallback to chat/general queries
-                     final_response = self.chat_manager.get_response(command_text)
-                     self.speak(final_response)
-                     return
+                        # Fallback to chat/general queries
+                        final_response = self.chat_manager.get_response(command_text)
+                        self.speak(final_response)
+                        return
+                    else:
+                        # null - truly didn't understand
+                        self.speak("No he entendido el comando.")
+                        app_logger.info("Router returned NULL and no intent matched.")
+                        return
                 
                 # Technical Categories (malbec, syrah, tempranillo, pinot, chandonay, cabernet)
                 else:
@@ -1374,10 +1381,9 @@ class NeoCore:
             "buscar_archivo": self.skills_files.search_file,
             "leer_archivo": self.skills_files.read_file,
             
-            # --- Finder & Viewer ---
-            "system_find_file": self.skills_finder.execute,
-            "visual_show": self.skills_finder.execute,
-            "visual_close": self.skills_finder.execute,
+            # Visual Skill - Smart File Viewer
+            "visual_show_file": self.skills_visual.show_file,
+            "visual_close": self.skills_visual.close_viewer,
             
             # --- Generic ---
             "responder_simple": lambda command, response, **kwargs: self.speak(response)
