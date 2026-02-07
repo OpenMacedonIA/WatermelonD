@@ -553,8 +553,14 @@ def api_network_speedtest():
 @login_required
 def api_wifi_scan():
     """API para escanear redes WiFi."""
-    networks = wifi_manager.scan()
-    return jsonify(networks)
+    result = wifi_manager.scan()
+    
+    # If scan() returns error dict, pass it through
+    if isinstance(result, dict) and 'error' in result:
+        return jsonify(result)
+    
+    # Otherwise, return list of networks
+    return jsonify(result)
 
 @app.route('/api/wifi/connect', methods=['POST'])
 @login_required
