@@ -14,6 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from modules.bus_client import BusClient
 from modules.config_manager import ConfigManager
 from modules.utils import normalize_text
+from modules.stt_postprocessor import get_processor
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [STT] - %(levelname)s - %(message)s')
@@ -42,6 +43,9 @@ class STTService:
         self.vosk_model = None
         self.vosk_recognizer = None
         self.sherpa_recognizer = None
+        
+        # Post-processor for error correction
+        self.postprocessor = get_processor(self.config_manager)
         
         self.setup_stt()
         
@@ -180,14 +184,17 @@ class STTService:
         return None
 
     def process_text(self, text):
-        logger.info(f"Transcribed: {text}")
+        # Apply post-processing corrections
+        text = self.postprocessor.process(text)
+        
+        logger.info(f"Transcribed (post-processed): {text}")
         ww = self.check_wake_word(text)
         
         if ww:
             logger.info(f"Wake Word Detected: {ww}")
             self.bus.emit("recognizer_loop:wakeword", {"wakeword": ww})
-            # Remove wake word
-            text = text.replace(ww, "").strip()
+            # Remove wake word using post-processor
+            text = self.postprocessor.remove_wake_word(text, [ww])
         
         if text:
             self.bus.emit("recognizer_loop:utterance", {"utterances": [text]})
