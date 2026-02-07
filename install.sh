@@ -36,28 +36,38 @@ if [ ! -d ".git" ]; then
         fi
     fi
 
+    # Asegurar que whiptail está instalado
+    if ! command -v whiptail &> /dev/null; then
+        echo "Instalando whiptail para interfaz gráfica..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y whiptail
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y newt
+        fi
+    fi
+
     # 2. Definir Directorio de Instalación
     DEFAULT_DIR="$HOME/WatermelonD"
-    echo "Directorio de instalación predeterminado: $DEFAULT_DIR"
-    read -p "¿Deseas instalar en otro lugar? (Deja vacío para usar predeterminado): " CUSTOM_DIR
+    
+    CUSTOM_DIR=$(whiptail --inputbox "Directorio de instalación\n\nDeja vacío para usar el predeterminado: $DEFAULT_DIR" 12 70 "" 3>&1 1>&2 2>&3)
     
     TARGET_DIR="${CUSTOM_DIR:-$DEFAULT_DIR}"
+    
+    whiptail --msgbox "Instalando en: $TARGET_DIR" 8 60
 
     # 2.1 Seleccionar Rama
-    echo "----------------------------------------------------------------"
-    echo "Seleccione la rama a instalar:"
-    echo "1) Main (Estable) - Recomendado para producción"
-    echo "2) Next (Testing) - Últimas funciones (Inestable)"
-    read -p "Opción [1]: " BRANCH_OPT
+    BRANCH_OPT=$(whiptail --title "Selección de Rama" --menu "Elige la rama a instalar:" 15 70 2 \
+        "1" "Main (Estable) - Recomendado para producción" \
+        "2" "Next (Testing) - Últimas funciones (Inestable)" \
+        3>&1 1>&2 2>&3)
     
     if [[ "$BRANCH_OPT" == "2" ]]; then
         BRANCH="next"
-        echo "-> Seleccionado: NEXT (Testing)"
     else
         BRANCH="main"
-        echo "-> Seleccionado: MAIN (Estable)"
     fi
-    echo "----------------------------------------------------------------"
+    
+    whiptail --msgbox "Rama seleccionada: $BRANCH" 8 50
     
     # 3. Clonar Repositorio
     if [ -d "$TARGET_DIR" ]; then
@@ -67,10 +77,8 @@ if [ ! -d ".git" ]; then
              cd "$TARGET_DIR"
              git submodule update --init --recursive
         else
-             echo "AVISO: El directorio $TARGET_DIR ya existe y no está vacío."
-             read -p "¿Continuar y tratar de actualizar/instalar ahí? (s/n): " CONT
-             if [[ ! "$CONT" =~ ^[Ss]$ ]]; then
-                 echo "Cancelando instalación."
+             if ! whiptail --title "Directorio Existente" --yesno "AVISO: El directorio $TARGET_DIR ya existe y no está vacío.\n\n¿Continuar y tratar de actualizar/instalar ahí?" 12 70; then
+                 whiptail --msgbox "Instalación cancelada por el usuario." 8 50
                  exit 0
              fi
         fi
@@ -576,39 +584,62 @@ function maintenance_menu() {
 # MENÚ PRINCIPAL
 # ==============================================================================
 
+# Asegurar whiptail en menú principal también
+if ! command -v whiptail &> /dev/null; then
+    echo "Instalando whiptail para interfaz gráfica..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y whiptail
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y newt
+    fi
+fi
+
 while true; do
-    clear
-    echo "========================================="
-    echo "===   Instalador Unificado Neo Papaya ==="
-    echo "========================================="
-    echo "Seleccione una opción de instalación:"
-    echo ""
-    echo "  1) Instalación ESTÁNDAR (Nodo Principal)"
-    echo "     Instala Core, Web, BD y dependencias necesarias."
-    echo ""
-    echo "  2) Cliente Web Remoto"
-    echo "     Solo interfaz gráfica, conecta a otro nodo."
-    echo ""
-    echo "  3) Satélite (Network Bros)"
-    echo "     Configura dispositivo como sensor/extensión de red."
-    echo ""
-    echo "  4) Configuración Developer (Split Repos)"
-    echo "     Configura ramas git para uvas, cereza, mango."
-    echo ""
-    echo "  5) Herramientas / Mantenimiento"
-    echo "     Diagnostico, reparar Kiosk, etc."
-    echo ""
-    echo "  0) Salir"
-    echo "========================================="
-    read -p "Opción [1-5, 0]: " OPTION
+    OPTION=$(whiptail --title "Instalador WatermelonD" --menu "Seleccione una opción de instalación:" 20 78 6 \
+        "1" "Instalación ESTÁNDAR (Nodo Principal)" \
+        "2" "Cliente Web Remoto" \
+        "3" "Satélite (Network Bros)" \
+        "4" "Configuración Developer (Split Repos)" \
+        "5" "Herramientas / Mantenimiento" \
+        "0" "Salir" \
+        3>&1 1>&2 2>&3)
+    
+    # Si se cancela (ESC), salir
+    if [ $? -ne 0 ]; then
+        whiptail --msgbox "Instalación cancelada." 8 40
+        exit 0
+    fi
 
     case $OPTION in
-        1) install_standard; exit 0 ;;
-        2) install_web_client; exit 0 ;;
-        3) install_satellite; exit 0 ;;
-        4) install_dev_repos; exit 0 ;;
-        5) maintenance_menu ;;
-        0) echo "Saliendo..."; exit 0 ;;
-        *) echo "Opción inválida."; sleep 1 ;;
+        1) 
+            whiptail --title "Instalación Estándar" --msgbox "Iniciando instalación del nodo principal...\n\nEsto instalará:\n- Core del sistema\n- Interfaz Web\n- Base de datos\n- Dependencias necesarias" 12 60
+            install_standard
+            exit 0
+            ;;
+        2) 
+            whiptail --title "Cliente Web" --msgbox "Iniciando instalación del cliente web remoto..." 8 60
+            install_web_client
+            exit 0
+            ;;
+        3) 
+            whiptail --title "Satélite" --msgbox "Configurando dispositivo como satélite..." 8 60
+            install_satellite
+            exit 0
+            ;;
+        4) 
+            whiptail --title "Developer" --msgbox "Configurando repositorios para desarrollo..." 8 60
+            install_dev_repos
+            exit 0
+            ;;
+        5) 
+            maintenance_menu
+            ;;
+        0) 
+            whiptail --msgbox "¡Hasta pronto!" 8 40
+            exit 0
+            ;;
+        *) 
+            whiptail --msgbox "Opción inválida. Por favor intenta de nuevo." 8 50
+            ;;
     esac
 done
