@@ -45,7 +45,7 @@ csrf = CSRFProtect(app)
 # Added keepalive settings to prevent disconnections
 socketio = SocketIO(
     app, 
-    async_mode='threading', 
+    async_mode='eventlet', 
     cors_allowed_origins="*",
     ping_timeout=60,          # Esperar 60s por pong antes de desconectar
     ping_interval=25,         # Enviar ping cada 25s
@@ -112,6 +112,9 @@ def on_mic_status(message):
 bus.on('mic:status', on_mic_status)
 # bus.connect()  <-- Deadlock Fix: Let run_forever handle it in thread
 # Run bus in background thread
+import threading
+# threaded=True matches async_mode='threading' but we are moving to eventlet for stability
+# Note: Ensure eventlet is NOT globally monkey-patched in NeoCore.py to avoid PyAudio issues.
 import threading
 threading.Thread(target=bus.run_forever, daemon=True).start()
 
@@ -832,35 +835,41 @@ def api_mqtt_broker_info():
     
     # Get local IP addresses
     def get_local_ips():
-        """Get all local IP addresses"""
+        """Get all local IP addresses, filtering out loopback"""
         ips = []
         try:
-            hostname = socket.gethostname()
-            # Get primary IP
-            primary_ip = socket.gethostbyname(hostname)
-            ips.append(primary_ip)
+            # Method 1: Connect to a public DNS to find the route
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0.5)
+            s.connect(("8.8.8.8", 80))
+            primary_ip = s.getsockname()[0]
+            s.close()
+            if primary_ip and not primary_ip.startswith('127.'):
+                ips.append(primary_ip)
+        except:
+            pass
             
-            # Try to get all IPs
-            import netiface as ni
+        try:
+            # Method 2: Get all interfaces via netifaces (best) or hostname fallback
+            import netifaces as ni
             for interface in ni.interfaces():
                 try:
                     addrs = ni.ifaddresses(interface)
                     if ni.AF_INET in addrs:
                         for addr in addrs[ni.AF_INET]:
                             ip = addr['addr']
-                            if ip not in ips and not ip.startswith('127.'):
+                            if ip and not ip.startswith('127.') and ip not in ips:
                                 ips.append(ip)
                 except:
                     pass
-        except:
-            # Fallback method
+        except ImportError:
+            # Fallback for when netifaces is not installed
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))
-                ip = s.getsockname()[0]
-                s.close()
-                if ip not in ips:
-                    ips.append(ip)
+                hostname = socket.gethostname()
+                host_ips = socket.gethostbyname_ex(hostname)[2]
+                for ip in host_ips:
+                    if ip and not ip.startswith('127.') and ip not in ips:
+                        ips.append(ip)
             except:
                 pass
         
