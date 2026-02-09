@@ -370,7 +370,10 @@ def settings():
         flash('Configuración guardada correctamente.', 'success')
         return redirect(url_for('settings'))
     
-    system_info = get_system_info()
+    system_info = sys_admin.get_system_info()
+    if system_info and 'app' in system_info:
+        system_info['app']['branch'] = get_git_branch()
+
     return render_template('settings.html', page='settings', config=config, voices=available_voices, models=available_models, sys_info=system_info)
 
 @app.route('/ssh')
@@ -439,24 +442,58 @@ def restart_system():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+def get_git_branch():
+    """Returns the current git branch."""
+    try:
+        branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).strip()
+        return branch
+    except:
+        return "unknown"
+
 @app.route('/api/update', methods=['POST'])
 @login_required
 def update_system():
-    """Ejecuta git pull y reinicia el servicio."""
+    """Ejecuta git pull para la rama actual y reinicia el servicio."""
     try:
-        # 1. Git Pull
-        result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+        branch = get_git_branch()
+        app_logger.info(f"Updating system from branch: {branch}")
+        
+        # 1. Git Pull Specific Branch
+        cmd = ['git', 'pull', 'origin', branch]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
         if result.returncode != 0:
-            return jsonify({'success': False, 'message': f'Git Pull Error: {result.stderr}'})
-            
-        # 2. Restart Service
+             return jsonify({'success': False, 'message': f'Git Pull Error ({branch}): {result.stderr}'})
+
+        # 2. Update Submodules
+        subprocess.run(['git', 'submodule', 'update', '--init', '--recursive'], capture_output=True)
+
+        # 3. Restart Service
         subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
-        return jsonify({'success': True, 'message': f'Actualizado correctamente. Reiniciando... \n{result.stdout}'})
-    except Exception as e:
-        subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
-        return jsonify({'success': True, 'message': f'Actualizado correctamente. Reiniciando... \n{result.stdout}'})
+        return jsonify({'success': True, 'message': f'Actualizado desde {branch}. Reiniciando... \n{result.stdout}'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/update/check', methods=['GET'])
+@login_required
+def check_updates():
+    """Verifica si hay cambios remotos sin aplicar."""
+    try:
+        subprocess.run(['git', 'fetch'], capture_output=True)
+        local_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+        remote_hash = subprocess.check_output(['git', 'rev-parse', '@{u}'], text=True).strip()
+        
+        has_updates = local_hash != remote_hash
+        branch = get_git_branch()
+        
+        return jsonify({
+            'has_updates': has_updates,
+            'branch': branch,
+            'local_hash': local_hash[:7],
+            'remote_hash': remote_hash[:7]
+        })
+    except Exception as e:
+        return jsonify({'has_updates': False, 'error': str(e)})
 
 @app.route('/api/audio/toggle', methods=['POST'])
 @login_required
@@ -1465,4 +1502,5 @@ def run_server():
         
     print(f"[START] Neo Web Admin running on https://{host}:{port}" if ssl_context else f"[START] Neo Web Admin running on http://{host}:{port}")
     
-    socketio.run(app, host=host, port=port, debug=debug_mode, use_reloader=False, ssl_context=ssl_context, allow_unsafe_werkzeug=True)
+    # FORCE DEBUG=FALSE to avoid Werkzeug fallback which causes 'write() before start_response'
+    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, ssl_context=ssl_context, log_output=False)

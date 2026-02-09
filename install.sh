@@ -107,7 +107,9 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
     CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
     
     # Intentar actualizar
-    if git pull && git submodule update --init --recursive; then
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "Actualizando desde rama: $CURRENT_BRANCH"
+    if git pull origin "$CURRENT_BRANCH" && git submodule update --init --recursive; then
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
         if [ "$CURRENT_HASH" != "$NEW_HASH" ]; then
             echo "----------------------------------------------------------------"
