@@ -389,6 +389,7 @@ def settings():
         import flask
         import flask_socketio
         import jinja2
+        import platform # Fix NameError
         system_info['libraries'] = {
             'python': platform.python_version(),
             'flask': flask.__version__,
