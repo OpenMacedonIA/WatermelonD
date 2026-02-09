@@ -117,7 +117,7 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
             exec "$0" "$@"
         fi
     else
-        echo "⚠️  Error al actualizar (git pull falló). Continuando con la versión actual..."
+        echo "  Error al actualizar (git pull falló). Continuando con la versión actual..."
     fi
 else
     echo "No se detectó repositorio git o git no está instalado. Saltando actualización."
@@ -223,10 +223,10 @@ function install_standard() {
     echo "Configurando permisos de red..."
     if ! groups $USER | grep -q netdev; then
         sudo usermod -aG netdev $USER
-        echo "✓ Usuario agregado al grupo 'netdev' (NetworkManager)"
-        echo "⚠️  NOTA: Debes cerrar sesión y volver a entrar para que los cambios surtan efecto"
+        echo " Usuario agregado al grupo 'netdev' (NetworkManager)"
+        echo "  NOTA: Debes cerrar sesión y volver a entrar para que los cambios surtan efecto"
     else
-        echo "✓ Usuario ya pertenece al grupo 'netdev'"
+        echo " Usuario ya pertenece al grupo 'netdev'"
     fi
 
     # --- CONFIGURACIÓN DE PYTHON ---
