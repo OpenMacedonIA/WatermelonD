@@ -1503,4 +1503,6 @@ def run_server():
     print(f"[START] Neo Web Admin running on https://{host}:{port}" if ssl_context else f"[START] Neo Web Admin running on http://{host}:{port}")
     
     # FORCE DEBUG=FALSE to avoid Werkzeug fallback which causes 'write() before start_response'
-    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, ssl_context=ssl_context, log_output=False)
+    # NOTE: eventlet does not support 'ssl_context' (uses keyfile/certfile), so we remove it. 
+    # SSL is currently disabled in code above (ssl_context=None).
+    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, log_output=False)
