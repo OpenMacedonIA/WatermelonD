@@ -315,13 +315,13 @@ function install_standard() {
     if [ ! -d "models/sherpa/sherpa-onnx-whisper-medium" ]; then
         echo "Descargando Sherpa-ONNX Whisper Medium..."
         if [ -f "resources/tools/download_sherpa_model.py" ]; then
-            $VENV_DIR/bin/python resources/tools/download_sherpa_model.py --model medium
+            $VENV_DIR/bin/python resources/tools/download_sherpa_model.py --model small
         else
             echo "ERROR: No se encontró el script de descarga de Sherpa-ONNX."
             echo "Instalación continúa, pero STT no funcionará hasta descargar el modelo."
         fi
     else
-        echo "✓ Sherpa-ONNX Whisper Medium ya instalado"
+        echo " Sherpa-ONNX Whisper Medium ya instalado"
     fi
 
     # Piper
@@ -556,7 +556,7 @@ EOT
     [ -f "resources/tools/password_helper.py" ] && $VENV_DIR/bin/python resources/tools/password_helper.py --user admin --password admin
 
     echo ""
-    echo "✅ Instalación Completa Finalizada."
+    echo " Instalación Completa Finalizada."
 }
 
 # ==============================================================================
@@ -863,7 +863,7 @@ config['web_admin']['debug'] = False
 with open(config_path, 'w') as f:
     json.dump(config, f, indent=4, ensure_ascii=False)
 
-print("✓ Configuración personalizada guardada")
+print(" Configuración personalizada guardada")
 EOF
     
     whiptail --msgbox "¡Personalización completada!\n\nTu nombre: $USER_NICKNAME\nPuerto web: $WEB_PORT" 10 50

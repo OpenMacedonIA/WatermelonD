@@ -102,7 +102,7 @@ python3 resources/tools/download_sherpa_model.py --model medium
 
 echo 'Descargando MANGO (T5)...'
 # Por defecto MANGO (Main/v1) por estabilidad a menos que se especifique otra cosa
-python3 resources/tools/download_mango_model.py --branch main
+#python3 resources/tools/download_mango_model.py --branch main
 
 echo 'Instalación Completada en Distrobox.'
 "

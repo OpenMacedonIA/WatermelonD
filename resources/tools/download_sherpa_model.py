@@ -47,7 +47,7 @@ def download_and_extract(model_name):
     import tarfile
     
     if model_name not in MODELS:
-        print(f"❌ Error: Model '{model_name}' not found.")
+        print(f" Error: Model '{model_name}' not found.")
         print(f"Available models: {', '.join(MODELS.keys())}")
         return False
     
@@ -63,12 +63,12 @@ def download_and_extract(model_name):
     
     # Check if already downloaded
     if os.path.exists(dest_dir):
-        print(f"✅ Model '{model_name}' already exists at {dest_dir}")
+        print(f"Model '{model_name}' already exists at {dest_dir}")
         response = input("Do you want to re-download? (y/N): ")
         if response.lower() != 'y':
             return True
     
-    print(f"\n📥 Downloading Sherpa-ONNX Whisper {model_name.upper()} model...")
+    print(f"\n Downloading Sherpa-ONNX Whisper {model_name.upper()} model...")
     print(f"   URL: {model_url}")
     print(f"   Size: {model_info['size']}")
     print(f"   Speed: {model_info['speed']}, Accuracy: {model_info['accuracy']}")
@@ -89,25 +89,25 @@ def download_and_extract(model_name):
                     percent = (downloaded / total_size) * 100
                     print(f"\r   Progress: {percent:.1f}%", end='', flush=True)
         
-        print(f"\n✅ Downloaded to {tar_path}")
+        print(f"\n Downloaded to {tar_path}")
         
         # Extract
-        print("📦 Extracting...")
+        print(" Extracting...")
         with tarfile.open(tar_path, "r:bz2") as tar:
             tar.extractall(path=DEST_BASE_DIR)
         
-        print("✅ Extracted successfully")
+        print(" Extracted successfully")
         
         # Clean up tar file
         os.remove(tar_path)
-        print(f"🗑️  Removed temporary file {tar_path}")
+        print(f"  Removed temporary file {tar_path}")
         
         # Verify extraction
         extracted_dir = os.path.join(DEST_BASE_DIR, model_info["dir_name"])
         if os.path.exists(extracted_dir):
             # List files
             files = os.listdir(extracted_dir)
-            print(f"\n📁 Model files in {extracted_dir}:")
+            print(f"\n Model files in {extracted_dir}:")
             for f in files:
                 print(f"   - {f}")
             
@@ -116,24 +116,24 @@ def download_and_extract(model_name):
             missing = [f for f in required_files if f not in files and not any(f.startswith(rf.split('.')[0]) for rf in files)]
             
             if missing:
-                print(f"\n⚠️  Warning: Some expected files might be missing: {missing}")
+                print(f"\n Warning: Some expected files might be missing: {missing}")
             else:
-                print("\n✅ All required model files present")
+                print("\n All required model files present")
             
             return True
         else:
-            print(f"❌ Error: Extraction failed, directory not found: {extracted_dir}")
+            print(f" Error: Extraction failed, directory not found: {extracted_dir}")
             return False
             
     except Exception as e:
-        print(f"\n❌ Error during download/extraction: {e}")
+        print(f"\n Error during download/extraction: {e}")
         return False
 
 def list_models():
     """List available models"""
-    print("\n📋 Available Sherpa-ONNX Whisper Models:\n")
+    print("\n Available Sherpa-ONNX Whisper Models:\n")
     for name, info in MODELS.items():
-        status = "✅ Installed" if os.path.exists(os.path.join(DEST_BASE_DIR, info["dir_name"])) else "❌ Not installed"
+        status = " Installed" if os.path.exists(os.path.join(DEST_BASE_DIR, info["dir_name"])) else "❌ Not installed"
         print(f"  {name.upper():<10} | Size: {info['size']:<10} | Speed: {info['speed']:<20} | Accuracy: {info['accuracy']:<15} | {status}")
     print()
 
@@ -153,18 +153,18 @@ def main():
         list_models()
         return
     
-    print(f"\n🎯 Sherpa-ONNX Whisper Model Downloader")
+    print(f"\n Sherpa-ONNX Whisper Model Downloader")
     print(f"=" * 50)
     
     success = download_and_extract(args.model)
     
     if success:
-        print(f"\n✅ SUCCESS! Model '{args.model}' is ready to use")
-        print(f"\n📝 To use this model, update your config:")
+        print(f"\n SUCCESS! Model '{args.model}' is ready to use")
+        print(f"\n To use this model, update your config:")
         print(f"   {{\n      \"stt\": {{\n         \"engine\": \"sherpa\",")
         print(f"         \"sherpa_model_path\": \"models/sherpa/{MODELS[args.model]['dir_name']}\"\n      }}\n   }}")
     else:
-        print(f"\n❌ FAILED to download model '{args.model}'")
+        print(f"\n FAILED to download model '{args.model}'")
         sys.exit(1)
 
 if __name__ == "__main__":
