@@ -370,9 +370,30 @@ def settings():
         flash('Configuración guardada correctamente.', 'success')
         return redirect(url_for('settings'))
     
-    system_info = sys_admin.get_system_info()
-    if system_info and 'app' in system_info:
-        system_info['app']['branch'] = get_git_branch()
+    # Construct full system info
+    raw_info = sys_admin.get_system_info()
+    
+    # Ensure all required keys exist
+    system_info = raw_info if raw_info else {}
+    
+    # APP Info
+    if 'app' not in system_info:
+        system_info['app'] = {}
+    system_info['app']['name'] = 'WatermelonD'
+    system_info['app']['version'] = '2.5.0' # Todo: Get from config
+    system_info['app']['branch'] = get_git_branch()
+    
+    # Libraries Info
+    if 'libraries' not in system_info:
+        import flask
+        import flask_socketio
+        import jinja2
+        system_info['libraries'] = {
+            'python': platform.python_version(),
+            'flask': flask.__version__,
+            'flask_socketio': flask_socketio.__version__,
+            'jinja2': jinja2.__version__
+        }
 
     return render_template('settings.html', page='settings', config=config, voices=available_voices, models=available_models, sys_info=system_info)
 
