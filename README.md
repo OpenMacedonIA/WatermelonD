@@ -60,14 +60,14 @@
 ### Installation
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
 
 ```bash
 # Clone the repository
-git clone -b rc https://github.com/OpenMacedonIA/WatermelonD
+git clone  https://github.com/OpenMacedonIA/WatermelonD
 cd WatermelonD
 
 # Run the installer
@@ -133,7 +133,7 @@ Access the Web Interface at `http://localhost:5000`.
 ### Instalación
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
