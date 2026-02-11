@@ -2,6 +2,7 @@ setuptools
 wheel
 python-vlc
 numpy
+websocket-client
 
 psutil
 pyaudio
