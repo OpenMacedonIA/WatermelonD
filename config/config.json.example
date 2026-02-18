@@ -5,6 +5,7 @@
         "confidence_threshold": 0.4
     },
     "wake_words": [
+        "wamd",
         "neo",
         "tio",
         "bro"

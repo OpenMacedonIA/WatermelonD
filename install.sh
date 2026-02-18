@@ -610,7 +610,7 @@ function configure_simple_mode() {
     
     # 2. Wake Words Personalizadas (Opcional)
     if whiptail --title "Palabras de Activación" --yesno \
-        "Palabras actuales: neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
+        "Palabras actuales: wamd, neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
         10 60; then
         
         CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
@@ -651,7 +651,7 @@ function configure_advanced_mode() {
     
     # 2. Wake Words Personalizadas
     if whiptail --title "Palabras de Activación" --yesno \
-        "Palabras actuales: neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
+        "Palabras actuales: wamd, neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
         10 60; then
         
         CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
@@ -847,7 +847,7 @@ else:
 config['user_nickname'] = "$USER_NICKNAME"
 
 # Aplicar wake_words personalizadas
-default_wake_words = ['neo', 'tio', 'bro']
+default_wake_words = ['wamd', 'neo', 'tio', 'bro']
 if "$CUSTOM_WAKE_WORDS".strip():
     custom = [w.strip() for w in "$CUSTOM_WAKE_WORDS".split(',')]
     config['wake_words'] = default_wake_words + custom

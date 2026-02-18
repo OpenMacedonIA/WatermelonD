@@ -106,7 +106,7 @@ class VoiceManager:
             
         words = set()
         # Wake words list
-        wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro', 'hermano', 'colega', 'nen'])
+        wake_words = self.config_manager.get('wake_words', ['wamd', 'neo', 'tio', 'bro', 'hermano', 'colega', 'nen'])
         if isinstance(wake_words, str): wake_words = [wake_words]
         
         for ww in wake_words:
@@ -141,9 +141,15 @@ class VoiceManager:
         """Pausa o reanuda la escucha activa."""
         self.is_processing = processing
 
+    # Mapa de alias fonéticos: wake_word → [variantes que el STT puede transcribir]
+    # "wamd" se pronuncia "guamde", y el STT puede transcribir diversas variantes.
+    PHONETIC_ALIASES = {
+        'wamd': ['guamde', 'guam de', 'guamdi', 'guande', 'wande', 'wamde', 'guam', 'guamd', 'guambe', 'guamte'],
+    }
+
     def _check_wake_word(self, text):
-        """Verifica si el texto contiene alguna palabra de activación (Fuzzy)."""
-        wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro', 'hermano', 'colega', 'nen'])
+        """Verifica si el texto contiene alguna palabra de activación (Fuzzy + Alias Fonéticos)."""
+        wake_words = self.config_manager.get('wake_words', ['wamd', 'neo', 'tio', 'bro', 'hermano', 'colega', 'nen'])
         if isinstance(wake_words, str): wake_words = [wake_words]
         
         text_lower = text.lower()
@@ -153,21 +159,40 @@ class VoiceManager:
             if ww.lower() in text_lower:
                 return ww.lower()
         
-        # 2. Fuzzy Match (RapidFuzz)
-        if VOSK_DISPONIBLE: # Reusing VOSK flag for general optional libs check or check rapidfuzz explicitly
-            try:
-                from rapidfuzz import fuzz
-                # Check each word in the text against wake words
-                words = text_lower.split()
-                for word in words:
-                    for ww in wake_words:
-                        ratio = fuzz.ratio(word, ww.lower())
-                        if ratio > 85: # 85% similarity
-                            vosk_logger.info(f"Fuzzy Wake Word Detected: '{word}' ~= '{ww}' ({ratio}%)")
-                            return ww.lower()
-            except ImportError:
-                pass
-                
+        # 2. Phonetic Alias Match (para palabras raras como "wamd")
+        for ww in wake_words:
+            ww_lower = ww.lower()
+            if ww_lower in self.PHONETIC_ALIASES:
+                for alias in self.PHONETIC_ALIASES[ww_lower]:
+                    if alias in text_lower:
+                        vosk_logger.info(f"Phonetic Alias Wake Word: '{alias}' → '{ww_lower}'")
+                        return ww_lower
+                # Fuzzy match contra alias fonéticos
+                try:
+                    from rapidfuzz import fuzz
+                    words = text_lower.split()
+                    for word in words:
+                        for alias in self.PHONETIC_ALIASES[ww_lower]:
+                            ratio = fuzz.ratio(word, alias)
+                            if ratio > 75:  # Umbral más bajo para alias fonéticos
+                                vosk_logger.info(f"Fuzzy Phonetic Alias: '{word}' ~= '{alias}' → '{ww_lower}' ({ratio}%)")
+                                return ww_lower
+                except ImportError:
+                    pass
+        
+        # 3. Fuzzy Match general (RapidFuzz)
+        try:
+            from rapidfuzz import fuzz
+            words = text_lower.split()
+            for word in words:
+                for ww in wake_words:
+                    ratio = fuzz.ratio(word, ww.lower())
+                    if ratio > 85: # 85% similarity
+                        vosk_logger.info(f"Fuzzy Wake Word Detected: '{word}' ~= '{ww}' ({ratio}%)")
+                        return ww.lower()
+        except ImportError:
+            pass
+            
         return None
 
     def on_audio_data(self, message):

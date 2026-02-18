@@ -343,13 +343,13 @@ class NeoCore:
 
     def handle_injected_command(self, data):
         """Handles commands injected via Bus (CLI/External)."""
-        self.app_logger.info(f"🔍 DEBUG: handle_injected_command called with data: {data}")
+        self.app_logger.info(f"DEBUG: handle_injected_command called with data: {data}")
         # BusClient passes the full message payload: {type, data, context}
         # Extract the actual command text from the nested 'data' field
         text = data.get('data', {}).get('text')
-        self.app_logger.info(f"🔍 DEBUG: Extracted text: {text}")
+        self.app_logger.info(f"DEBUG: Extracted text: {text}")
         if text:
-            self.app_logger.info(f"💉 Command Injected via Bus: '{text}'")
+            self.app_logger.info(f"Command Injected via Bus: '{text}'")
             # Simulate detected command
             # Use 'neo' as detected wake word to ensure processing
             self.on_voice_command(text, 'neo')
@@ -572,6 +572,11 @@ class NeoCore:
             self.health_manager.stop()
         os._exit(0)
 
+    # Mapa de alias fonéticos (mismos que en voice_manager.py)
+    PHONETIC_ALIASES = {
+        'wamd': ['guamde', 'guam de', 'guamdi', 'guande', 'wande', 'wamde', 'guam', 'guamd', 'guambe', 'guamte'],
+    }
+
     def on_voice_command(self, command, wake_word, audio_buffer=None):
         """Callback cuando VoiceManager detecta voz."""
         app_logger.info(f" VOICE RECEIVED: '{command}' (WW: {wake_word})")
@@ -589,9 +594,8 @@ class NeoCore:
         # Check Active Listening Window
         is_active_listening = time.time() < self.active_listening_end_time
         
-        # Wake Word Check OR Active Listening
-        # FORCE ENABLE: Bypassing strict wake word check to unblock user
-        if True: # is_active_listening or wake_word in command_lower:
+        # ESTRICTO: Requiere wake word O ventana de escucha activa
+        if is_active_listening or wake_word:
              if update_face: update_face('thinking')
              self.is_processing_command = True
              self.voice_manager.set_processing(True)
@@ -601,14 +605,21 @@ class NeoCore:
              self.speaker.play_random_filler()
              
              # Remove wake word from command if present
-             command_clean = command_lower.replace(wake_word, "").strip() if wake_word in command_lower else command_lower
+             command_clean = command_lower.replace(wake_word, "").strip() if wake_word and wake_word in command_lower else command_lower
+             # Also remove phonetic aliases from command text
+             if wake_word and wake_word in self.PHONETIC_ALIASES:
+                 for alias in self.PHONETIC_ALIASES[wake_word]:
+                     command_clean = command_clean.replace(alias, "").strip()
              
-             # Extend active listening for follow-up
-             self.active_listening_end_time = time.time() + 8
+             # Extend active listening window (5 seconds for follow-up commands)
+             self.active_listening_end_time = time.time() + 5
              
              self.handle_command(command_clean, audio_buffer)
              
              self.voice_manager.set_processing(False)
+        else:
+             # Sin wake word y sin ventana activa → ignorar completamente
+             app_logger.debug(f"No wake word detected, ignoring: '{command}'")
 
     def _handle_mango_logic(self, command_text):
         """Procesa comandos de sistema usando MANGO (T5). Retorna True si manejó el comando."""
@@ -885,7 +896,7 @@ class NeoCore:
                 # "Capa de Clasificación (Router)"
                 router_label, router_score = self.decision_router.predict(command_text)
                 
-                app_logger.info(f"🧭 ROUTER Decision: label='{router_label}', score={router_score:.3f}")
+                app_logger.info(f" ROUTER Decision: label='{router_label}', score={router_score:.3f}")
                 
                 # Emit router decision to UI/CLI (even for null)
                 if self.web_server:
@@ -932,17 +943,9 @@ class NeoCore:
                 # Technical Categories (malbec, syrah, tempranillo, pinot, chandonay, cabernet)
                 else:
                     try:
-                        # "Capa de Ejecución": ONNX Runner
-                        # INJECT CONTEXT based on router type
-
-                        # --- Context Injection Strategy ---
-                        # Network models (syrah/cabernet): ONLY network aliases
-                        # Other models: Full filesystem context (pwd + ls)
-                        # =========================
-                        # SECURE CATEGORY HANDLER
-                        # =========================
+                       
                         if router_label == "secure":
-                            app_logger.info(f"🔒 SECURE category detected. Using SecureIntentMatcher...")
+                            app_logger.info(f"SECURE category detected. Using SecureIntentMatcher...")
                             
                             if not self.secure_intent_matcher:
                                 self.speak("El sistema de seguridad no está disponible.")
@@ -954,7 +957,7 @@ class NeoCore:
                             if match_result:
                                 cmd, context, category, is_python = match_result
                                 
-                                app_logger.info(f"✅ Intent matched: category={category}, context={context}")
+                                app_logger.info(f" Intent matched: category={category}, context={context}")
                                 
                                 # Si es función Python (SecuritySkill)
                                 if is_python:
@@ -1010,7 +1013,7 @@ class NeoCore:
                                         return
                             else:
                                 # No hay match en SecureIntentMatcher
-                                app_logger.warning(f"❌ No intent match for secure command: {command_text}")
+                                app_logger.warning(f"No intent match for secure command: {command_text}")
                                 self.speak("No reconozco ese comando de seguridad. ¿Puedes reformularlo?")
                                 return
                         
@@ -1447,7 +1450,6 @@ class NeoCore:
             "cast_video": self.skills_media.cast_video,
             "stop_cast": self.skills_media.stop_cast,
             
-            # --- Content & Fun (Migrated to Plugin) ---
             # "contar_chiste": self.skills_content.contar_contenido_aleatorio, 
             # "decir_frase_celebre": self.skills_content.decir_frase_celebre,
             # "contar_dato_curioso": self.skills_content.contar_contenido_aleatorio,

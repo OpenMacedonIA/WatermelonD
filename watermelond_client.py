@@ -177,7 +177,7 @@ SETUP_HTML = """
             </div>
             <div class="form-group">
                 <label>Wake Words (comma separated)</label>
-                <input type="text" name="wake_words" placeholder="neo, computadora" required value="{{ wake_words }}">
+                <input type="text" name="wake_words" placeholder="wamd, neo, computadora" required value="{{ wake_words }}">
             </div>
             <button type="submit">Save & Connect</button>
         </form>
@@ -188,6 +188,12 @@ SETUP_HTML = """
 
 # --- Client Agent (Background Audio Processing) ---
 class ClientAgent(threading.Thread):
+    # Mapa de alias fonéticos: wake_word → [variantes que el STT puede transcribir]
+    # "wamd" se pronuncia "guamde", y el STT puede transcribir diversas variantes.
+    PHONETIC_ALIASES = {
+        'wamd': ['guamde', 'guam de', 'guamdi', 'guande', 'wande', 'wamde', 'guam', 'guamd', 'guambe', 'guamte'],
+    }
+
     def __init__(self, server_url, wake_words):
         super().__init__(daemon=True)
         self.server_url = server_url
@@ -253,7 +259,7 @@ class ClientAgent(threading.Thread):
         is_recording = False
         silence_frames = 0
         THRESHOLD = 500
-        SILENCE_LIMIT = 30 # ~1.5 sec silence
+        SILENCE_LIMIT = 100 # ~5 sec listening window
         
         while self.running:
             try:
@@ -285,6 +291,35 @@ class ClientAgent(threading.Thread):
             except Exception as e:
                 pass
                 
+    def _check_wake_word(self, text):
+        """Verifica si el texto contiene alguna wake word (Direct + Alias Fonéticos)."""
+        text_lower = text.lower()
+        
+        # 1. Direct Match
+        for ww in self.wake_words:
+            if ww in text_lower:
+                return ww
+        
+        # 2. Phonetic Alias Match
+        for ww in self.wake_words:
+            if ww in self.PHONETIC_ALIASES:
+                for alias in self.PHONETIC_ALIASES[ww]:
+                    if alias in text_lower:
+                        logger.info(f"Phonetic Alias: '{alias}' → '{ww}'")
+                        return ww
+                # Fuzzy match contra alias
+                try:
+                    from rapidfuzz import fuzz
+                    for word in text_lower.split():
+                        for alias in self.PHONETIC_ALIASES[ww]:
+                            if fuzz.ratio(word, alias) > 75:
+                                logger.info(f"Fuzzy Alias: '{word}' ~= '{alias}' → '{ww}'")
+                                return ww
+                except ImportError:
+                    pass
+        
+        return None
+
     def process_audio(self, raw_data, rate):
         if not self.recognizer: return
         
@@ -297,23 +332,22 @@ class ClientAgent(threading.Thread):
         
         if text:
             logger.info(f"Stt: {text}")
-            # Check Wake Word
-            triggered = False
-            wakeword = ""
-            for cur_ww in self.wake_words:
-                if cur_ww in text.lower():
-                    triggered = True
-                    wakeword = cur_ww
-                    break
+            # Check Wake Word (con alias fonéticos)
+            wakeword = self._check_wake_word(text)
             
-            if triggered:
+            if wakeword:
                 logger.info(f"Wake Word '{wakeword}' detected!")
-
-                msg = text.lower().replace(wakeword, "").strip()
+                # Limpiar alias fonéticos del texto también
+                msg = text.lower()
+                msg = msg.replace(wakeword, "")
+                for alias in self.PHONETIC_ALIASES.get(wakeword, []):
+                    msg = msg.replace(alias, "")
+                msg = msg.strip()
                 if msg:
                    self.emit_utterance(msg)
             else:
-                 logger.info("No wake word found in: " + text)
+                 # ESTRICTO: sin wake word → ignorar completamente
+                 logger.debug("No wake word → ignoring: " + text)
 
     def emit_utterance(self, text):
         if self.sio.connected:
