@@ -58,13 +58,13 @@ if [ ! -d ".git" ]; then
     # 2.1 Seleccionar Rama
     BRANCH_OPT=$(whiptail --title "Selección de Rama" --menu "Elige la rama a instalar:" 15 70 2 \
         "1" "Main (Estable) - Recomendado para producción" \
-        "2" "RC (Release Candidate) - Próxima versión (Inestable)" \
+        "2" "RC_180226 (Release Candidate) - Próxima versión (Recomendado)" \
         3>&1 1>&2 2>&3)
     
     if [[ "$BRANCH_OPT" == "2" ]]; then
-        BRANCH="rc"
+        BRANCH="rc_180226"
     else
-        BRANCH="main"
+        BRANCH="rc_180226"
     fi
     
     whiptail --msgbox "Rama seleccionada: $BRANCH" 8 50

@@ -89,3 +89,4 @@ Thumbs.db
 # User Requested Ignore
 # resources/
 .env
+changelog.md

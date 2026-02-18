@@ -5,11 +5,12 @@
     },
     "network": {
         "enabled": true,
-        "description": "Herramientas de red (ping, escaneo, IP p\u00fablica, cluster).",
+        "description": "Herramientas de red (ping, escaneo, IP pública, cluster).",
         "config": {
             "aliases": {
                 "router": "192.168.1.1",
-                "google": "8.8.8.8"
+                "google": "8.8.8.8",
+                "cloudflare": "1.1.1.1"
             }
         }
     },
@@ -19,26 +20,26 @@
     },
     "media": {
         "enabled": true,
-        "description": "Reproducci\u00f3n de m\u00fasica, radio y control de medios (Cast)."
+        "description": "Reproducción de música, radio y control de medios (Cast)."
     },
     "content": {
         "enabled": true,
-        "description": "Entretenimiento: chistes, curiosidades, frases c\u00e9lebres y aprendizaje."
+        "description": "Entretenimiento: chistes, curiosidades, frases célebres y aprendizaje."
     },
     "organizer": {
         "enabled": true,
-        "description": "Gesti\u00f3n personal: alarmas, temporizadores y recordatorios."
+        "description": "Gestión personal: alarmas, temporizadores y recordatorios."
     },
     "ssh": {
         "enabled": true,
-        "description": "Gesti\u00f3n remota de servidores v\u00eda SSH.",
+        "description": "Gestión remota de servidores vía SSH.",
         "config": {
             "servers": []
         }
     },
     "files": {
         "enabled": true,
-        "description": "B\u00fasqueda y lectura de archivos en el sistema.",
+        "description": "Búsqueda y lectura de archivos en el sistema.",
         "config": {
             "enable_indexing": true,
             "scan_interval": 24,

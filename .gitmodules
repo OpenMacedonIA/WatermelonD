@@ -1,20 +1,20 @@
 [submodule "modules/BrainNut"]
 	path = modules/BrainNut
 	url = https://github.com/OpenMacedonIA/BrainNut
-	branch = rc
+	branch = rc_180226
 [submodule "modules/BlueberrySkills"]
 	path = modules/BlueberrySkills
 	url = https://github.com/OpenMacedonIA/BlueberrySkills
-	branch = rc
+	branch = rc_180226
 [submodule "TangerineUI"]
 	path = TangerineUI
 	url = https://github.com/OpenMacedonIA/TangerineUI	
-	branch = rc
+	branch = rc_180226
 [submodule "modules/Watermelon-extras"]
 	path = modules/Watermelon-extras
 	url = https://github.com/OpenMacedonIA/Watermelon-extras
-	branch = rc
+	branch = rc_180226
 [submodule "modules/BerryConnect"]
 	path = modules/BerryConnect
 	url = https://github.com/OpenMacedonIA/BerryConnect.git
-	branch = rc
+	branch = rc_180226
