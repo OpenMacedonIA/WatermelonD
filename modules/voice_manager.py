@@ -289,9 +289,23 @@ class VoiceManager:
             model_dir = self.config_manager.get('stt', {}).get('sherpa_model_path', "models/sherpa")
             
             # Whisper ONNX files
-            encoder = os.path.join(model_dir, "tiny-encoder.onnx")
-            decoder = os.path.join(model_dir, "tiny-decoder.onnx")
-            tokens = os.path.join(model_dir, "tiny-tokens.txt")
+            # Whisper ONNX files - Auto-Detect Size
+            prefix = "tiny"
+            for p in ["tiny", "small", "base", "medium", "large"]:
+                if os.path.exists(os.path.join(model_dir, f"{p}-encoder.onnx")) or \
+                   os.path.exists(os.path.join(model_dir, f"{p}-encoder.int8.onnx")):
+                    prefix = p
+                    break
+            
+            # Prefer int8 quantized models if available (faster/lighter)
+            if os.path.exists(os.path.join(model_dir, f"{prefix}-encoder.int8.onnx")):
+                encoder = os.path.join(model_dir, f"{prefix}-encoder.int8.onnx")
+                decoder = os.path.join(model_dir, f"{prefix}-decoder.int8.onnx")
+            else:
+                encoder = os.path.join(model_dir, f"{prefix}-encoder.onnx")
+                decoder = os.path.join(model_dir, f"{prefix}-decoder.onnx")
+                
+            tokens = os.path.join(model_dir, f"{prefix}-tokens.txt")
             
             if not os.path.exists(encoder):
                 vosk_logger.error(f"Modelo Sherpa Whisper no encontrado en {model_dir}")
