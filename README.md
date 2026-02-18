@@ -60,7 +60,7 @@
 ### Installation
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc_180226/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
@@ -133,7 +133,7 @@ Access the Web Interface at `http://localhost:5000`.
 ### Instalación
 
 ```bash
-wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/main/install.sh && chmod +x install.sh && ./install.sh
+wget -O install.sh https://raw.githubusercontent.com/OpenMacedonIA/WatermelonD/refs/heads/rc_180226/install.sh && chmod +x install.sh && ./install.sh
 ```
 
 **Manual Installation:**
