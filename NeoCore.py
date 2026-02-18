@@ -109,7 +109,7 @@ class SocketLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-app_logger.info("El registro de logs ha sido iniciado (desde NeoCore Refactored).")
+app_logger.info("El registro de logs ha sido iniciado (desde NeoCore).")
 
 class NeoCore:
     """
@@ -119,7 +119,7 @@ class NeoCore:
     def __init__(self):
         # --- Asignar Logger al objeto para que los Skills lo usen ---
         self.app_logger = app_logger
-        self.app_logger.info("Iniciando Neo Core (System v2.5.0 - Optimized)...")
+        self.app_logger.info("Iniciando Neo Core...")
 
         try:
             locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
@@ -233,14 +233,14 @@ class NeoCore:
                 self.vision_manager = VisionManager(self.event_queue)
                 self.vision_manager.start()
             except ImportError as e:
-                self.app_logger.error(f"No se pudo cargar VisionManager (cv2 missing?): {e}")
+                self.app_logger.error(f"No se pudo cargar VisionManager: {e}")
                 self.vision_manager = None
             except Exception as e:
                 self.app_logger.error(f"Error fatal iniciando VisionManager: {e}")
                 self.vision_manager = None
         else:
             self.vision_manager = None
-            self.app_logger.info("VisionManager deshabilitado por configuración (evita Segfaults).")
+            self.app_logger.info("VisionManager deshabilitado por configuracion.")
         self.file_manager = FileManager()
         self.cast_manager = CastManager()
         self.cast_manager.start_discovery() # Start looking for TVs/Speakers
