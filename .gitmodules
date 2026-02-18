@@ -5,16 +5,16 @@
 [submodule "modules/BlueberrySkills"]
 	path = modules/BlueberrySkills
 	url = https://github.com/OpenMacedonIA/BlueberrySkills
-	branch = main
+	branch = rc
 [submodule "TangerineUI"]
 	path = TangerineUI
 	url = https://github.com/OpenMacedonIA/TangerineUI	
-	branch = main
+	branch = rc
 [submodule "modules/Watermelon-extras"]
 	path = modules/Watermelon-extras
 	url = https://github.com/OpenMacedonIA/Watermelon-extras
-	branch = main
+	branch = rc
 [submodule "modules/BerryConnect"]
 	path = modules/BerryConnect
 	url = https://github.com/OpenMacedonIA/BerryConnect.git
-	branch = main
+	branch = rc

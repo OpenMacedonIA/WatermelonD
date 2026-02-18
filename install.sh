@@ -62,7 +62,7 @@ if [ ! -d ".git" ]; then
         3>&1 1>&2 2>&3)
     
     if [[ "$BRANCH_OPT" == "2" ]]; then
-        BRANCH="main"
+        BRANCH="rc"
     else
         BRANCH="main"
     fi
