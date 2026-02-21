@@ -202,7 +202,8 @@ def rate_limit_login(func):
             
         if len(login_attempts.get(ip, [])) >= 5:
             # flash('Demasiados intentos. Espera 1 minuto.', 'danger')
-            return render_template('login.html', error='Demasiados intentos. Espera 1 minuto.'), 429
+            from flask import make_response
+            return make_response(render_template('login.html', error='Demasiados intentos. Espera 1 minuto.'), 429)
             
         return func(*args, **kwargs)
     return wrapper
