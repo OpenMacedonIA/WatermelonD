@@ -1528,4 +1528,4 @@ def run_server():
     # FORCE DEBUG=FALSE to avoid Werkzeug fallback which causes 'write() before start_response'
     # NOTE: eventlet does not support 'ssl_context' (uses keyfile/certfile), so we remove it. 
     # SSL is currently disabled in code above (ssl_context=None).
-    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, log_output=False)
+    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, log_output=False, allow_unsafe_werkzeug=True)
