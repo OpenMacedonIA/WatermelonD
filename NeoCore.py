@@ -1021,15 +1021,21 @@ class NeoCore:
                             # Network models: Only SSH/network aliases
                             fs_context = "[]"
                             try:
+                                server_entries = []
                                 if self.ssh_manager and hasattr(self.ssh_manager, 'servers'):
-                                    server_entries = []
                                     for alias, data in self.ssh_manager.servers.items():
                                         host = data.get('host', 'unknown')
                                         server_entries.append(f"'{alias}={host}'")
-                                    
-                                    if server_entries:
-                                        network_context_str = ", ".join(server_entries)
-                                        fs_context = f"[{network_context_str}]"
+                                
+                                # Inject network_aliases from config
+                                if self.config_manager:
+                                    network_aliases = self.config_manager.get('network_aliases', {})
+                                    for alias, ip in network_aliases.items():
+                                        server_entries.append(f"'{alias}={ip}'")
+
+                                if server_entries:
+                                    network_context_str = ", ".join(server_entries)
+                                    fs_context = f"[{network_context_str}]"
                             except Exception as e:
                                 self.app_logger.error(f"Error building network context: {e}")
                         else:
