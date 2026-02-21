@@ -268,6 +268,7 @@ class VoiceManager:
 
     def setup_sherpa(self):
         """Carga el modelo Sherpa-ONNX (Whisper Tiny)."""
+        self.sherpa_recognizer = None
         try:
             import sherpa_onnx
             model_dir = self.config_manager.get('stt', {}).get('sherpa_model_path', "models/sherpa")
@@ -297,8 +298,11 @@ class VoiceManager:
 
     def _sherpa_listener(self):
         """Bucle de escucha para Sherpa-ONNX (Offline Whisper con VAD)."""
-        if not self.sherpa_recognizer:
-            vosk_logger.error("Sherpa Recognizer no inicializado.")
+        if getattr(self, 'sherpa_recognizer', None) is None:
+            vosk_logger.error("Sherpa Recognizer no inicializado. Comprueba que los archivos del modelo existan. El hilo de voz quedará en reposo.")
+            # Sleep in a loop to keep the thread alive and prevent the watchdog from continuously restarting it
+            while self.is_listening:
+                time.sleep(5)
             return
 
         vosk_logger.info("Iniciando escucha con Sherpa-ONNX (Whisper)...")
