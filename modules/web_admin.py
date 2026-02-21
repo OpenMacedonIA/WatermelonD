@@ -391,11 +391,18 @@ def settings():
         import flask_socketio
         import jinja2
         import platform # Fix NameError
+        
+        try:
+            import importlib.metadata
+            fs_version = importlib.metadata.version('Flask-SocketIO')
+        except:
+            fs_version = getattr(flask_socketio, '__version__', 'unknown')
+            
         system_info['libraries'] = {
             'python': platform.python_version(),
-            'flask': flask.__version__,
-            'flask_socketio': flask_socketio.__version__,
-            'jinja2': jinja2.__version__
+            'flask': getattr(flask, '__version__', 'unknown'),
+            'flask_socketio': fs_version,
+            'jinja2': getattr(jinja2, '__version__', 'unknown')
         }
 
     return render_template('settings.html', page='settings', config=config, voices=available_voices, models=available_models, sys_info=system_info)
