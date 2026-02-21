@@ -6,7 +6,7 @@
 
 ## English
 
-> **RC Status**: This is the **WatermelonD** release candidate branch. Stable and ready for testing before final release.
+> This branch is a emergency copy 
 
 
 

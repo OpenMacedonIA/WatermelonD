@@ -46,7 +46,7 @@ csrf = CSRFProtect(app)
 # Added keepalive settings to prevent disconnections
 socketio = SocketIO(
     app, 
-    async_mode='eventlet', 
+    async_mode='threading', 
     cors_allowed_origins="*",
     ping_timeout=60,          # Esperar 60s por pong antes de desconectar
     ping_interval=25,         # Enviar ping cada 25s

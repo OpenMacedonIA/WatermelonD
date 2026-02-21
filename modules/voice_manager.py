@@ -190,6 +190,15 @@ class VoiceManager:
             stt_config = self.config_manager.get('stt', {})
             stt_engine = stt_config.get('engine', 'vosk')
             
+            app_logger.info(f"Using STT Engine: {stt_engine}")
+            
+            if stt_engine == 'sherpa':
+                self._sherpa_listener()
+                return
+            elif stt_engine == 'whisper':
+                self._whisper_listener()
+                return
+            
             if not self.vosk_model:
                 vosk_logger.error("Modelo Vosk no cargado. No se puede iniciar escucha.")
                 return
@@ -203,7 +212,7 @@ class VoiceManager:
                 else:
                     self.recognizer = vosk.KaldiRecognizer(self.vosk_model, 16000)
 
-            app_logger.info("Starting Local PyAudio Stream (VoiceManager)...")
+            app_logger.info("Starting Local PyAudio Stream (VoiceManager - Vosk)...")
             
             with no_alsa_error():
                 p = pyaudio.PyAudio()
