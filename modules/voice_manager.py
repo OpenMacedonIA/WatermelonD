@@ -271,26 +271,32 @@ class VoiceManager:
         self.sherpa_recognizer = None
         try:
             import sherpa_onnx
-            model_dir = self.config_manager.get('stt', {}).get('sherpa_model_path', "models/sherpa")
+            model_dir = self.config_manager.get('stt', {}).get('sherpa_model_path', "models/sherpa/sherpa-onnx-whisper-small")
             
-            # Whisper ONNX files
-            encoder = os.path.join(model_dir, "tiny-encoder.onnx")
-            decoder = os.path.join(model_dir, "tiny-decoder.onnx")
-            tokens = os.path.join(model_dir, "tiny-tokens.txt")
+            # Whisper ONNX files (Small INT8)
+            encoder = os.path.join(model_dir, "small-encoder.int8.onnx")
+            decoder = os.path.join(model_dir, "small-decoder.int8.onnx")
+            tokens = os.path.join(model_dir, "small-tokens.txt")
             
             if not os.path.exists(encoder):
                 vosk_logger.error(f"Modelo Sherpa Whisper no encontrado en {model_dir}")
                 return
 
             vosk_logger.info(f"Cargando Sherpa-ONNX Whisper desde {model_dir}...")
-            self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
-                encoder=encoder,
-                decoder=decoder,
-                tokens=tokens,
+            config = sherpa_onnx.OfflineRecognizerConfig(
+                model_config=sherpa_onnx.OfflineModelConfig(
+                    whisper=sherpa_onnx.OfflineWhisperModelConfig(
+                        encoder=encoder,
+                        decoder=decoder,
+                    ),
+                    tokens=tokens,
+                    num_threads=1,
+                    debug=False,
+                ),
+                decoding_method="greedy_search",
                 language="es",
-                task="transcribe",
-                num_threads=1
             )
+            self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer(config)
             vosk_logger.info("Sherpa-ONNX Whisper cargado correctamente.")
         except Exception as e:
             vosk_logger.error(f"Error cargando Sherpa-ONNX: {e}")
