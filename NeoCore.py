@@ -885,7 +885,7 @@ class NeoCore:
                 # "Capa de Clasificación (Router)"
                 router_label, router_score = self.decision_router.predict(command_text)
                 
-                app_logger.info(f"🧭 ROUTER Decision: label='{router_label}', score={router_score:.3f}")
+                app_logger.info(f"ROUTER Decision: label='{router_label}', score={router_score:.3f}")
                 
                 # Emit router decision to UI/CLI (even for null)
                 if self.web_server:
@@ -1085,7 +1085,15 @@ class NeoCore:
                                  except: pass
                             
                             # Heuristic: If output is short/readable, speak it.
-                            if len(output) < 200:
+                            if generated_command.strip().startswith('find'):
+                                lines_found = len([line for line in output.splitlines() if line.strip()])
+                                if lines_found == 0:
+                                    self.speak("No he encontrado ningún archivo.")
+                                elif lines_found == 1:
+                                    self.speak("He encontrado 1 archivo.")
+                                else:
+                                    self.speak(f"He encontrado {lines_found} archivos.")
+                            elif len(output) < 200:
                                 self.speak(f"Hecho: {output}")
                             else:
                                 self.speak("Comando ejecutado.")

@@ -193,6 +193,10 @@ class SysAdminManager:
         Soporta timeout de 10 segundos y directorio de trabajo personalizado.
         """
         try:
+            # Prevent ping from running infinitely
+            if command.strip().startswith('ping') and '-c' not in command:
+                command += ' -c 4'
+                
             # Ejecutar comando con timeout de 10s
             result = subprocess.run(
                 command, 
