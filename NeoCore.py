@@ -134,6 +134,9 @@ class NeoCore:
 
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_all()
+        
+        # --- State Variables ---
+        self.last_find_results = None
 
         self.event_queue = queue.Queue()
         # --- Fix for Distrobox/Jack Segfaults ---
@@ -743,6 +746,14 @@ class NeoCore:
                      current_user, confidence = self.voice_auth_skill.identify_speaker(audio_buffer)
                      app_logger.info(f" Speaker identified as: {current_user} (Conf: {confidence:.2f})")
                 
+                # --- FIND COMMAND RESULTS INTERCEPTION ---
+                cmd_lower = command_text.lower()
+                if self.last_find_results and any(kw in cmd_lower for kw in ['muéstra', 'muestra', 'enseña', 'dime cuales', 'dime cuáles', 'léelos', 'lee los archivos']):
+                    results = self.last_find_results
+                    self.last_find_results = None  # Clear after reading
+                    self.speak(f"Estos son los archivos: {results}")
+                    return
+
                 # Diálogos activos
                 if self.waiting_for_timer_duration:
                     self.handle_timer_duration_response(command_text)
@@ -1095,10 +1106,13 @@ class NeoCore:
                                 lines_found = len([line for line in output.splitlines() if line.strip()])
                                 if lines_found == 0:
                                     self.speak("No he encontrado ningún archivo.")
+                                    self.last_find_results = None
                                 elif lines_found == 1:
                                     self.speak("He encontrado 1 archivo.")
+                                    self.last_find_results = output
                                 else:
                                     self.speak(f"He encontrado {lines_found} archivos.")
+                                    self.last_find_results = output
                             elif len(output) < 200:
                                 self.speak(f"Hecho: {output}")
                             else:
