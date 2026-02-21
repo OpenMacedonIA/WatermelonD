@@ -8,7 +8,8 @@ pyaudio
 rapidfuzz
 scikit-learn
 dateparser
-flask
+Flask<3.1.0
+Werkzeug<3.1.0
 paramiko
 cryptography
 flask-socketio
