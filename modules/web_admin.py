@@ -385,6 +385,26 @@ def settings():
     system_info['app']['version'] = '2.5.0' # Todo: Get from config
     system_info['app']['branch'] = get_git_branch()
     
+    import platform # Added for system info retrieval
+    
+    # OS Info
+    if 'os' not in system_info:
+        system_info['os'] = {
+            'system': system_info.get('system', 'Unknown'),
+            'release': system_info.get('release', 'Unknown'),
+            'version': system_info.get('version', 'Unknown'),
+            'architecture': system_info.get('machine', 'Unknown'),
+            'processor': platform.processor() or 'Unknown'
+        }
+        
+    # Python Info
+    if 'python' not in system_info:
+        system_info['python'] = {
+            'version': platform.python_version(),
+            'implementation': platform.python_implementation(),
+            'compiler': platform.python_compiler()
+        }
+    
     # Libraries Info
     if 'libraries' not in system_info:
         import flask
