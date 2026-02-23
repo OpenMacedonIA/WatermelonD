@@ -617,6 +617,15 @@ function configure_simple_mode() {
             "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,hola" \
             12 60 "" 3>&1 1>&2 2>&3)
     fi
+
+    # 2.5 Interfaz de Usuario / Face
+    if whiptail --title "Interfaz Visual de TangerineUI" --yesno \
+        "¿Deseas usar la Nueva Interfaz Simple (Recomendada)?\n\n- Sí: Interfaz de cara minimalista.\n- No: Interfaz 'Legacy' con logs y gráficas en pantalla." \
+        12 60; then
+        USE_LEGACY_FACE="false"
+    else
+        USE_LEGACY_FACE="true"
+    fi
     
     # 3. Puerto Web Admin (Opcional)
     if whiptail --title "Puerto Web" --yesno \
@@ -657,6 +666,15 @@ function configure_advanced_mode() {
         CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
             "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,hola,jarvis" \
             12 60 "" 3>&1 1>&2 2>&3)
+    fi
+
+    # 2.5 Interfaz de Usuario / Face
+    if whiptail --title "Interfaz Visual de TangerineUI" --yesno \
+        "¿Deseas usar la Nueva Interfaz Simple (Recomendada)?\n\n- Sí: Interfaz de cara minimalista.\n- No: Interfaz 'Legacy' con logs y gráficas en pantalla." \
+        12 60; then
+        USE_LEGACY_FACE="false"
+    else
+        USE_LEGACY_FACE="true"
     fi
     
     # 3. Servidores SSH
@@ -860,6 +878,12 @@ if 'web_admin' not in config:
 config['web_admin']['port'] = int("$WEB_PORT")
 config['web_admin']['host'] = '0.0.0.0'
 config['web_admin']['debug'] = False
+
+# Aplicar UI preference
+use_legacy_face = "$USE_LEGACY_FACE".lower() == "true"
+if 'tangerine' not in config:
+    config['tangerine'] = {}
+config['tangerine']['use_legacy_face'] = use_legacy_face
 
 # Guardar
 with open(config_path, 'w') as f:
