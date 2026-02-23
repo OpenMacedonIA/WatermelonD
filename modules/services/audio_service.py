@@ -8,13 +8,13 @@ import os
 import sys
 import base64
 
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.bus_client import BusClient
 from modules.utils import no_alsa_error
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [AUDIO] - %(levelname)s - %(message)s')
 logger = logging.getLogger("AudioService")
 
@@ -38,8 +38,8 @@ class AudioService:
         self.is_paused = False
 
     def on_mic_toggle(self, data):
-        """Toggles microphone mute state."""
-        # Optional: Allow setting specific state
+        """Alterna el estado de silencio del micrófono."""
+        # Opcional: Permitir configurar un estado específico
         if 'enabled' in data:
             self.is_muted = not data['enabled']
         else:
@@ -62,8 +62,8 @@ class AudioService:
         logger.info("Starting Microphone Loop...")
         CHUNK = 1024
         RATE = 16000
-        THRESHOLD = 500 # Energy threshold
-        SILENCE_LIMIT = 20 # Frames of silence to consider end of speech
+        THRESHOLD = 500 # Umbral de energía
+        SILENCE_LIMIT = 20 # Cuadros de silencio para considerar fin de voz
         
         with no_alsa_error():
             p = pyaudio.PyAudio()
@@ -82,7 +82,7 @@ class AudioService:
             try:
                 data = stream.read(CHUNK, exception_on_overflow=False)
                 
-                # Simple Energy VAD
+                # VAD de energía simple
                 shorts = struct.unpack("%dh" % (len(data) / 2), data)
                 rms = np.sqrt(np.mean(np.square(shorts)))
                 
@@ -100,18 +100,18 @@ class AudioService:
                     audio_buffer.append(data)
                     
                     if silence_frames > SILENCE_LIMIT:
-                        # End of speech
-                        logger.info("End of speech. Sending audio...")
+                        # Fin de la voz
+                        logger.info("Fin de voz. Enviando audio...")
                         self.bus.emit("recognizer_loop:record_end")
                         
                         raw_data = b''.join(audio_buffer)
-                        # Encode to base64 for JSON transport
+                        # Codificar a base64 para transporte JSON
                         b64_data = base64.b64encode(raw_data).decode('utf-8')
                         
                         self.bus.emit("recognizer_loop:audio", {
                             "data": b64_data,
                             "rate": RATE,
-                            "width": 2, # 16-bit
+                            "width": 2, # 16 bits
                             "channels": 1
                         })
                         

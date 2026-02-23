@@ -29,7 +29,7 @@ from modules.BlueberrySkills.diagnosis import DiagnosisSkill
 from modules.BlueberrySkills.visual import VisualSkill
 from modules.ssh_manager import SSHManager
 from modules.wifi_manager import WifiManager
-# from modules.vision import VisionManager # Lazy load to prevent CV2 segfaults
+# from modules.vision import VisionManager # Carga perezosa para evitar segfaults de CV2
 from modules.file_manager import FileManager
 from modules.bus_client import BusClient
 from modules.cast_manager import CastManager
@@ -96,7 +96,7 @@ except ImportError:
     vlc = None
 
 class SocketLogHandler(logging.Handler):
-    """Handler to stream logs to web client via SocketIO."""
+    """Manejador para transmitir logs al cliente web a través de SocketIO."""
     def __init__(self, socketio):
         super().__init__()
         self.socketio = socketio
@@ -135,14 +135,14 @@ class NeoCore:
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_all()
         
-        # --- State Variables ---
+        # --- Variables de Estado ---
         self.last_find_results = None
 
         self.event_queue = queue.Queue()
-        # --- Fix for Distrobox/Jack Segfaults ---
+        # --- Corrección para Segfaults de Distrobox/Jack ---
         jack_no_start = self.config.get('audio', {}).get('jack_no_start_server', '1')
         os.environ["JACK_NO_START_SERVER"] = str(jack_no_start)
-        # --- Audio Output (Speaker) ---
+        # --- Salida de Audio (Altavoz) ---
         try:
             self.speaker = Speaker(self.event_queue)
             self.audio_output_enabled = True
@@ -155,7 +155,7 @@ class NeoCore:
         # --- Alias para compatibilidad con Skills ---
         self.skills_config = self.config.get('skills', {})
         
-        # --- AI & Core Managers ---
+        # --- Gestores de IA y Núcleo ---
         model_path = self.config.get('ai_model_path')
         self.ai_engine = AIEngine(model_path=model_path) 
         self.intent_manager = IntentManager(self.config_manager)
@@ -163,7 +163,7 @@ class NeoCore:
         self.onnx_runner = SpecificModelRunner() # Initialize specialized runner
         self.text_normalizer = TextNormalizer() # Initialize normalizer
         self.keyword_router = KeywordRouter(self)
-        # --- Audio Input (VoiceManager) ---
+        # --- Entrada de Audio (Gestor de Voz) ---
         try:
             self.voice_manager = VoiceManager(
                 self.config_manager, 
@@ -178,21 +178,21 @@ class NeoCore:
             self.voice_manager = type('MockVoice', (object,), {'start_listening': lambda self, i: None, 'stop_listening': lambda self: None, 'set_processing': lambda self, p: None, 'is_listening': False})()
             self.audio_input_enabled = False
 
-        # --- Bus Client (CLI / External Injection) ---
+        # --- Cliente de Bus (Inyección CLI / Externa) ---
         self.bus = BusClient(name="NeoCore")
         self.bus.on('command:inject', self.handle_injected_command)
         app_logger.info(f"BusClient configured for {self.bus.host}:{self.bus.port}. Starting thread.")
-        # Start bus thread
+        # Iniciar hilo del bus
         threading.Thread(target=self.bus.run_forever, daemon=True).start()
         
-        # Update Web Admin Status
+        # Actualizar estado del Web Admin
         if WEB_ADMIN_DISPONIBLE:
             set_audio_status(getattr(self, 'audio_output_enabled', False), getattr(self, 'audio_input_enabled', False))
             self.web_server = web_admin_module
             
-            # Attach Socket Log Handler
+            # Adjuntar manejador de logs de SocketIO
             try:
-                # Remove existing socket handlers to avoid duplicates on restart
+                # Eliminar manejadores de socket existentes para evitar duplicados al reiniciar
                 for h in self.app_logger.handlers[:]:
                     if isinstance(h, SocketLogHandler):
                         self.app_logger.removeHandler(h)
@@ -209,27 +209,27 @@ class NeoCore:
         self.mango_manager = MangoManager() # Initialize MANGO T5
         self.health_manager = HealthManager(self.config_manager)
         
-        # Start RAG Ingestion in background
+        # Iniciar ingesta de RAG en segundo plano
         self._rag_thread = threading.Thread(target=self.chat_manager.knowledge_base.ingest_docs, daemon=True, name="RAG_Ingest")
         self._rag_thread.start()
 
-        # --- Legacy Managers ---
+        # --- Gestores Heredados ---
         self.calendar_manager = CalendarManager()
         self.alarm_manager = AlarmManager()
         self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
         self.ssh_manager = SSHManager()
         self.wifi_manager = WifiManager()
 
-        # --- Inject Managers into Web Admin (Shared State) ---
+        # --- Inyectar Gestores en Web Admin (Estado Compartido) ---
         if WEB_ADMIN_DISPONIBLE and self.web_server:
              self.web_server.ssh_manager = self.ssh_manager
-             # Inject others if needed, e.g. sysadmin
+             # Inyectar otros si es necesario, p. ej. sysadmin
              if self.sysadmin_manager:
                  self.web_server.sys_admin = self.sysadmin_manager
              if self.wifi_manager:
                  self.web_server.wifi_manager = self.wifi_manager
         
-        # Vision (Optional & Disabled by default to prevent Segfaults)
+        # Visión (Opcional y deshabilitado por defecto para evitar Segfaults)
         if self.config.get('vision_enabled', False):
             try:
                 from modules.vision import VisionManager
@@ -248,13 +248,13 @@ class NeoCore:
         self.cast_manager = CastManager()
         self.cast_manager.start_discovery() # Start looking for TVs/Speakers
         
-        # --- AI Engine (Gemma 2B) ---
-        # self.ai_engine already initialized above
+        # --- Motor de IA (Gemma 2B) ---
+        # self.ai_engine ya inicializado arriba
         
-        # --- BRAIN (Memory & Learning & RAG DB) ---
+        # --- CEREBRO (Memoria & Aprendizaje & BD RAG) ---
         self.brain = Brain()
         self.brain.set_ai_engine(self.ai_engine) # Inject AI for consolidation
-        # --- Alias DB for FilesSkill (using Brain's DB Manager) ---
+        # --- Alias de BD para FilesSkill (usando el Gestor de BD del Cerebro) ---
         # Si Brain tiene un db_manager, lo exponemos como self.db
         if self.brain and hasattr(self.brain, 'db'):
              self.db = self.brain.db
@@ -263,22 +263,22 @@ class NeoCore:
              self.db = None
              self.app_logger.warning("No se ha podido vincular self.db (Brain DB Manager). FilesSkill podría fallar.")
         
-        # --- Chat Manager (Personality & History) ---
+        # --- Gestor de Chat (Personalidad e Historial) ---
         self.chat_manager.brain = self.brain # Inject Brain for RAG
         
         self.network_manager = NetworkManager() if NetworkManager else None
         self.guard = Guard(self.event_queue) if Guard else None
         self.sherlock = Sherlock(self.event_queue) if Sherlock else None
         
-        # --- MQTT (Network Bros) ---
+        # --- MQTT (Hermanos de Red) ---
         self.mqtt_manager = MQTTManager(self.event_queue)
-        self.mqtt_manager.start() # Non-blocking, fails gracefully if no broker
+        self.mqtt_manager.start() # No bloqueante, falla elegantemente si no hay broker
         
-        # --- Bluetooth (Fallback) ---
+        # --- Bluetooth (Respaldo) ---
         self.bluetooth_manager = BluetoothManager(self.event_queue)
-        self.bluetooth_manager.start() # Non-blocking
+        self.bluetooth_manager.start() # No bloqueante
         
-        # --- Skills ---
+        # --- Habilidades ---
         self.skills_system = SystemSkill(self)
         self.skills_network = NetworkSkill(self)
         self.skills_time = TimeDateSkill(self)
@@ -292,21 +292,21 @@ class NeoCore:
         self.skills_visual = VisualSkill(self)
         self.skills_diagnosis = DiagnosisSkill(self)
 
-        # --- Dynamic Plugins (Extensions) ---
+        # --- Plugins Dinámicos (Extensiones) ---
         self.plugin_loader = PluginLoader(self)
         self.plugin_loader.load_plugins()
         
-        # --- Optional Skills (Voice Auth) ---
+        # --- Habilidades Opcionales (Autenticación de Voz) ---
         try:
             from modules.BlueberrySkills.optional.voice_auth import VoiceAuthSkill
             self.voice_auth_skill = VoiceAuthSkill(self)
         except ImportError:
              self.voice_auth_skill = None
-             app_logger.info("Optional Skill 'VoiceAuth' not found.")
+             app_logger.info("Habilidad Opcional 'VoiceAuth' no encontrada.")
         
         self.vlc_instance, self.player = self.setup_vlc()
         
-        # --- Content Loading (Resources) ---
+        # --- Carga de Contenido (Recursos) ---
         self.load_resources()
         
         # --- Variables de estado ---
@@ -325,44 +325,44 @@ class NeoCore:
         self.waiting_for_alarm_confirmation = False
         self.pending_alarm_data = None
 
-        self.pending_mango_command = None # For confirming potentially dangerous shell commands
+        self.pending_mango_command = None # Para confirmar comandos de shell potencialmente peligrosos
         
-        self.waiting_for_learning = None # Stores the key we are trying to learn
-        self.pending_suggestion = None # Stores the ambiguous intent we are asking about
+        self.waiting_for_learning = None # Almacena la clave que intentamos aprender
+        self.pending_suggestion = None # Almacena la intención ambigua sobre la que estamos preguntando
 
         self.last_spoken_text = "" 
         self.last_intent_name = None
         self.active_listening_end_time = 0 
-        self.dynamic_actions = {} # Registry for plugin actions 
+        self.dynamic_actions = {} # Registro para acciones de plugins 
 
-        # --- Thread Handles ---
+        # --- Manejadores de Hilos ---
         self._thread_events = None
         self._thread_proactive = None
         self._thread_web = None
 
         self.start_background_tasks()
         
-        # Main loop moved to run()
+        # El bucle principal se movió a run()
 
     def handle_injected_command(self, data):
-        """Handles commands injected via Bus (CLI/External)."""
-        self.app_logger.info(f"🔍 DEBUG: handle_injected_command called with data: {data}")
-        # BusClient passes the full message payload: {type, data, context}
-        # Extract the actual command text from the nested 'data' field
+        """Maneja los comandos inyectados a través del Bus (CLI/Externa)."""
+        self.app_logger.info(f" DEBUG: handle_injected_command called with data: {data}")
+        # BusClient pasa el payload completo del mensaje: {type, data, context}
+        # Extraer el texto real del comando del campo anidado 'data'
         text = data.get('data', {}).get('text')
-        self.app_logger.info(f"🔍 DEBUG: Extracted text: {text}")
+        self.app_logger.info(f" DEBUG: Extracted text: {text}")
         if text:
-            self.app_logger.info(f"💉 Command Injected via Bus: '{text}'")
-            # Simulate detected command
-            # Use 'neo' as detected wake word to ensure processing
+            self.app_logger.info(f" Command Injected via Bus: '{text}'")
+            # Simular comando detectado
+            # Usar 'neo' como palabra de activación detectada para asegurar el procesamiento
             self.on_voice_command(text, 'neo')
         else:
             self.app_logger.warning(f"Received command:inject with no text: {data}")
 
     def _watchdog_check(self):
-        """Performs periodic health checks on threads and services."""
-        # Simple keep-alive logging for now
-        # In future this could restart dead threads
+        """Realiza comprobaciones periódicas de salud en hilos y servicios."""
+        # Registro de mantenimiento activo simple por ahora
+        # En el futuro esto podría reiniciar hilos inactivos
         if self.app_logger:
             self.app_logger.debug("Watchdog: System OK")
 
@@ -397,7 +397,7 @@ class NeoCore:
             ]
             return random.choice(responses)
             
-        # 2. ESTADO DEL SISTEMA (Smart Check)
+        # 2. ESTADO DEL SISTEMA (Comprobación Inteligente)
         if re.search(r'(cómo|como|qué|que) (estás|estas|tal|te sientes|vamos)|reporte de estado|status', text):
             # Obtener métricas reales si es posible
             status_msg = f"Todo operativo, {nickname}."
@@ -460,7 +460,7 @@ class NeoCore:
             self._thread_web.start()
             app_logger.info("Servidor Web Admin iniciado en segundo plano.")
 
-        # 5. Self-Healing
+        # 5. Autorreparación
         self.health_manager.start()
 
     def on_vision_event(self, event_type, data):
@@ -806,22 +806,22 @@ class NeoCore:
                              self.speak("Lo siento, mis sistemas biométricos no están activos.")
                         return
 
-                # --- 1. COMMAND EXECUTION (Priority 1) ---
-                # Try to execute via Action Map
+                # --- 1. EJECUCIÓN DEL COMANDO (Prioridad 1) ---
+                # Intentar ejecutar a través del mapa de acciones
                 result = self.execute_command(command_text)
                 if result:
                     # Comprobar si result es un stream de texto (generator)
                     if hasattr(result, '__iter__') and not isinstance(result, (str, bytes, dict)):
-                        # Streaming response
+                        # Respuesta en streaming
                         try:
                              buffer = ""
                              for chunk in result:
                                  if chunk:
                                      buffer += chunk
-                                     # Heuristic: speak on sentence boundaries
+                                     # Heurística: hablar en los límites de oraciones
                                      if any(punct in buffer for punct in ['.', '!', '?', '\n']):
                                           import re
-                                          # Split keeping delimiters
+                                          # Dividir manteniendo delimitadores
                                           parts = re.split(r'([.!?\n])', buffer)
                                           
                                           if len(parts) > 1:
@@ -832,7 +832,7 @@ class NeoCore:
                                                       self.speak(sentence)
                                                       
                                               buffer = "".join(parts)
-                             # Speak remaining
+                             # Hablar lo restante
                              if buffer.strip():
                                  self.speak(buffer)
                         except Exception as e:
@@ -840,15 +840,15 @@ class NeoCore:
                               self.speak("He hecho lo que pediste, pero me he liado al contártelo.")
                     return
 
-                # Check for "Soy {name}" or "Aprende mi cara"
+                # Comprobar "Soy {name}" o "Aprende mi cara"
                 import re
                 match_learn = re.search(r"(?:soy|me llamo|mi nombre es)\s+(.+)", command_text, re.IGNORECASE)
                 if match_learn:
                     name = match_learn.group(1).strip()
-                    # Filter out purely conversational fillers if needed, but for now take the capture
+                    # Filtrar rellenos puramente conversacionales si es necesario, pero por ahora tomar la captura
                     if self.vision_manager:
                         self.speak(f"Hola {name}. Mírame a la cámara mientras aprendo tu cara...")
-                        # Run in background to not block
+                        # Ejecutar en segundo plano para no bloquear
                         def learn_task():
                              success, msg = self.vision_manager.learn_user(name)
                              self.speak(msg)
@@ -859,27 +859,27 @@ class NeoCore:
                         return
 
 
-                # --- CONVERSATIONAL SHORTCUTS (Before Router) ---
-                # Check if this is a simple greeting/farewell/status query
-                # Combine _check_conversational_shortcuts() with intent detection
+                # --- ATAJOS CONVERSACIONALES (Antes del Router) ---
+                # Comprobar si esto es una consulta simple de saludo/despedida/estado
+                # Combinar _check_conversational_shortcuts() con detección de intenciones
                 shortcut_response = self._check_conversational_shortcuts(command_text)
                 if shortcut_response:
-                    # It's a greeting/farewell/thank you - respond directly
+                    # Es un saludo/despedida/agradecimiento - responder directamente
                     self.speak(shortcut_response)
                     return
                 
-                # Also check intent manager for saludo/despedida to catch variations
+                # También comprobar el gestor de intenciones para saludo/despedida para capturar variaciones
                 best_intent = self.intent_manager.find_best_intent(command_text)
                 if best_intent and best_intent.get('name') in ['saludo', 'despedida', 'agradecimiento']:
-                    # High or medium confidence greeting/farewell from intent manager
+                    # Saludo/despedida de alta o media confianza del gestor de intenciones
                     confidence = float(best_intent.get('confidence', 0))
-                    if confidence >= 80:  # High confidence
-                        # Use shortcut response if available, otherwise generic
+                    if confidence >= 80:  # Alta confianza
+                        # Usar respuesta de atajo si está disponible, de lo contrario genérica
                         shortcut_response = self._check_conversational_shortcuts(command_text)
                         if shortcut_response:
                             self.speak(shortcut_response)
                         else:
-                            # Generic fallback
+                            # Respaldo genérico
                             if best_intent['name'] == 'saludo':
                                 nickname = self.config_manager.get('user_nickname', 'Usuario')
                                 self.speak(f"Hola {nickname}, ¿en qué puedo ayudarte?")
@@ -889,7 +889,7 @@ class NeoCore:
                                 self.speak("De nada.")
                         return
 
-                # --- 1. NEW ROUTER ARCHITECTURE ---
+                # --- 1. NUEVA ARQUITECTURA DE ENRUTADOR ---
                 # "Capa de Normalización"
                 command_text = self.text_normalizer.normalize(command_text)
 
@@ -898,7 +898,7 @@ class NeoCore:
                 
                 app_logger.info(f"ROUTER Decision: label='{router_label}', score={router_score:.3f}")
                 
-                # Emit router decision to UI/CLI (even for null)
+                # Emitir decisión del router a la UI/CLI (incluso para nulos)
                 if self.web_server:
                     try:
                         self.web_server.socketio.emit('router:decision', {
@@ -909,51 +909,51 @@ class NeoCore:
                     except Exception as e:
                         app_logger.debug(f"Failed to emit router decision: {e}")
                 
-                # Handling 'null' or 'gemma' category - Try intent fallback first
+                # Manejando categoría 'null' o 'gemma' - Intentar respaldo de intenciones primero
                 if router_label in ["null", "gemma", None]:
-                    # --- INTENT FALLBACK ---
-                    # Try to match with registered intents/actions before giving up
+                    # --- RESPALDO DE INTENCIONES ---
+                    # Intentar hacer coincidir con intenciones/acciones registradas antes de rendirse
                     app_logger.info(f"Router returned {router_label}. Trying intent fallback...")
                     
                     fallback_result = self.execute_command(command_text)
                     if fallback_result:
-                        # Found a matching intent!
+                        # ¡Se encontró una intención coincidente!
                         app_logger.info(f"[OK] Intent fallback succeeded for '{command_text}'")
                         self.speak(fallback_result if isinstance(fallback_result, str) else "Hecho")
                         return
                     
-                    # Still not found - handle as conversational
+                    # Aún no se encuentra - manejar como conversacional
                     if router_label == "gemma":
-                        # --- FAST PATH COMPARATOR ---
+                        # --- COMPARADOR DE RUTA RÁPIDA ---
                         shortcut_response = self._check_conversational_shortcuts(command_text)
                         if shortcut_response:
                             self.speak(shortcut_response)
                             return
 
-                        # Fallback to chat/general queries
+                        # Respaldo a consultas de chat/generales
                         final_response = self.chat_manager.get_response(command_text)
                         self.speak(final_response)
                         return
                     else:
-                        # null - truly didn't understand
+                        # null - realmente no entendió
                         self.speak("No he entendido el comando.")
                         app_logger.info("Router returned NULL and no intent matched.")
                         return
                 
-                # Technical Categories (malbec, syrah, tempranillo, pinot, chandonay, cabernet)
+                # Categorías Técnicas (malbec, syrah, tempranillo, pinot, chandonay, cabernet)
                 else:
                     try:
                         # "Capa de Ejecución": ONNX Runner
-                        # INJECT CONTEXT based on router type
+                        # INYECTAR CONTEXTO basado en el tipo de enrutador
 
-                        # --- Context Injection Strategy ---
-                        # Network models (syrah/cabernet): ONLY network aliases
-                        # Other models: Full filesystem context (pwd + ls)
+                        # --- Estrategia de inyección de contexto ---
+                        # Modelos de red (syrah/cabernet): SÓLO alias de red
+                        # Otros modelos: Contexto completo del sistema de archivos (pwd + ls)
                         # =========================
-                        # SECURE CATEGORY HANDLER
+                        # MANEJADOR DE CATEGORÍA SEGURA
                         # =========================
                         if router_label == "secure":
-                            app_logger.info(f"🔒 SECURE category detected. Using SecureIntentMatcher...")
+                            app_logger.info(f" SECURE category detected. Using SecureIntentMatcher...")
                             
                             if not self.secure_intent_matcher:
                                 self.speak("El sistema de seguridad no está disponible.")
@@ -965,7 +965,7 @@ class NeoCore:
                             if match_result:
                                 cmd, context, category, is_python = match_result
                                 
-                                app_logger.info(f"✅ Intent matched: category={category}, context={context}")
+                                app_logger.info(f" Intent matched: category={category}, context={context}")
                                 
                                 # Si es función Python (SecuritySkill)
                                 if is_python:
@@ -1020,16 +1020,16 @@ class NeoCore:
                                         
                                         return
                             else:
-                                # No hay match en SecureIntentMatcher
-                                app_logger.warning(f"❌ No intent match for secure command: {command_text}")
+                                # No hay coincidencia en SecureIntentMatcher
+                                app_logger.warning(f" No intent match for secure command: {command_text}")
                                 self.speak("No reconozco ese comando de seguridad. ¿Puedes reformularlo?")
                                 return
                         
                         # =========================
-                        # NETWORK/SYSTEM CATEGORIES
+                        # CATEGORÍAS DE RED/SISTEMA
                         # =========================
                         elif router_label in ["syrah", "syrach", "cabernet"]:
-                            # Network models: Only SSH/network aliases
+                            # Modelos de red: Sólo alias SSH/red
                             fs_context = "[]"
                             try:
                                 server_entries = []
@@ -1038,7 +1038,7 @@ class NeoCore:
                                         host = data.get('host', 'unknown')
                                         server_entries.append(f"'{alias}={host}'")
                                 
-                                # Inject network_aliases from config
+                                # Inyectar network_aliases desde configuración
                                 if self.config_manager:
                                     network_aliases = self.config_manager.get('network_aliases', {})
                                     for alias, ip in network_aliases.items():
@@ -1050,7 +1050,7 @@ class NeoCore:
                             except Exception as e:
                                 self.app_logger.error(f"Error building network context: {e}")
                         else:
-                            # Other models get full filesystem context
+                            # Otros modelos obtienen contexto completo del sistema de archivos
                             fs_context = self._get_filesystem_context()
                         # --------------------------------------------------------
 
@@ -1065,7 +1065,7 @@ class NeoCore:
                             return
 
                     except FileNotFoundError as e:
-                        # "Graceful Failure": Model missing
+                        # "Fallo elegante": Falta modelo
                         self.app_logger.error(f"Missing Model for {router_label}: {e}")
                         self.speak(f"No encuentro el modelo especializado para {router_label}. Continuando...")
                         return # Restart loop
@@ -1077,14 +1077,14 @@ class NeoCore:
 
                 # "Capa de Post-Procesamiento"
                 if generated_command:
-                    # 1. Visual Content Logic
+                    # 1. Lógica de Contenido Visual
                     visual_tokens = ["cat ", "gedit ", "nano ", "vim ", "ls ", "tree", "top", "htop", "less ", "more "]
                     is_visual = any(token in generated_command for token in visual_tokens)
                     
                     if is_visual and self.web_server: 
                          self.app_logger.info("Visual command detected. Emitting CLI event.")
                     
-                    # 2. Validate & Execute via SysAdminManager
+                    # 2. Validar y Ejecutar vía SysAdminManager
                     if self.sysadmin_manager:
                         is_valid, val_msg = self.sysadmin_manager.validate_command_flags(generated_command)
                         if not is_valid:
@@ -1097,11 +1097,11 @@ class NeoCore:
                         if success:
                             if is_visual and self.web_server:
                                  try:
-                                     # Emit output to web console
+                                     # Emitir salida a consola web
                                      self.web_server.socketio.emit('cli:output', {'cmd': generated_command, 'output': output}, namespace='/')
                                  except: pass
                             
-                            # Heuristic: If output is short/readable, speak it.
+                            # Heurística: Si la salida es corta/legible, háblala.
                             if generated_command.strip().startswith('find'):
                                 lines_found = len([line for line in output.splitlines() if line.strip()])
                                 if lines_found == 0:
@@ -1126,16 +1126,16 @@ class NeoCore:
                 
                 return
 
-                # --- Keyword Router (Legacy Function Calling) ---
+                # --- Enrutador de palabras clave (Llamada de función legada) ---
                 router_result = self.keyword_router.process(command_text)
                 if router_result:
                     app_logger.info(f"Keyword Router Action Result: {router_result}")
-                    # Use Gemma to generate a natural response based on the result
+                    # Usar Gemma para generar una respuesta natural basada en el resultado
                     final_response = self.chat_manager.get_response(command_text, system_context=router_result)
                     self.speak(final_response)
                     return
 
-                # --- BRAIN: Check for aliases ---
+                # --- CEREBRO: Comprobar alias ---
                 if self.brain:
                     alias_command = self.brain.process_input(command_text)
                     if alias_command:
@@ -1144,24 +1144,24 @@ class NeoCore:
 
                 app_logger.info(f"Comando: '{command_text}'. Buscando intención...")
 
-                # --- Suggestion / Learning Flow ---
+                # --- Flujo de sugerencias / Aprendizaje ---
                 if self.pending_suggestion:
                     if command_text.lower() in ['sí', 'si', 'claro', 'yes', 'correcto', 'eso es']:
-                        # User confirmed!
+                        # ¡Usuario confirmado!
                         original_cmd = self.pending_suggestion['original']
                         target_intent = self.pending_suggestion['intent']
                         
-                        # 1. Learn Alias
+                        # 1. Aprender Alias
                         if self.brain:
-                            # Use the first trigger as the canonical command
+                            # Usar el primer activador como comando canónico
                             canonical = target_intent['triggers'][0]
                             self.brain.learn_alias(original_cmd, canonical)
                             self.speak(f"Entendido. Aprendo que '{original_cmd}' es '{canonical}'.")
                         
-                        # 2. Execute Action
+                        # 2. Ejecutar Acción
                         self.pending_suggestion = None
-                        best_intent = target_intent # Proceed to execute
-                        # Fall through to execution block below...
+                        best_intent = target_intent # Proceder a ejecutar
+                        # Pasar al bloque de ejecución de abajo...
                     
                     elif command_text.lower() in ['no', 'negativo', 'cancelar']:
                         self.speak("Vale, perdona. ¿Qué querías decir?")
@@ -1170,15 +1170,15 @@ class NeoCore:
                     else:
                   
                         self.pending_suggestion = None
-                        # Fall through to normal processing
+                        # Pasar al procesamiento normal
 
-                # --- 3. AMBIGUITY CHECK (Legacy Intents) ---
-                # If we are here, it means:
-                # 1. Intent was NOT High Confidence.
-                # 2. Mango was NOT High Confidence (or failed).
+                # --- 3. COMPROBACIÓN DE AMBIGÜEDAD (Intenciones Legadas) ---
+                # Si estamos aquí, significa:
+                # 1. La intención NO era de Alta Confianza.
+                # 2. Mango NO era de Alta Confianza (o falló).
                 
                 if best_intent:
-                    # Low/Medium match -> Ask User
+                    # Coincidencia Baja/Media -> Preguntar al usuario
                     self.pending_suggestion = {
                         'original': command_text,
                         'intent': best_intent
@@ -1187,11 +1187,11 @@ class NeoCore:
                     self.speak(f"No estoy seguro. ¿Te refieres a '{suggestion_text}'?")
                     return
                 
-                # --- MANGO T5 Fallback (Low Confidence System Commands) ---
-                # If IntentManager also failed, check Mango again with lower threshold (e.g. 0.6)
-                # This catches things that look like system commands but Mango wasn't super sure.
+                # --- Respaldo de MANGO T5 (Comandos de Sistema de Baja Confianza) ---
+                # Si IntentManager también falló, comprobar Mango de nuevo con un umbral más bajo (ej. 0.6)
+                # Esto capta cosas que parecen comandos de sistema pero Mango no estaba súper seguro.
                 if mango_cmd and mango_conf > 0.6: 
-                     # Same logic as above but effectively treating it as "Last Resort" before Chat
+                     # Misma lógica anterior pero tratándolo efectivamente como "Último recurso" antes del Chat
                      if mango_cmd.startswith("echo ") or mango_cmd == "ls" or mango_cmd.startswith("ls "):
                          self.speak(f"Ejecutando: {mango_cmd}")
                          success, output = self.sysadmin_manager.run_command(mango_cmd)
@@ -1294,17 +1294,17 @@ class NeoCore:
             for chunk in stream:
                 buffer += chunk
                 
-                # Check for sentence delimiters
-                # Simple heuristic: split by punctuation
+                # Comprobar delimitadores de oraciones
+                # Heurística simple: dividir por puntuación
                 import re
-                # Split keeping delimiters
+                # Dividir manteniendo delimitadores
                 parts = re.split(r'([.!?\n])', buffer)
                 
                 if len(parts) > 1:
-                    # We have at least one complete sentence
-                    # parts = ['Sentence 1', '.', 'Sentence 2', '?', 'Partial']
+                    # Tenemos al menos una oración completa
+                    # partes = ['Oración 1', '.', 'Oración 2', '?', 'Parcial']
                     
-                    # Process pairs (text + delimiter)
+                    # Procesar pares (texto + delimitador)
                     while len(parts) >= 2:
                         sentence = parts.pop(0) + parts.pop(0)
                         sentence = sentence.strip()
@@ -1312,10 +1312,10 @@ class NeoCore:
                             app_logger.info(f"Stream Sentence: {sentence}")
                             self.speak(sentence)
                     
-                    # Remaining part is the new buffer
+                    # La parte restante es el nuevo buffer
                     buffer = "".join(parts)
             
-            # Speak remaining buffer
+            # Hablar el buffer restante
             if buffer.strip():
                 app_logger.info(f"Stream Final: {buffer}")
                 self.speak(buffer)
@@ -1336,7 +1336,7 @@ class NeoCore:
                     app_logger.info(f"Procesando evento SPEAK: {text_to_speak}")
                     self.is_processing_command = True
                     
-                    # Emit AI Response to UI
+                    # Emitir respuesta IA a la UI
                     if self.web_server:
                         try:
                             self.web_server.socketio.emit('ai:response', {'text': text_to_speak}, namespace='/')
@@ -1395,30 +1395,30 @@ class NeoCore:
                 self._check_hourly_tasks()
                 last_hourly_check = current_time
             
-            # Sleep to prevent CPU spinning
-            time.sleep(0.5)  # Check every 500ms instead of continuous loop
+            # Dormir para evitar el sobreuso de CPU
+            time.sleep(0.5)  # Comprobar cada 500ms en lugar de bucle continuo
             
             # Tareas horarias (limpieza, mantenimiento)
             if int(time.time()) % 3600 == 0:
-                # self.clean_tts_cache() # Assuming this function exists elsewhere or is removed
+                # self.clean_tts_cache() # Asumiendo que esta función existe en otro lugar o fue eliminada
                 if self.brain:
-                    self.brain.consolidate_memory() # Try to consolidate yesterday's memory
+                    self.brain.consolidate_memory() # Intentar consolidar la memoria de ayer
 
-            # Reset Face if Active Listening Expired
+            # Restablecer la cara si expiró la escucha activa
             if self.active_listening_end_time > 0 and time.time() > self.active_listening_end_time:
                 if update_face: update_face('idle')
                 self.active_listening_end_time = 0
 
-            # Watchdog: Check if Voice Thread is alive
+            # Perro guardián: comprobar si el hilo de voz está vivo
             if self.voice_manager.is_listening:
                  if not hasattr(self.voice_manager, 'listener_thread') or not self.voice_manager.listener_thread.is_alive():
                      self.app_logger.warning(" Watchdog: Voice Thread Died! Restarting...")
-                     self.voice_manager.stop_listening() # Reset flags
+                     self.voice_manager.stop_listening() # Restablecer banderas
                      time.sleep(1)
                      self.voice_manager.start_listening(self.intent_manager.intents)
                      self.app_logger.info(" Watchdog: Voice Thread Restarted.")
 
-            time.sleep(1) # Reduced sleep for better responsiveness
+            time.sleep(1) # Reducido para mejor capacidad de respuesta
 
     def _check_frequent_tasks(self):
         """Verifica alarmas y temporizadores."""
@@ -1444,7 +1444,7 @@ class NeoCore:
         
         # Mapa de acciones simplificado
         action_map = {
-            # --- System & Admin ---
+            # --- Sistema y Admin ---
             "accion_apagar": self.skills_system.apagar,
             "check_system_status": self.skills_system.check_status,
             "queja_factura": self.skills_system.queja_factura,
@@ -1454,12 +1454,12 @@ class NeoCore:
             "system_find_file": self.skills_system.find_file,
             "realizar_diagnostico": self.skills_diagnosis.realizar_diagnostico,
             
-            # --- Time & Date ---
+            # --- Hora y Fecha ---
             "decir_hora_actual": self.skills_time.decir_hora_fecha,
             "decir_fecha_actual": self.skills_time.decir_hora_fecha,
             "decir_dia_semana": self.skills_time.decir_dia_semana,
             
-            # --- Organizer (Calendar, Alarms, Timers) ---
+            # --- Organizador (Calendario, Alarmas, Temporizadores) ---
             "consultar_citas": self.skills_organizer.consultar_citas,
             "crear_recordatorio_voz": self.skills_organizer.crear_recordatorio_voz, 
             "crear_alarma_voz": self.skills_organizer.crear_alarma_voz, 
@@ -1469,13 +1469,13 @@ class NeoCore:
             "consultar_temporizador": self.skills_organizer.consultar_temporizador, 
             "crear_temporizador_directo": self.skills_organizer.crear_temporizador_directo,
             
-            # --- Media & Cast ---
+            # --- Medios & Cast ---
             "controlar_radio": self.skills_media.controlar_radio,
             "detener_radio": self.skills_media.detener_radio, 
             "cast_video": self.skills_media.cast_video,
             "stop_cast": self.skills_media.stop_cast,
             
-            # --- Content & Fun (Migrated to Plugin) ---
+            # --- Contenido & Diversión (Migrado a Plugin) ---
             # "contar_chiste": self.skills_content.contar_contenido_aleatorio, 
             # "decir_frase_celebre": self.skills_content.decir_frase_celebre,
             # "contar_dato_curioso": self.skills_content.contar_contenido_aleatorio,
@@ -1483,7 +1483,7 @@ class NeoCore:
             # "aprender_dato": self.skills_content.aprender_dato,
             # "consultar_dato": self.skills_content.consultar_dato,
             
-            # --- Network & SSH & Files ---
+            # --- Red & SSH & Archivos ---
             "network_scan": self.skills_network.scan,
             "network_ping": self.skills_network.ping,
             "network_whois": self.skills_network.whois,
@@ -1498,19 +1498,19 @@ class NeoCore:
             "buscar_archivo": self.skills_files.search_file,
             "leer_archivo": self.skills_files.read_file,
             
-            # Visual Skill - Smart File Viewer
+            # Habilidad Visual - Visor de archivos inteligente
             "visual_show_file": self.skills_visual.show_file,
             "visual_close": self.skills_visual.close_viewer,
             
-            # --- Generic ---
+            # --- Genérico ---
             "responder_simple": lambda command, response, **kwargs: self.speak(response)
         }
         
-        # --- Merge Dynamic Plugin Actions ---
+        # --- Fusionar Acciones Dinámicas de Plugin ---
         if hasattr(self, 'dynamic_actions'):
             action_map.update(self.dynamic_actions)
         
-        # --- BRAIN: Store interaction ---
+        # --- CEREBRO: Almacenar interacción ---
         if self.brain:
             self.brain.store_interaction(cmd, resp, intent_name)
             
@@ -1549,7 +1549,7 @@ class NeoCore:
 
     def execute_command(self, command_text):
         """Intenta ejecutar un comando usando los diferentes gestores (Intent, Keyword, etc)."""
-        # 1. Intent Manager (NLP)
+        # 1. Gestor de Intenciones (NLP)
         intent = self.intent_manager.find_best_intent(command_text)
         if intent and intent.get('score', 0) > 70:
              app_logger.info(f"Intent detectado: {intent.get('name', 'Unknown')} ({intent.get('confidence', 'N/A')})")
@@ -1569,7 +1569,7 @@ class NeoCore:
 
         # 3. System Admin Actions (si no fue capturado por router)
         if self.sysadmin_manager:
-             # Check for common system phrases
+             # Comprobar frases de sistema comunes
              pass
 
         return None
@@ -1577,12 +1577,12 @@ class NeoCore:
     def handle_mango_confirmation(self, text):
         """Confirma o cancela un comando de sistema propuesto por Mango."""
         command = self.pending_mango_command
-        self.pending_mango_command = None # Reset state
+        self.pending_mango_command = None # Restablecer estado
 
         if any(w in text.lower() for w in ['sí', 'si', 'hazlo', 'dale', 'ejecuta', 'vale', 'ok']):
             self.speak("Ejecutando.")
             
-            # Execute command
+            # Ejecutar comando
             try:
                 import subprocess
                 result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
@@ -1600,33 +1600,33 @@ class NeoCore:
             self.speak("Vale, cancelado.")
 
     def _get_filesystem_context(self):
-        """Generates context string with pwd and top 5 files (by size)."""
+        """Genera cadena de contexto con pwd y los top 5 archivos (por tamaño)."""
         try:
             cwd = os.getcwd()
             files = []
             try:
-                # Use scandir for better performance and stat access
+                # Usar scandir para mejor rendimiento y acceso a stat
                 with os.scandir(cwd) as entries:
                     for entry in entries:
-                        # Skip hidden files
+                        # Saltarse archivos ocultos
                         if not entry.name.startswith('.'):
                             try:
                                 stats = entry.stat()
                                 files.append((entry.name, stats.st_size))
                             except OSError:
-                                pass # Skip files we can't access
+                                pass # Saltar archivos a los que no podemos acceder
             except OSError:
                 app_logger.warning(f"Could not scan directory: {cwd}")
                 files = []
             
-            # Sort by size (descending) and take top 5
+            # Ordenar por tamaño (descendente) y tomar top 5
             files.sort(key=lambda x: x[1], reverse=True)
             top_files = [f[0] for f in files[:5]]
             
-            # Format: 'ls=file1, file2, ...'
+            # Formato: 'ls=archivo1, archivo2, ...'
             ls_str = ", ".join(top_files)
             
-            # Final format as per requirement: "Contexto: ['pwd=...', 'ls=...'] | "
+            # Formato final según requerimiento: "Contexto: ['pwd=...', 'ls=...'] | "
             return f"['pwd={cwd}', 'ls={ls_str}']"
         except Exception as e:
             app_logger.error(f"Error generating FS context: {e}")

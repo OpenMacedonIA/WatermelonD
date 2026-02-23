@@ -8,7 +8,7 @@ import os
 import sys
 import base64
 
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.bus_client import BusClient
@@ -16,11 +16,11 @@ from modules.config_manager import ConfigManager
 from modules.utils import normalize_text
 from modules.stt_postprocessor import get_processor
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [STT] - %(levelname)s - %(message)s')
 logger = logging.getLogger("STTService")
 
-# Optional Imports
+# Importaciones opcionales
 try:
     import sherpa_onnx
     SHERPA_AVAILABLE = True
@@ -33,15 +33,15 @@ class STTService:
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get('stt', {})
         
-        # Models
+        # Modelos
         self.sherpa_recognizer = None
         
-        # Post-processor for error correction
+        # Post-procesador para corrección de errores
         self.postprocessor = get_processor(self.config_manager)
         
         self.setup_stt()
         
-        # Connect to Bus
+        # Conectar al Bus
         self.bus.connect()
         self.bus.on('recognizer_loop:audio', self.on_audio)
 
@@ -57,7 +57,7 @@ class STTService:
         
         model_dir = self.config.get('sherpa_model_path', "models/sherpa/sherpa-onnx-whisper-medium")
         
-        # Auto-detect model if path points to generic dir but specific model exists
+        # Auto-detectar modelo si la ruta apunta a un dir genérico pero existe un modelo específico
         if model_dir == "models/sherpa" and os.path.exists("models/sherpa/sherpa-onnx-whisper-medium"):
              model_dir = "models/sherpa/sherpa-onnx-whisper-medium"
         
@@ -65,9 +65,9 @@ class STTService:
         decoder = os.path.join(model_dir, "decoder.onnx")
         tokens = os.path.join(model_dir, "tokens.txt")
         
-        # Fallback for old file names (tiny-encoder.onnx, etc)
+        # Respaldo para nombres de archivo antiguos (tiny-encoder.onnx, etc)
         if not os.path.exists(encoder):
-            # Try finding any *encoder.onnx
+            # Intentar buscar cualquier *encoder.onnx
             files = os.listdir(model_dir) if os.path.exists(model_dir) else []
             for f in files:
                 if f.endswith("encoder.onnx"): encoder = os.path.join(model_dir, f)
@@ -76,7 +76,7 @@ class STTService:
 
         if os.path.exists(encoder):
             try:
-                # Determine thread count
+                # Determinar cantidad de hilos
                 num_threads = int(self.config.get('num_threads', 2))
                 
                 self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
@@ -91,7 +91,7 @@ class STTService:
 
     def on_audio(self, message):
         """
-        Handle audio data from AudioService.
+        Maneja datos de audio de AudioService.
         """
         data = message.get('data', {})
         b64_data = data.get('data')
@@ -134,7 +134,7 @@ class STTService:
         return None
 
     def process_text(self, text):
-        # Apply post-processing corrections
+        # Aplicar correcciones de post-procesamiento
         text = self.postprocessor.process(text)
         
         logger.info(f"Transcribed (post-processed): {text}")
@@ -143,7 +143,7 @@ class STTService:
         if ww:
             logger.info(f"Wake Word Detected: {ww}")
             self.bus.emit("recognizer_loop:wakeword", {"wakeword": ww})
-            # Remove wake word using post-processor
+            # Eliminar palabra de activación usando el post-procesador
             text = self.postprocessor.remove_wake_word(text, [ww])
         
         if text:

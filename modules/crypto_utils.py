@@ -1,6 +1,6 @@
 """
-Password encryption utilities using Fernet (AES-128).
-Replaces Base64 obfuscation with real encryption.
+Utilidades de encriptación de contraseñas usando Fernet (AES-128).
+Reemplaza la ofuscación en Base64 por encriptación real.
 """
 
 from cryptography.fernet import Fernet
@@ -15,8 +15,8 @@ logger = logging.getLogger("CryptoUtils")
 
 class PasswordCrypto:
     """
-    Encrypts/decrypts passwords using Fernet (symmetric encryption).
-    Uses machine-specific key derived from /etc/machine-id.
+    Encripta/desencripta contraseñas usando Fernet (encriptación simétrica).
+    Usa clave específica de la máquina derivada de /etc/machine-id.
     """
     
     def __init__(self):
@@ -30,23 +30,23 @@ class PasswordCrypto:
     
     def _get_encryption_key(self):
         """
-        Generate encryption key based on machine ID.
-        This makes passwords non-portable between machines.
+        Genera clave de encriptación basada en ID de máquina.
+        Esto hace que las contraseñas no sean portátiles entre máquinas.
         """
         try:
-            # Try to get machine-id (Linux)
+            # Intentar obtener machine-id (Linux)
             with open('/etc/machine-id', 'r', encoding='utf-8') as f:
                 machine_id = f.read().strip()
         except FileNotFoundError:
-            # Fallback for systems without machine-id (macOS, BSD)
+            # Alternativa para sistemas sin machine-id (macOS, BSD)
             try:
                 machine_id = os.uname().nodename + os.uname().machine
             except:
-                # Last resort fallback
+                # Alternativa de último recurso
                 machine_id = "watermelond_default_id"
                 logger.warning("Could not get machine ID, using default (less secure)")
         
-        # Derive key using PBKDF2
+        # Derivar clave usando PBKDF2
         salt = b'watermelond_ssh_password_salt_v1'
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
@@ -61,8 +61,8 @@ class PasswordCrypto:
     
     def encrypt(self, plaintext):
         """
-        Encrypt a password string.
-        Returns: "FERNET:encrypted_data" or None on error
+        Encriptar un string de contraseña.
+        Devuelve: "FERNET:datos_encriptados" o None en caso de error
         """
         if not plaintext:
             return None
@@ -80,14 +80,14 @@ class PasswordCrypto:
     
     def decrypt(self, encrypted_text):
         """
-        Decrypt a password string.
-        Supports both FERNET: and legacy ENC: (Base64) formats.
-        Returns: decrypted plaintext or original text on error
+        Desencriptar un string de contraseña.
+        Soporta ambos formatos FERNET: y legado ENC: (Base64).
+        Devuelve: texto plano desencriptado o texto original en caso de error
         """
         if not encrypted_text:
             return None
         
-        # Handle Fernet encryption
+        # Manejar la encriptación Fernet
         if encrypted_text.startswith("FERNET:"):
             if not self._fernet:
                 logger.error("Crypto not initialized, cannot decrypt")
@@ -101,7 +101,7 @@ class PasswordCrypto:
                 logger.error(f"Decryption failed: {e}")
                 return None
         
-        # Handle legacy Base64 obfuscation (backwards compatibility)
+        # Manejar ofuscación Base64 de legado (compatibilidad hacia atrás)
         elif encrypted_text.startswith("ENC:"):
             try:
                 raw = encrypted_text.split("ENC:")[1]
@@ -112,13 +112,13 @@ class PasswordCrypto:
                 logger.error(f"Base64 decode failed: {e}")
                 return None
         
-        # Plain text (legacy)
+        # Texto plano (legado)
         else:
             logger.warning("Found plaintext password - should be encrypted")
             return encrypted_text
     
     def _fallback_obfuscate(self, text):
-        """Fallback to Base64 if Fernet fails."""
+        """Alternativa a Base64 si Fernet falla."""
         try:
             encoded = base64.b64encode(text.encode()).decode()
             logger.warning("Using Base64 fallback (less secure)")
@@ -127,11 +127,11 @@ class PasswordCrypto:
             return None
 
 
-# Global instance
+# Instancia global
 _crypto_instance = None
 
 def get_crypto():
-    """Get singleton PasswordCrypto instance."""
+    """Obtener instancia singleton de PasswordCrypto."""
     global _crypto_instance
     if _crypto_instance is None:
         _crypto_instance = PasswordCrypto()

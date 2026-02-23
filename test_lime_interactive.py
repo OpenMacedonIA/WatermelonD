@@ -2,14 +2,14 @@ import logging
 import os
 import sys
 from unittest.mock import MagicMock
-import readline # For better input handling
+import readline # Para un mejor manejo de la entrada
 
-# --- Hack: Mock broken torchvision to prevent T5 load crash ---
-# Copied from modules/BrainNut/engine.py
+# --- Hack: Simular torchvision roto para prevenir cuelgue de T5 ---
+# Copiado de modules/BrainNut/engine.py
 try:
     import torchvision
 except (ImportError, RuntimeError):
-    # Mocking torchvision to bypass specific environment issues
+    # Simulando torchvision para evitar problemas específicos del entorno
     mock_tv = MagicMock()
     from importlib.machinery import ModuleSpec
     mock_tv.__spec__ = ModuleSpec(name="torchvision", loader=None)
@@ -20,13 +20,13 @@ except (ImportError, RuntimeError):
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-# Setup basic logging
+# Configurar logging básico
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("LimeTester")
 
 class LimeTester:
     def __init__(self, model_path=None):
-        # Default priority: Local > HuggingFace
+        # Prioridad predeterminada: Local > HuggingFace
         if model_path:
             self.model_path = model_path
         elif os.path.exists("models/Lime"):
@@ -39,24 +39,24 @@ class LimeTester:
         self.device = "cpu"
 
     def load_model(self):
-        logger.info(f"Loading Lime T5 from {self.model_path}...")
+        logger.info(f"Cargando Lime T5 desde {self.model_path}...")
         
         try:
             if torch.cuda.is_available():
                 self.device = "cuda"
             else:
                 self.device = "cpu"
-                torch.set_num_threads(2) # Allow slightly more threads for standalone test
+                torch.set_num_threads(2) # Permitir un poco más de hilos para prueba independiente
                 
-            logger.info(f"Using device: {self.device}")
+            logger.info(f"Usando dispositivo: {self.device}")
 
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_path).to(self.device)
             
-            logger.info("[OK] Model loaded successfully!")
+            logger.info("[OK] ¡Modelo cargado exitosamente!")
             return True
         except Exception as e:
-            logger.error(f"[ERROR] Error loading model: {e}")
+            logger.error(f"[ERROR] Error cargando modelo: {e}")
             return False
 
     def get_context(self):
@@ -81,7 +81,7 @@ class LimeTester:
         if not text: return
         
         try:
-            # Build prompt with context
+            # Construir prompt con contexto
             if context_override is not None:
                 context_str = str(context_override)
             else:
@@ -89,7 +89,7 @@ class LimeTester:
                 
             input_text = f"Contexto: {context_str} | Instrucción: {text.strip()}"
             
-            # logger.debug(f"Full Prompt: {input_text}") # Silenced for cleaner UI
+            # logger.debug(f"Prompt Completo: {input_text}") # Silenciado para una interfaz más limpia
 
             input_ids = self.tokenizer.encode(input_text, return_tensors="pt").to(self.device)
             
@@ -98,7 +98,7 @@ class LimeTester:
                 max_length=128, 
                 num_beams=5, 
                 temperature=0.7,
-                do_sample=True, # Enable sampling to make temperature effective
+                do_sample=True, # Habilitar muestreo para que la temperatura sea efectiva
                 early_stopping=True,
                 return_dict_in_generate=True, 
                 output_scores=True
@@ -106,23 +106,23 @@ class LimeTester:
             
             command = self.tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
             
-            # Calculate confidence (heuristic)
+            # Calcular confianza (heurística)
             sequence_score = outputs.sequences_scores[0].item()
             
-            # Confidence mapping
-            if sequence_score > -1.5: confidence = "Very High (98%)"
-            elif sequence_score > -3.0: confidence = "High (90%)"
-            elif sequence_score > -5.0: confidence = "Medium (75%)"
-            else: confidence = "Low (50%)"
+            # Mapeo de confianza
+            if sequence_score > -1.5: confidence = "Muy Alta (98%)"
+            elif sequence_score > -3.0: confidence = "Alta (90%)"
+            elif sequence_score > -5.0: confidence = "Media (75%)"
+            else: confidence = "Baja (50%)"
             
-            print(f"\n🌱 Result:")
-            # print(f"   Context: \033[90m{context_str}\033[0m") # Removed as requested
-            print(f"   Command: \033[92m{command}\033[0m") # Green text
-            print(f"   Score:   {sequence_score:.4f} ({confidence})")
+            print(f"\n Resultado:")
+            # print(f"   Context: \033[90m{context_str}\033[0m") # Eliminado según lo solicitado
+            print(f"   Comando: \033[92m{command}\033[0m") # Texto verde
+            print(f"   Puntuación: {sequence_score:.4f} ({confidence})")
             print("-" * 40)
             
         except Exception as e:
-            logger.error(f"Inference error: {e}")
+            logger.error(f"Error de inferencia: {e}")
 
 def run_benchmark(tester):
     # ==========================================
@@ -138,14 +138,14 @@ def run_benchmark(tester):
 
     # Pruebas específicas para ver si ignora el ruido y obedece comandos de sistema
     pruebas_neocore = [
-        # --- 🐳 DOCKER (¿Sabe ignorar los .py?) ---
+        # ---  DOCKER (¿Sabe ignorar los .py?) ---
         "Despliega un contenedor redis en el puerto 6379",
         "Listame los contenedores activos",
         "Muestra los logs del contenedor llamado 'database'",
         "Para todos los contenedores que esten corriendo",
         "Ejecuta una terminal bash dentro del contenedor 'neocore_app'",
 
-        # --- 📂 NAVEGACIÓN Y ARCHIVOS (¿Sabe moverse?) ---
+        # ---  NAVEGACIÓN Y ARCHIVOS (¿Sabe moverse?) ---
         "Entra en el directorio TangerineUI",
         "Sube un nivel de directorio",
         "Dime la ruta actual (pwd)",  # A ver si aquí no dice 'echo'
@@ -153,7 +153,7 @@ def run_benchmark(tester):
         "Muestrame las ultimas 10 lineas del changelog.md",
         "Cuenta cuantos archivos hay en la carpeta modules",
 
-        # --- ⚙️ ESTADO DEL SISTEMA (¿Sabe mirar el hardware?) ---
+        # ---  ESTADO DEL SISTEMA (¿Sabe mirar el hardware?) ---
         "Verifica el espacio libre en disco",
         "Dime cuanta memoria RAM se esta usando",
         "Muestrame los puertos que estan escuchando en el sistema",
@@ -175,16 +175,16 @@ def run_benchmark(tester):
     # ==========================================
     # BUCLE DE EJECUCIÓN
     # ==========================================
-    print("--- 🔥 INICIANDO BATERÍA DE PRUEBAS SYSADMIN ---")
+    print("---  INICIANDO BATERÍA DE PRUEBAS SYSADMIN ---")
 
     # 1. Ejecutar pruebas con ruido (NeoCore)
     for req in pruebas_neocore:
-        print(f"📝 Contexto: NeoCore | Request > {req}")
+        print(f" Contexto: NeoCore | Request > {req}")
         tester.infer(req, context_override=ctx_neocore)
 
     # 2. Ejecutar pruebas limpias
     for req in pruebas_limpias:
-        print(f"📝 Contexto: []      | Request > {req}")
+        print(f" Contexto: []      | Request > {req}")
         tester.infer(req, context_override=[])
 
 def main():
@@ -192,21 +192,21 @@ def main():
     
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--benchmark", action="store_true", help="Run automated benchmark battery")
+    parser.add_argument("--benchmark", action="store_true", help="Ejecutar la batería de pruebas automatizada")
     args = parser.parse_args()
 
     tester = LimeTester()
     if not tester.load_model():
-        print("Failed to start. Check if model is downloaded in models/Lime or internet is available.")
+        print("Error al iniciar. Compruebe si el modelo está descargado en models/Lime o si hay internet.")
         return
 
     if args.benchmark:
         run_benchmark(tester)
         return
 
-    print("Type 'exit' or 'quit' to stop.")
-    print("Type 'benchmark' to run the test battery.")
-    print("\nReady! Ask for a command (e.g., 'list all files', 'shut down the system')")
+    print("Escribe 'exit' o 'quit' para detener.")
+    print("Escribe 'benchmark' para ejecutar la batería de pruebas.")
+    print("\n¡Listo! Pide un comando (ej., 'lista todos los archivos', 'apaga el sistema')")
     
     while True:
         try:
@@ -221,7 +221,7 @@ def main():
             tester.infer(user_input)
             
         except KeyboardInterrupt:
-            print("\nExiting...")
+            print("\nSaliendo...")
             break
 
 if __name__ == "__main__":

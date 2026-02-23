@@ -6,7 +6,7 @@ import threading
 import time
 import random
 from datetime import datetime, date
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.utils import load_json_data
@@ -28,7 +28,7 @@ from modules.ai_engine import AIEngine
 from modules.chat import ChatManager
 from modules.brain import Brain
 
-# Optional Managers
+# Administradores opcionales
 try:
     from modules.sysadmin import SysAdminManager
 except ImportError:
@@ -64,7 +64,7 @@ try:
 except ImportError:
     MangoManager = None
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [SKILLS] - %(levelname)s - %(message)s')
 logger = logging.getLogger("SkillsService")
 
@@ -73,12 +73,12 @@ class EventQueueWrapper:
         self.bus = bus
 
     def put(self, item):
-        """Intercepts event_queue.put and emits to bus."""
+        """Intercepta event_queue.put y emite al bus."""
         msg_type = item.get('type')
         if msg_type == 'speak':
             self.bus.emit('speak', {'text': item.get('text')})
         elif msg_type == 'mqtt_alert':
-            # Re-emit as bus event
+            # Reemitir como evento del bus
             self.bus.emit('mqtt.alert', item)
         else:
             logger.warning(f"Unknown event type in queue: {msg_type}")
@@ -89,20 +89,19 @@ class SkillsService:
         self.config_manager = ConfigManager()
         self.config = self.config_manager.get_all()
         
-        # Emulate NeoCore interface for skills
+        # Emular interfaz NeoCore para habilidades
         self.event_queue = EventQueueWrapper(self.bus)
         
-        # Initialize Managers
-        # Initialize Managers
+        # Inicializar Administradores
         self.init_managers()
         
-        # Load Config BEFORE Skills (so they can access it)
+        # Cargar configuración ANTES de las habilidades (para que puedan acceder a ella)
         self.load_intents()
         
-        # Expose logger as app_logger for skills
+        # Exponer el registro como app_logger para habilidades
         self.app_logger = logger
         
-        # Initialize Skills
+        # Inicializar habilidades
         self.init_skills()
         
         # Action Map
@@ -120,7 +119,7 @@ class SkillsService:
         # Load Skills Config
         self.skills_config = load_json_data('config/skills.json')
         if not self.skills_config:
-            # Default fallback
+            # Respaldo por defecto
             self.skills_config = {}
             logger.warning("Could not load config/skills.json")
 
@@ -167,7 +166,7 @@ class SkillsService:
         self.skills_files = FilesSkill(self)
         self.skills_visual = VisualSkill(self)
         
-        # Map instances to names for permission checking
+        # Mapeo de instancias a nombres para comprobación de permisos
         self.skill_instance_map = {
             self.skills_system: "system",
             self.skills_network: "network",
@@ -250,15 +249,15 @@ class SkillsService:
         if response:
             self.speak(response)
         else:
-            # Fallback to AI if no response defined
+            # Fallback a IA si no hay respuesta definida
             self.handle_unknown({"data": {"utterance": command}})
 
     def register_intents(self):
-        # Register for all intents in action_map
+        # Registrar para todas las intenciones en action_map
         for intent_name in self.action_map:
             self.bus.on(intent_name, self.handle_intent)
             
-        # Also register for unknown intent (fallback to Chat)
+        # También registrar para intención desconocida (fallback de Chat)
         self.bus.on("recognizer_loop:unknown_intent", self.handle_unknown)
 
     def handle_intent(self, message):
@@ -270,7 +269,7 @@ class SkillsService:
         logger.info(f"Executing Skill for: {intent_type}")
         
         if intent_type in self.action_map:
-            # Get response from intents
+            # Obtener respuesta de las intenciones
             response = ""
             intent_def = self.intents_map.get(intent_type)
             if intent_def and 'responses' in intent_def:
@@ -281,13 +280,12 @@ class SkillsService:
             try:
                 method = self.action_map[intent_type]
                 
-                # Check if skill is enabled
+                # Comprobar si la habilidad está habilitada
                 skill_instance = getattr(method, '__self__', None)
                 if skill_instance:
                     skill_name = self.skill_instance_map.get(skill_instance)
                     if skill_name:
-                        # Reload config to be sure (or we could listen for updates)
-                        # For performance, we might want to cache this, but for now reload is safer for immediate effect
+                        # Recargar configuración para estar seguros (podríamos cachear por rendimiento)
                         self.skills_config = load_json_data('config/skills.json') or {}
                         
                         skill_info = self.skills_config.get(skill_name, {})
@@ -310,12 +308,12 @@ class SkillsService:
              logger.warning("Unknown intent event received but no utterance found.")
              return
 
-        # 1. Try Mango (Sysadmin/Command) First
+        # 1. Probar Mango Primero (Comandos Sysadmin)
         if self.mango_manager and self.mango_manager.is_ready:
             logger.info(f"Consulting Mango for: {utterance}")
             command, confidence = self.mango_manager.infer(utterance)
             
-            # Threshold matches user preference for Mango priority
+            # Umbral de prioridad
             if command and confidence >= 0.8: 
                 logger.info(f"Mango identified command: {command} (Conf: {confidence})")
                 
@@ -335,7 +333,7 @@ class SkillsService:
 
                     success, output = self.sysadmin_manager.run_command(command)
                     if success:
-                        # Smart Summary for TTS
+                        # Resumen inteligente para TTS
                         speak_text = self.summarize_output(output, command)
                         self.bus.emit('speak', {'text': speak_text})
                     else:
@@ -348,14 +346,14 @@ class SkillsService:
                  logger.info(f"Mango ignored input (Conf: {confidence}). Falling back to Gemma.")
 
     def summarize_output(self, output, command):
-        """Generates a TTS-friendly summary of command output."""
+        """Genera un resumen amigable para TTS de la salida del comando."""
         output = output.strip()
         lines = output.split('\n')
         count = len(lines)
         
-        # 1. Detect 'ls -l' style output (drwxr-xr-x ...)
+        # 1. Detectar salida al estilo 'ls -l' (drwxr-xr-x ...)
         if count > 0 and (lines[0].startswith('total ') or lines[0].startswith('drwx') or lines[0].startswith('-rw')):
-            # It's a file list
+            # Es una lista de archivos
             file_count = 0
             dir_count = 0
             files = []
@@ -364,7 +362,7 @@ class SkillsService:
                 if line.startswith('total '): continue
                 parts = line.split()
                 if len(parts) > 8:
-                    name = " ".join(parts[8:]) # Username/date etc are before this
+                    name = " ".join(parts[8:]) # Usuario/fecha etc están antes de esto
                     if line.startswith('d'):
                         dir_count += 1
                     else:
@@ -374,27 +372,27 @@ class SkillsService:
             total_items = file_count + dir_count
             
             if total_items > 5:
-                # Too many: Just count
+                # Son demasiados: contar
                 msg = f"Se encontraron {total_items} elementos"
                 if dir_count > 0: msg += f", {dir_count} carpetas"
                 if file_count > 0: msg += f" y {file_count} archivos"
                 msg += "."
                 return msg
             elif total_items > 0:
-                # Few: Read names
+                # Son pocos: leer nombres
                 return f"Hay {total_items} elementos: {', '.join(files)}."
             else:
                 return "El directorio está vacío."
 
-        # 2. General Output Handling
+        # 2. Manejo General de la Salida
         if len(output) < 300 and count <= 5:
-             # Short enough to read fully
+             # Es suficientemente corto para leerlo entero
              return f"Salida: {output}"
         else:
-             # Too long, read summary
-             preview = ". ".join(lines[:2]) # Read first 2 lines only
+             # Demasiado largo, leer un resumen
+             preview = ". ".join(lines[:2]) # Leer solo las dos primeras líneas
              
-             # Save full output
+             # Guardar la salida completa
              filename = os.path.join(os.path.expanduser("~"), "resultado_comando.txt")
              try:
                  with open(filename, 'w') as f:
@@ -403,7 +401,7 @@ class SkillsService:
              except Exception:
                  return f"Salida: {preview}. Y más texto."
 
-        # 2. Fallback to Chat (Gemma)
+        # 2. Respaldo a Chat (Gemma)
         logger.info(f"Chatting with AI: {utterance}")
         try:
             # Use ChatManager
@@ -418,7 +416,7 @@ class SkillsService:
         logger.info("Skills Service Started")
         self.bus.run_forever()
 
-    # Helper for skills that might call self.core.speak directly (if any)
+    # Helpers param las habilidades que pueden llamar self.core.speak directamente 
     def speak(self, text):
         self.bus.emit('speak', {'text': text})
 

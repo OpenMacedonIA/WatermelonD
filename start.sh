@@ -1,46 +1,46 @@
 #!/bin/bash
-# start.sh - WatermelonD Manual Launcher
+# start.sh - Lanzador Manual de WatermelonD
 
 set -e
 
-# --- 1. Environment Detection ---
+# --- 1. Detección de Entorno ---
 if [ -d "venv" ]; then
     VENV_PATH="venv"
 elif [ -d "venv_distrobox" ]; then
-    # Legacy support
+    # Soporte heredado
     VENV_PATH="venv_distrobox"
 else
-    echo "❌ CRITICAL: Virtual environment not found."
-    echo "   Please run './install.sh' to set up the project."
+    echo " CRÍTICO: Entorno virtual no encontrado."
+    echo "   Por favor, ejecuta './install.sh' para configurar el proyecto."
     exit 1
 fi
 
-echo "✅ Using virtual environment: $VENV_PATH"
+echo " Usando entorno virtual: $VENV_PATH"
 source $VENV_PATH/bin/activate
 
-# --- 2. Runtime Environment Vars ---
+# --- 2. Variables de Entorno de Tiempo de Ejecución ---
 export PYTHONUNBUFFERED=1
-# Prevent Jack Audio Server from auto-spawning (common issue in bare metal)
+# Prevenir que Jack Audio Server se inicie automáticamente (problema común en bare metal)
 export JACK_NO_START_SERVER=1
 
-# --- 3. Dependency Checks ---
-# Check Mosquitto (MQTT Broker)
+# --- 3. Comprobación de Dependencias ---
+# Comprobar Mosquitto (Broker MQTT)
 if command -v systemctl >/dev/null; then
     if systemctl is-active --quiet mosquitto; then
-        echo "✅ MQTT Broker is running."
+        echo " El Broker MQTT está en ejecución."
     else
-        echo "⚠️  WARNING: Mosquitto service is NOT running."
-        echo "   The system might fail to communicate with satellites."
-        echo "   Try: 'sudo systemctl start mosquitto'"
+        echo "  ADVERTENCIA: El servicio Mosquitto NO está en ejecución."
+        echo "   El sistema podría fallar al comunicarse con satélites."
+        echo "   Prueba: 'sudo systemctl start mosquitto'"
     fi
 else
-    # Fallback for non-systemd envs (like docker)
+    # Respaldo para entornos sin systemd (como docker)
     if ! pgrep -x "mosquitto" > /dev/null; then
-        echo "⚠️  WARNING: Mosquitto does not seem to be running."
+        echo "  ADVERTENCIA: Mosquitto parece no estar en ejecución."
     fi
 fi
 
-# --- 4. Launch ---
-echo "🚀 Starting WatermelonD Core..."
+# --- 4. Lanzamiento ---
+echo " Iniciando WatermelonD Core..."
 echo "---------------------------------"
 python NeoCore.py

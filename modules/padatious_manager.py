@@ -22,78 +22,78 @@ class PadatiousManager:
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir)
         else:
-            logger.warning("Padatious not installed. NLU will be limited.")
+            logger.warning("Padatious no está instalado. NLU estará limitado.")
 
     def load_intents(self, intents_path='config/intents.json'):
-        """Loads intents from JSON and trains Padatious."""
+        """Carga intenciones desde JSON y entrena Padatious."""
         if not self.available: return
 
         data = load_json_data(intents_path, 'intents')
         if not data:
-            logger.error("No intents loaded.")
+            logger.error("No se cargaron intenciones.")
             return
 
         self.intents = data
-        logger.info(f"Loading {len(self.intents)} intents into Padatious...")
+        logger.info(f"Cargando {len(self.intents)} intenciones en Padatious...")
 
         for intent in self.intents:
             name = intent.get('name')
             triggers = intent.get('triggers', [])
-            logger.debug(f"Adding intent '{name}' with {len(triggers)} triggers.")
+            logger.debug(f"Añadiendo la intención '{name}' con {len(triggers)} triggers.")
             self.container.add_intent(name, triggers)
 
-        # Load Learned Intents
+        # Cargar Itenciones Aprendidas
         learned_path = 'config/learned_intents.json'
         if os.path.exists(learned_path):
             learned_data = load_json_data(learned_path)
             if learned_data:
-                logger.info(f"Loading {len(learned_data)} learned samples...")
+                logger.info(f"Cargando {len(learned_data)} muestras aprendidas...")
                 for intent_name, samples in learned_data.items():
-                    # Find existing intent to merge or create new?
-                    # For now, we assume we are adding samples to EXISTING intents
-                    # or new intents that must be handled by SkillsService.
+                    # Buscar la intención existente o crear una nueva?
+                    # Por ahora, asumimos que estamos añadiendo muestras a intenciones EXISTENTES
+                    # o nuevas intenciones que deben ser gestionadas por SkillsService.
                     
-                    # Add to Padatious
+                    # Añadir a Padatious
                     self.container.add_intent(intent_name, samples)
                     
-                    # Also update self.intents list so calc_intent can find metadata
-                    # Check if intent exists
+                    # También actualizar la lista self.intents para que calc_intent pueda encontrar metadatos
+                    # Comprobar si la intención existe
                     existing = next((i for i in self.intents if i['name'] == intent_name), None)
                     if existing:
                         existing['triggers'].extend(samples)
                     else:
-                        # If it's a new intent entirely, we need minimal metadata
+                        # Si es una intención completamente nueva, necesitamos metadatos mínimos
                         self.intents.append({
                             'name': intent_name,
                             'triggers': samples,
-                            'action': 'responder_simple', # Default
+                            'action': 'responder_simple', # Por defecto
                             'responses': []
                         })
 
-        logger.info("Training Padatious model...")
+        logger.info("Entrenando módulo Padatious...")
         try:
             self.container.train()
-            logger.info("Padatious training complete.")
+            logger.info("Entrenamiento de Padatious completado.")
         except Exception as e:
-            logger.error(f"Padatious training FAILED: {e}")
+            logger.error(f"Entrenamiento de Padatious FALLÓ: {e}")
             self.available = False
 
     def calc_intent(self, text):
         """
-        Returns the best intent for the given text.
-        Returns a dict compatible with our NLU format.
+        Devuelve la mejor intención para el texto dado.
+        Devuelve un diccionario compatible con nuestro formato NLU.
         """
         match = self.container.calc_intent(text)
         
         if match.name:
-            # Find the original intent object to get responses/actions
+            # Encontrar el objeto intención original para obtener respuestas/acciones
             original_intent = next((i for i in self.intents if i['name'] == match.name), None)
             
             return {
                 'name': match.name,
-                'confidence': match.conf, # 0.0 to 1.0
+                'confidence': match.conf, # 0.0 a 1.0
                 'score': int(match.conf * 100),
-                'parameters': match.matches, # Extracted entities
+                'parameters': match.matches, # Entidades extraídas
                 'action': original_intent.get('action') if original_intent else None,
                 'responses': original_intent.get('responses', []) if original_intent else []
             }

@@ -30,7 +30,7 @@ def inject(text):
         output = data.get('output', '')
         if len(output) > 200:
             output = output[:200] + "..."
-        print(f"\n📄 [OUTPUT]: {output}")
+        print(f"\n [OUTPUT]: {output}")
     
     def on_router_decision(data):
         category = data.get('category')

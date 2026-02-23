@@ -28,7 +28,7 @@ else
 fi
 
 CONTAINER_NAME="neocore-box"
-IMAGE="debian:12" # Stable Bookworm
+IMAGE="debian:12" # Bookworm Estable
 
 # 2. Comprobar/Crear Contenedor
 echo -e "${YELLOW}Verificando contenedor '${CONTAINER_NAME}'...${NC}"
@@ -70,7 +70,7 @@ source venv_distrobox/bin/activate
 
 echo 'Instalando pip requirements...'
 pip install --upgrade pip wheel setuptools
-# Fix fann2 por separado si es necesario
+# Arreglar fann2 por separado si es necesario
 if grep -q 'fann2' requirements.txt; then
     # Clonar y construir fann primero si falta la librería del sistema
     if [ ! -f /usr/lib/libfann.so ] && [ ! -f /usr/local/lib/libfann.so ]; then

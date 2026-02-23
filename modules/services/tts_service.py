@@ -5,13 +5,13 @@ import queue
 import threading
 import time
 
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.bus_client import BusClient
 from modules.speaker import Speaker
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [TTS] - %(levelname)s - %(message)s')
 logger = logging.getLogger("TTSService")
 
@@ -19,14 +19,14 @@ class TTSService:
     def __init__(self):
         self.bus = BusClient(name="TTSService")
         
-        # Queue to receive events from Speaker
+        # Cola para recibir eventos del Altavoz
         self.event_queue = queue.Queue()
         self.speaker = Speaker(self.event_queue)
         
         self.bus.connect()
         self.bus.on('speak', self.handle_speak)
         
-        # Start monitoring speaker events
+        # Iniciar monitorización de eventos del altavoz
         threading.Thread(target=self.monitor_speaker, daemon=True).start()
 
     def handle_speak(self, message):
@@ -37,7 +37,7 @@ class TTSService:
             self.speaker.speak(text)
 
     def monitor_speaker(self):
-        """Relay speaker events to bus."""
+        """Retransmitir eventos del altavoz al bus."""
         while True:
             try:
                 event = self.event_queue.get()

@@ -7,10 +7,10 @@ from chromadb.utils import embedding_functions
 from sentence_transformers import SentenceTransformer
 import pypdf
 
-# Configure logger
+# Configurar logger
 logger = logging.getLogger("KnowledgeBase")
 
-# Suppress HuggingFace Transformers warnings (position_ids UNEXPECTED)
+# Suprimir advertencias de HuggingFace Transformers (position_ids UNEXPECTED)
 import transformers
 transformers.logging.set_verbosity_error()
 
@@ -20,14 +20,14 @@ class KnowledgeBase:
         self.db_path = db_path
         self.collection_name = "colega_docs"
         
-        # Initialize ChromaDB Client
+        # Inicializar Cliente ChromaDB
         self.client = chromadb.PersistentClient(path=self.db_path)
         
-        # Initialize Embedding Function (using a small, efficient model)
-        # all-MiniLM-L6-v2 is a good balance of speed and performance
+        # Inicializar Función de Incrustación (usando un modelo pequeño y eficiente)
+        # all-MiniLM-L6-v2 es un buen equilibrio entre velocidad y rendimiento
         self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
         
-        # Get or Create Collection
+        # Obtener o Crear Colección
         self.collection = self.client.get_or_create_collection(
             name=self.collection_name,
             embedding_function=self.embedding_fn
@@ -37,18 +37,18 @@ class KnowledgeBase:
 
     def ingest_docs(self, force: bool = False):
         """
-        Scans the docs directory and ingests markdown files into the vector DB.
-        If force is True, it clears the collection first.
+        Escanea el directorio de documentos e ingesta archivos markdown en la base de datos vectorial.
+        Si force es True, limpia la colección primero.
         """
         if force:
-            logger.info("Forcing re-ingestion. Clearing collection...")
+            logger.info("Forzando re-ingesta. Limpiando colección...")
             self.client.delete_collection(self.collection_name)
             self.collection = self.client.get_or_create_collection(
                 name=self.collection_name,
                 embedding_function=self.embedding_fn
             )
 
-        # Find all supported files
+        # Encontrar todos los archivos soportados
         extensions = ['*.md', '*.txt', '*.pdf']
         docs_files = []
         for ext in extensions:
@@ -72,19 +72,19 @@ class KnowledgeBase:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                 
-                # Simple chunking by paragraphs or headers could be better, 
-                # but for now let's do a sliding window or paragraph split.
-                # Let's split by double newlines to get paragraphs.
+                # La división simple por párrafos o encabezados podría ser mejor, 
+                # pero por ahora hagamos una ventana deslizante o división por párrafos.
+                # Dividamos por retornos de carro dobles para obtener párrafos.
                 chunks = [c.strip() for c in content.split('\n\n') if c.strip()]
                 
                 if not chunks:
                     continue
 
-                # Prepare data for Chroma
+                # Preparar datos para Chroma
                 ids = [f"{os.path.basename(file_path)}_{i}" for i in range(len(chunks))]
                 metadatas = [{"source": file_path, "chunk_index": i} for i in range(len(chunks))]
                 
-                # Add to collection
+                # Añadir a la colección
                 self.collection.upsert(
                     documents=chunks,
                     ids=ids,
@@ -100,8 +100,8 @@ class KnowledgeBase:
 
     def query(self, query_text: str, n_results: int = 3) -> List[str]:
         """
-        Queries the knowledge base for relevant context.
-        Returns a list of text chunks.
+        Consulta la base de conocimientos buscando contexto relevante.
+        Devuelve una lista de fragmentos de texto (chunks).
         """
         try:
             results = self.collection.query(
@@ -109,7 +109,7 @@ class KnowledgeBase:
                 n_results=n_results
             )
             
-            # results['documents'] is a list of lists (one list per query)
+            # results['documents'] es una lista de listas (una lista por consulta)
             if results['documents'] and results['documents'][0]:
                 return results['documents'][0]
             return []
@@ -119,7 +119,7 @@ class KnowledgeBase:
             return []
 
 if __name__ == "__main__":
-    # Test run
+    # Prueba de ejecución
     logging.basicConfig(level=logging.INFO)
     kb = KnowledgeBase(docs_path="/home/jrodriiguezg/backup/codigos/COLEGA/docs")
     kb.ingest_docs()

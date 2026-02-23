@@ -49,7 +49,7 @@ class VirusScanner:
         """
         Escanea un archivo individual.
         
-        Returns:
+        Devuelve:
             (is_infected, virus_name): Tupla con estado y nombre del virus si existe
         """
         if not self.clamav_available:
@@ -67,9 +67,9 @@ class VirusScanner:
                 timeout=30
             )
             
-            # ClamAV exit codes:
-            # 0 = no virus found
-            # 1 = virus found
+            # Códigos de salida de ClamAV:
+            # 0 = no se encontró virus
+            # 1 = virus encontrado
             # 2 = error
             
             if result.returncode == 1:
@@ -101,7 +101,7 @@ class VirusScanner:
         """
         Escanea directorio completo.
         
-        Returns:
+        Devuelve:
             (infected_files, total_scanned): Lista de archivos infectados y total escaneados
         """
         if not self.clamav_available:
@@ -160,7 +160,7 @@ class VirusScanner:
         """
         Mueve archivo infectado a cuarentena.
         
-        Returns:
+        Devuelve:
             True si se movió correctamente
         """
         if not os.path.exists(filepath):
@@ -186,7 +186,7 @@ class VirusScanner:
         """
         Lista archivos en cuarentena.
         
-        Returns:
+        Devuelve:
             Lista de dicts con info de archivos en cuarentena
         """
         if not os.path.exists(self.quarantine_dir):

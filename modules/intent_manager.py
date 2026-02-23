@@ -44,7 +44,7 @@ class IntentManager:
     def find_best_intent(self, command_text):
         """Busca la mejor intención usando RapidFuzz y Caché."""
         if not RAPIDFUZZ_DISPONIBLE:
-            # Fallback a búsqueda exacta
+            # Alternativa a búsqueda exacta
             for trigger in self.triggers_list:
                 if trigger in command_text:
                     return self.intent_map[trigger]

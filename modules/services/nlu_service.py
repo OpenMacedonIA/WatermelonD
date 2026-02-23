@@ -3,7 +3,7 @@ import os
 import sys
 import json
 
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.bus_client import BusClient
@@ -11,7 +11,7 @@ from modules.config_manager import ConfigManager
 from modules.intent_manager import IntentManager
 from modules.padatious_manager import PadatiousManager
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [NLU] - %(levelname)s - %(message)s')
 logger = logging.getLogger("NLUService")
 
@@ -20,11 +20,11 @@ class NLUService:
         self.bus = BusClient(name="NLUService")
         self.config_manager = ConfigManager()
         
-        # Initialize Engines
-        self.intent_manager = IntentManager(self.config_manager) # Legacy / Fallback
+        # Inicializar Motores
+        self.intent_manager = IntentManager(self.config_manager) # Legado / Respaldo
         self.padatious_manager = PadatiousManager()
         
-        # Train Padatious
+        # Entrenar Padatious
         self.padatious_manager.load_intents()
         
         self.bus.connect()
@@ -32,8 +32,8 @@ class NLUService:
 
     def handle_utterance(self, message):
         """
-        Handle utterance from Voice Service.
-        Message data: {"utterances": ["text"]}
+        Manejar locución desde el Servicio de Voz.
+        Datos del mensaje: {"utterances": ["texto"]}
         """
         data = message.get('data', {})
         utterances = data.get('utterances', [])
@@ -46,27 +46,27 @@ class NLUService:
         
         best_intent = None
         
-        # 1. Try Padatious (Primary)
+        # 1. Probar Padatious (Principal)
         if self.padatious_manager.available:
             pad_result = self.padatious_manager.calc_intent(text)
             if pad_result and pad_result['confidence'] > 0.75:
                 logger.info(f"Padatious Match: {pad_result['name']} ({pad_result['score']}%)")
                 best_intent = pad_result
         
-        # 2. Fallback to RapidFuzz (Legacy) if Padatious failed or low confidence
+        # 2. Respaldo a RapidFuzz (Legado) si Padatious falló o tiene baja confianza
         if not best_intent:
             legacy_result = self.intent_manager.find_best_intent(text)
             if legacy_result:
                 logger.info(f"Legacy Match: {legacy_result['name']} ({legacy_result['score']}%)")
                 best_intent = legacy_result
 
-        # 3. Emit Result
+        # 3. Emitir Resultado
         if best_intent:
             intent_name = best_intent.get('name')
             confidence = best_intent.get('confidence', 'high')
             score = best_intent.get('score', 0)
             
-            # Emit Intent Event
+            # Emitir Evento de Intención
             payload = {
                 "utterance": text,
                 "intent_type": intent_name,
@@ -83,7 +83,7 @@ class NLUService:
             self.log_to_inbox(text)
 
     def log_to_inbox(self, text):
-        """Saves unknown utterance to inbox for review."""
+        """Guarda la locución desconocida en la bandeja de entrada para su revisión."""
         inbox_path = 'data/nlu_inbox.json'
         try:
             data = []
@@ -91,7 +91,7 @@ class NLUService:
                 with open(inbox_path, 'r') as f:
                     data = json.load(f)
             
-            # Avoid duplicates
+            # Evitar duplicados
             if text not in [i['text'] for i in data]:
                 data.append({
                     'text': text,
@@ -99,7 +99,7 @@ class NLUService:
                     'status': 'new'
                 })
                 
-                # Keep last 50
+                # Mantener los últimos 50
                 if len(data) > 50:
                     data = data[-50:]
                     

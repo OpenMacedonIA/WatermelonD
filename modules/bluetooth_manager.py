@@ -17,18 +17,18 @@ class BluetoothManager:
         self.clients = []
 
     def start(self):
-        """Starts the Bluetooth RFCOMM server in a background thread."""
+        """Inicia el servidor RFCOMM Bluetooth en un hilo de fondo."""
         if self.running: return
 
         try:
             self.server_sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-            self.server_sock.bind((socket.BDADDR_ANY, self.port)) # Retaining original BDADDR_ANY as self.host is not defined in __init__
+            self.server_sock.bind((socket.BDADDR_ANY, self.port)) # Manteniendo BDADDR_ANY original porque self.host no está definido en __init__
             self.server_sock.listen(1)
             self.server_sock.settimeout(1.0) # Timeout para aceptar conexiones y no bloquear
             
-            # Get port info
-            # port = self.server_sock.getsockname()[1] # This line was removed in the diff
-            logger.info(f"Bluetooth Server listening on RFCOMM channel {self.port}") # Modified log message
+            # Obtener información del puerto
+            # port = self.server_sock.getsockname()[1] # Esta línea fue eliminada en el diff
+            logger.info(f"Bluetooth Server listening on RFCOMM channel {self.port}") # Mensaje de log modificado
 
             self.running = True
             self.thread = threading.Thread(target=self._accept_loop, daemon=True)
@@ -41,14 +41,14 @@ class BluetoothManager:
         except Exception as e:
             logger.error(f"Failed to start Bluetooth Server: {e}")
             self.server_sock = None
-            self.running = False # Keep original running = False
+            self.running = False # Mantener running = False original
             return
 
     def _accept_loop(self):
-        """Accepts incoming Bluetooth connections."""
+        """Acepta conexiones Bluetooth entrantes."""
         while self.running:
             try:
-                # Use select to make accept non-blocking-ish or handle timeout
+                # Usa select para hacer que accept no sea bloqueante o maneje el timeout
                 readable, _, _ = select.select([self.server_sock], [], [], 2.0)
                 if self.server_sock in readable:
                     client_sock, client_info = self.server_sock.accept()
@@ -64,7 +64,7 @@ class BluetoothManager:
                 time.sleep(1)
 
     def _client_handler(self, client_sock, client_info):
-        """Handles data from a connected client."""
+        """Maneja los datos de un cliente conectado."""
         buffer = ""
         try:
             while self.running:
@@ -74,7 +74,7 @@ class BluetoothManager:
                 
                 buffer += data.decode('utf-8')
                 
-                # Process complete lines (JSONs)
+                # Procesar líneas completas (JSONs)
                 while '\n' in buffer:
                     line, buffer = buffer.split('\n', 1)
                     if line.strip():
@@ -89,11 +89,11 @@ class BluetoothManager:
             logger.info(f"Bluetooth connection closed: {client_info}")
 
     def _process_message(self, raw_msg, client_info):
-        """Parses JSON and injects into event queue."""
+        """Parsea JSON e inyecta en la cola de eventos."""
         try:
             payload = json.loads(raw_msg)
-            # Normalize to match MQTT structure
-            # Expected payload from agent: {"agent": "name", "type": "telemetry|alert", "data": {...}}
+            # Normalizar para coincidir con la estructura MQTT
+            # Payload esperado del agente: {"agent": "nombre", "type": "telemetry|alert", "data": {...}}
             
             agent = payload.get('agent', f"BT_{client_info[0]}")
             msg_type = payload.get('type', 'telemetry')
@@ -103,13 +103,13 @@ class BluetoothManager:
 
             if msg_type == 'alert':
                 self.event_queue.put({
-                    'type': 'mqtt_alert', # Reuse MQTT alert type for compatibility
+                    'type': 'mqtt_alert', # Reusar tipo de alerta MQTT para compatibilidad
                     'agent': agent,
                     'msg': data.get('msg', 'Alert received via Bluetooth')
                 })
             elif msg_type == 'telemetry':
                 self.event_queue.put({
-                    'type': 'mqtt_telemetry', # Reuse MQTT telemetry type
+                    'type': 'mqtt_telemetry', # Reusar tipo de telemetría MQTT
                     'agent': agent,
                     'data': data
                 })

@@ -23,9 +23,9 @@ class Guard:
         # Estructura: { "signature_id": [timestamp1, timestamp2, ...] }
         self.state = {}
         
-        # Virus Scanner (ClamAV Integration)
+        # Escáner de Virus (Integración ClamAV)
         self.virus_scanner = VirusScanner()
-        self.scanned_files = set()  # Track ya escaneados para no repetir 
+        self.scanned_files = set()  # Rastrear los ya escaneados para no repetir 
 
     def load_signatures(self):
         if not os.path.exists(SIGNATURES_FILE):
@@ -178,7 +178,7 @@ class Guard:
                 if not os.path.isfile(filepath):
                     continue
                 
-                # Skip si ya fue escaneado
+                # Omitir si ya fue escaneado
                 if filepath in self.scanned_files:
                     continue
                 

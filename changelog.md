@@ -129,7 +129,7 @@ Importante actualización centrada en la autonomía del sistema (Self-Healing) y
 - **Ejecución Híbrida**: Pipeline inteligente que discrimina entre Intenciones (Reglas), MANGO (Técnico) y Chat Llama (Conversacional).
 - **Safety First**: Sistema de ejecución segura con lista blanca para comandos de lectura (`ls`, `cat`) y solicitud de confirmación obligatoria para comandos de escritura/root (`systemctl`, `rm`).
 
-### ️ Interfaz Web 2.0
+###  Interfaz Web 2.0
 
 - **Dashboard Personalizable**: Ahora es posible reordenar los widgets (CPU, RAM, Discos) mediante **Drag & Drop**, con persistencia automática de la disposición.
 - **Terminal "Power User"**:
@@ -148,7 +148,7 @@ Importante actualización centrada en la autonomía del sistema (Self-Healing) y
 
 Reingeniería total del núcleo del sistema, pasando de un monolito multihilo a una arquitectura orientada a servicios (SOA) inspirada en OVOS, comunicados por un Bus de Mensajes.
 
-### ️ Arquitectura
+###  Arquitectura
 
 - **Message Bus**: Implementación de un bus de eventos WebSocket (Flask-SocketIO) que actúa como columna vertebral del sistema.
 - **Microservicios**: Descomposición de `NeoCore` en servicios independientes:
@@ -195,7 +195,7 @@ Actualización masiva centrada en la "humanización" del asistente, mejorando dr
 - **Dictado Abierto**: Eliminación de la restricción de gramática (`use_grammar: false`), permitiendo entender cualquier palabra, no solo comandos predefinidos.
 - **Fuzzy Wake Word**: Implementación de `rapidfuzz` para detectar la palabra de activación con tolerancia a fallos (ej. "Ey tío", "Brou", "Tio" sin tilde).
 
-### ️ Síntesis de Voz (TTS)
+###  Síntesis de Voz (TTS)
 
 - **Piper Integration Fix**: Solución al crash de `synthesize_stream_raw` adaptando el código a la API moderna de Piper (`AudioChunk`).
 - **Sample Rate Dinámico**: Detección automática de la frecuencia de muestreo del modelo de voz.
@@ -217,7 +217,7 @@ Esta versión introduce la personalidad **T.I.O.** (Tecnología Inteligente Oper
 - **Sherlock (Diagnóstico)**: Motor de razonamiento basado en grafos y árboles de decisión para diagnosticar problemas técnicos (`modules/sherlock.py`).
 - **Empatía (Sentimiento)**: Análisis de sentimiento ligero para adaptar la memoria y las respuestas al estado de ánimo del usuario.
 
-### ️ Personalidad & Voz
+###  Personalidad & Voz
 
 - **Identidad T.I.O.**: Cambio de nombre de "NEOPapaya" a "Tío". Personalidad de "SysAdmin Colega" (informal, técnico, sarcástico).
 - **Wake Word Difuso**: Detección de la palabra clave "Tío" en cualquier parte de la frase (inicio, medio, fin) usando `rapidfuzz`.
@@ -274,7 +274,7 @@ Esta versión representa una reescritura mayor del sistema, cambiando completame
 - **Core Refactorizado**: `NeoCore.py` ahora implementa un sistema de hilos robusto para manejar Voz, Web y Eventos simultáneamente.
 - **Estética**: La interfaz web adopta un tema oscuro profesional ("Cyberpunk/SysAdmin") en lugar de colores claros.
 
-### ️ Eliminado
+###  Eliminado
 
 - **Interfaz Tkinter**: Eliminado `NeoTK.py` y todos los assets gráficos locales.
 - **Módulos de Salud**: Eliminados `pill_manager.py` (pastillero) y gestión de citas médicas.

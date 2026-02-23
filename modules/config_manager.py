@@ -16,7 +16,7 @@ class ConfigManager:
         return cls._instance
 
     def load(self):
-        """Loads configuration from JSON file."""
+        """Carga la configuración desde el archivo JSON."""
         try:
             if os.path.exists(self.CONFIG_FILE):
                 with open(self.CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -30,7 +30,7 @@ class ConfigManager:
             self._config = {}
 
     def save(self):
-        """Saves current configuration to JSON file."""
+        """Guarda la configuración actual en el archivo JSON."""
         try:
             with open(self.CONFIG_FILE, 'w', encoding='utf-8') as f:
                 json.dump(self._config, f, indent=4)
@@ -38,14 +38,14 @@ class ConfigManager:
             logger.error(f"Error saving config: {e}")
 
     def get(self, key, default=None):
-        """Retrieves a configuration value."""
+        """Recupera un valor de configuración."""
         return self._config.get(key, default)
 
     def set(self, key, value):
-        """Sets a configuration value and saves."""
+        """Establece un valor de configuración y guarda."""
         self._config[key] = value
         self.save()
 
     def get_all(self):
-        """Returns the entire configuration dictionary."""
+        """Devuelve el diccionario de configuración completo."""
         return self._config

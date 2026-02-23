@@ -40,13 +40,13 @@ def configure_vosk(config_manager):
     model_path = input("Model path [vosk-models/es]: ").strip() or "vosk-models/es"
     
     if not os.path.exists(model_path):
-        print(f"\n⚠️  Warning: Model not found at {model_path}")
+        print(f"\n  Warning: Model not found at {model_path}")
         print("   Download with: python resources/tools/download_vosk_model.py")
     
     config_manager.set('stt.engine', 'vosk')
     config_manager.set('stt.model_path', model_path)
     
-    print("\n✅ Configured Vosk engine")
+    print("\n Configured Vosk engine")
 
 def configure_sherpa(config_manager):
     """Configure Sherpa-ONNX engine"""
@@ -58,7 +58,7 @@ def configure_sherpa(config_manager):
     print("  1. Tiny   - ~75MB,  Very Fast,   Good accuracy")
     print("  2. Base   - ~145MB, Fast,        Better accuracy")
     print("  3. Small  - ~490MB, Medium,      Very Good accuracy")
-    print("  4. Medium - ~1.5GB, Slower,      Excellent accuracy ⭐ Recommended")
+    print("  4. Medium - ~1.5GB, Slower,      Excellent accuracy  Recommended")
     print()
     
     choice = input("Select model [1-4, default=4]: ").strip() or "4"
@@ -71,7 +71,7 @@ def configure_sherpa(config_manager):
     }
     
     if choice not in model_map:
-        print("❌ Invalid choice")
+        print(" Invalid choice")
         return
     
     model_name, model_dir = model_map[choice]
@@ -79,12 +79,12 @@ def configure_sherpa(config_manager):
     
     # Check if model exists
     if not os.path.exists(model_path):
-        print(f"\n⚠️  Model not found at {model_path}")
+        print(f"\n  Model not found at {model_path}")
         download = input(f"Download {model_name} model now? (y/N): ").strip().lower()
         
         if download == 'y':
             import subprocess
-            print(f"\n📥 Downloading {model_name} model...")
+            print(f"\n Downloading {model_name} model...")
             result = subprocess.run([
                 sys.executable,
                 "resources/tools/download_sherpa_model.py",
@@ -92,10 +92,10 @@ def configure_sherpa(config_manager):
             ])
             
             if result.returncode != 0:
-                print("❌ Download failed")
+                print(" Download failed")
                 return
         else:
-            print("⚠️  Skipping download. Run manually:")
+            print("  Skipping download. Run manually:")
             print(f"   python resources/tools/download_sherpa_model.py --model {model_name}")
             return
     
@@ -112,12 +112,12 @@ def configure_sherpa(config_manager):
     config_manager.set('stt.sherpa_model_path', model_path)
     config_manager.set('stt.num_threads', threads)
     
-    print(f"\n✅ Configured Sherpa-ONNX with {model_name} model ({threads} threads)")
+    print(f"\n Configured Sherpa-ONNX with {model_name} model ({threads} threads)")
 
 def configure_whisper(config_manager):
     """Configure Faster-Whisper engine"""
     print_header("Configure Faster-Whisper Engine")
-    print("⚠️  Warning: Faster-Whisper is very accurate but SLOW on CPU!")
+    print("  Warning: Faster-Whisper is very accurate but SLOW on CPU!")
     print("   Not recommended for real-time use on i3-7gen.")
     print("   Consider using Sherpa-ONNX instead (option 2).")
     print()
@@ -134,8 +134,8 @@ def configure_whisper(config_manager):
     config_manager.set('stt.whisper_device', 'cpu')
     config_manager.set('stt.whisper_compute', 'int8')
     
-    print(f"\n✅ Configured Faster-Whisper with {model} model")
-    print("⚠️  This may be slow! Test performance before deploying.")
+    print(f"\n Configured Faster-Whisper with {model} model")
+    print("  This may be slow! Test performance before deploying.")
 
 def benchmark_engines():
     """Run benchmarks to compare engines"""
@@ -143,16 +143,16 @@ def benchmark_engines():
     print("This will test all available engines with a sample audio file.")
     print()
     
-    print("📝 TODO: Implement benchmark tool")
+    print(" TODO: Implement benchmark tool")
     print("   Will be available in: resources/tools/benchmark_stt.py")
 
 def main():
     config_manager = ConfigManager()
     
     print("""
-    ╔════════════════════════════════════════════════════════╗
-    ║          WatermelonD STT Configuration Tool           ║
-    ╚════════════════════════════════════════════════════════╝
+    
+              WatermelonD STT Configuration Tool           
+    
     """)
     
     show_current_config(config_manager)
@@ -182,11 +182,11 @@ def main():
         print("Goodbye!")
         sys.exit(0)
     else:
-        print("❌ Invalid option")
+        print(" Invalid option")
         sys.exit(1)
     
     print("\n" + "="*60)
-    print("🔄 Restart NeoCore for changes to take effect:")
+    print(" Restart NeoCore for changes to take effect:")
     print("   systemctl --user restart neo.service")
     print("="*60 + "\n")
 

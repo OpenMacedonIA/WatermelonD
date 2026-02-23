@@ -11,32 +11,32 @@ class WifiManager:
 
     def scan(self):
         """
-        Scans for available WiFi networks using multiple methods with fallbacks.
-        Priority: nmcli → iwlist → iw
-        Returns: list of dicts OR dict with 'error' key
+        Busca redes WiFi disponibles utilizando múltiples métodos con alternativas.
+        Prioridad: nmcli → iwlist → iw
+        Devuelve: lista de diccionarios O diccionario con la clave 'error'
         """
-        # Method 1: Try nmcli (NetworkManager) - NO rescan to avoid permission issues
+        # Método 1: Intentar con nmcli (NetworkManager) - SIN re-escaneo para evitar problemas de permisos
         networks = self._scan_nmcli()
         if networks:
             return networks
         
-        # Method 2: Try iwlist (wireless-tools)
+        # Método 2: Intentar con iwlist (wireless-tools)
         networks = self._scan_iwlist()
         if networks:
             return networks
         
-        # Method 3: Try iw (modern wireless utility)
+        # Método 3: Intentar con iw (utilidad inalámbrica moderna)
         networks = self._scan_iw()
         if networks:
             return networks
         
-        # All methods failed
-        return {'error': 'No WiFi scanning method available. Install network-manager, wireless-tools, or iw.'}
+        # Todos los métodos fallaron
+        return {'error': 'No hay método de escaneo WiFi disponible. Instala network-manager, wireless-tools, o iw.'}
 
     def _scan_nmcli(self):
-        """Scan using nmcli WITHOUT --rescan to avoid permission issues"""
+        """Escaneo usando nmcli SIN --rescan para evitar problemas de permisos"""
         try:
-            # Remove --rescan yes to avoid sudo requirements
+            # Eliminar --rescan yes para evitar requerimientos de sudo
             cmd = ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "device", "wifi", "list"]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
             
@@ -51,10 +51,10 @@ class WifiManager:
                 if len(parts) < 3:
                     continue
 
-                # Format: SSID:SIGNAL:SECURITY
+                # Formato: SSID:SEÑAL:SEGURIDAD
                 ssid = parts[0]
                 signal = parts[1]
-                security = ":".join(parts[2:])  # Security might contain ":"
+                security = ":".join(parts[2:])  # La seguridad puede contener ":"
 
                 if not ssid or ssid in seen_ssids:
                     continue
@@ -63,8 +63,8 @@ class WifiManager:
                 networks.append({
                     "ssid": ssid,
                     "signal": int(signal) if signal.isdigit() else 0,
-                    "security": security or "Open",
-                    "in_use": False  # We don't check this without IN-USE field
+                    "security": security or "Abierta",
+                    "in_use": False  # No comprobamos esto sin el campo IN-USE
                 })
             
             networks.sort(key=lambda x: x['signal'], reverse=True)
@@ -82,11 +82,11 @@ class WifiManager:
             return None
 
     def _scan_iwlist(self):
-        """Scan using iwlist (requires sudo)"""
+        """Escaneo usando iwlist (requiere sudo)"""
         try:
             interface = self._get_wireless_interface()
             if not interface:
-                # Only log once, not every time
+                # Solo registrar una vez, no cada vez
                 return None
 
             cmd = ["sudo", "iwlist", interface, "scan"]
@@ -99,7 +99,7 @@ class WifiManager:
             for line in result.stdout.splitlines():
                 line = line.strip()
                 
-                # New cell = new network
+                # Nueva celda = nueva red
                 if "Cell" in line and "Address:" in line:
                     if current_network and current_network.get('ssid'):
                         if current_network['ssid'] not in seen_ssids:
@@ -113,7 +113,7 @@ class WifiManager:
                     if match:
                         current_network['ssid'] = match.group(1)
                 
-                # Signal quality
+                # Calidad de señal
                 elif "Quality=" in line:
                     match = re.search(r'Quality=(\d+)/(\d+)', line)
                     if match:
@@ -122,22 +122,22 @@ class WifiManager:
                         signal_percent = int((quality / max_quality) * 100)
                         current_network['signal'] = signal_percent
                 
-                # Encryption
+                # Encriptación
                 elif "Encryption key:" in line:
                     if "off" in line.lower():
                         current_network['security'] = "Open"
                     else:
-                        current_network['security'] = "WPA/WPA2"  # Default assumption
+                        current_network['security'] = "WPA/WPA2"  # Suposición predeterminada
                 
                 elif "WPA" in line or "WPA2" in line:
                     current_network['security'] = "WPA2"
 
-            # Add last network
+            # Añadir última red
             if current_network and current_network.get('ssid'):
                 if current_network['ssid'] not in seen_ssids:
                     networks.append(current_network)
 
-            # Ensure all have required fields
+            # Asegurar que todas tienen los campos requeridos
             for net in networks:
                 net.setdefault('signal', 0)
                 net.setdefault('security', 'Unknown')
@@ -158,11 +158,11 @@ class WifiManager:
             return None
 
     def _scan_iw(self):
-        """Scan using iw (modern tool, requires sudo)"""
+        """Escaneo usando iw (herramienta moderna, requiere sudo)"""
         try:
             interface = self._get_wireless_interface()
             if not interface:
-                # Only log once, not every time
+                # Solo registrar una vez, no cada vez
                 return None
 
             cmd = ["sudo", "iw", "dev", interface, "scan"]
@@ -175,7 +175,7 @@ class WifiManager:
             for line in result.stdout.splitlines():
                 line = line.strip()
                 
-                # New BSS = new network
+                # Nuevo BSS = nueva red
                 if line.startswith("BSS"):
                     if current_network and current_network.get('ssid'):
                         if current_network['ssid'] not in seen_ssids:
@@ -189,26 +189,26 @@ class WifiManager:
                     if ssid:
                         current_network['ssid'] = ssid
                 
-                # Signal strength
+                # Fuerza de la señal
                 elif "signal:" in line:
                     match = re.search(r'signal:\s*(-?\d+)', line)
                     if match:
                         dbm = int(match.group(1))
-                        # Convert dBm to percentage (rough estimation)
+                        # Convertir dBm a porcentaje (estimación aproximada)
                         # -30 dBm = 100%, -90 dBm = 0%
                         signal_percent = max(0, min(100, (dbm + 90) * 100 // 60))
                         current_network['signal'] = signal_percent
                 
-                # Security
+                # Seguridad
                 elif "WPA" in line or "RSN" in line:
                     current_network['security'] = "WPA2"
 
-            # Add last network
+            # Añadir última red
             if current_network and current_network.get('ssid'):
                 if current_network['ssid'] not in seen_ssids:
                     networks.append(current_network)
 
-            # Ensure all have required fields
+            # Asegurar que todas tienen los campos requeridos
             for net in networks:
                 net.setdefault('signal', 0)
                 net.setdefault('security', 'Open')
@@ -229,16 +229,16 @@ class WifiManager:
             return None
 
     def _get_wireless_interface(self):
-        """Get the wireless interface name (wlan0, wlp3s0, etc) - cached"""
-        # Return cached result if we already checked
+        """Obtener el nombre de la interfaz inalámbrica (wlan0, wlp3s0, etc) - en caché"""
+        # Devolver resultado en caché si ya lo comprobamos
         if self._interface_check_done:
             return self._wireless_interface_cache
         
         try:
-            # Try ip link show
+            # Intentar ip link show
             result = subprocess.run(["ip", "link", "show"], capture_output=True, text=True, timeout=5)
             for line in result.stdout.splitlines():
-                # Look for interface names starting with 'wl'
+                # Buscar nombres de interfaz que empiecen por 'wl'
                 match = re.search(r'^\d+:\s+(wl\w+):', line)
                 if match:
                     interface = match.group(1)
@@ -247,7 +247,7 @@ class WifiManager:
                     self._interface_check_done = True
                     return interface
             
-            # Fallback: try common names
+            # Alternativa: probar nombres comunes
             for iface in ['wlan0', 'wlp3s0', 'wlp2s0', 'wlan1']:
                 check = subprocess.run(["ip", "link", "show", iface], capture_output=True, timeout=2)
                 if check.returncode == 0:
@@ -256,7 +256,7 @@ class WifiManager:
                     self._interface_check_done = True
                     return iface
             
-            # No interface found - log only ONCE
+            # No se encontró interfaz - registrar solo UNA VEZ
             logger.warning("No wireless interface found (Ethernet-only system or VM)")
             self._interface_check_done = True
             self._wireless_interface_cache = None
@@ -270,7 +270,7 @@ class WifiManager:
 
     def connect(self, ssid, password):
         """
-        Connects to a WiFi network using nmcli.
+        Conecta a una red WiFi usando nmcli.
         """
         try:
             logger.info(f"Connecting to {ssid}...")

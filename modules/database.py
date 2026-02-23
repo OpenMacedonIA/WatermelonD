@@ -17,21 +17,21 @@ class DatabaseManager:
             try:
                 self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
                 self.conn.row_factory = sqlite3.Row
-                # --- Performance Optimizations ---
-                self.conn.execute("PRAGMA journal_mode=WAL;") # Write-Ahead Logging for concurrency
-                self.conn.execute("PRAGMA synchronous=NORMAL;") # Faster writes, safe enough for WAL
-                self.conn.execute("PRAGMA cache_size=-2000;") # Limit cache to ~2MB
+                # --- Optimizaciones de Rendimiento ---
+                self.conn.execute("PRAGMA journal_mode=WAL;") # Write-Ahead Logging para concurrencia
+                self.conn.execute("PRAGMA synchronous=NORMAL;") # Escrituras más rápidas, suficientemente seguro para WAL
+                self.conn.execute("PRAGMA cache_size=-2000;") # Limitar caché a ~2MB
                 self.conn.execute("PRAGMA foreign_keys=ON;") 
             except sqlite3.Error as e:
                 logger.error(f"Error connecting to database: {e}")
         return self.conn
 
     def init_db(self):
-        """Initialize the database schema."""
+        """Inicializa el esquema de la base de datos."""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Table for storing raw interactions
+        # Tabla para almacenar interacciones en bruto (raw)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS interactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +42,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for storing learned facts (Key-Value)
+        # Tabla para almacenar hechos aprendidos (Clave-Valor)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS facts (
                 key TEXT PRIMARY KEY,
@@ -51,7 +51,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for learned aliases (Trigger -> Command)
+        # Tabla para alias aprendidos (Disparador -> Comando)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS aliases (
                 trigger TEXT PRIMARY KEY,
@@ -60,7 +60,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for episodic memory (Events)
+        # Tabla para memoria episódica (Eventos)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS episodic_memory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,7 +72,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for Cortex Concepts (Generalized Memory)
+        # Tabla para Conceptos del Cortex (Memoria Generalizada)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS concepts (
                 word TEXT PRIMARY KEY,
@@ -83,7 +83,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for Concept Associations
+        # Tabla para Asociaciones de Conceptos
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS concept_associations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,7 +94,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for Knowledge Graph Relations
+        # Tabla para Relaciones del Grafo de Conocimiento
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS relations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +106,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for Proactive Surprises (to avoid repetition)
+        # Tabla para Sorpresas Proactivas (para evitar repetición)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS surprises (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,7 +116,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for Daily Summaries (Long Term Memory)
+        # Tabla para Resúmenes Diarios (Memoria a Largo Plazo)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS daily_summaries (
                 date DATE PRIMARY KEY,
@@ -125,7 +125,7 @@ class DatabaseManager:
             )
         ''')
 
-        # Table for File Indexing
+        # Tabla para Indexación de Archivos
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS files_index (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +140,7 @@ class DatabaseManager:
 
         conn.commit()
         
-        # Create indices for frequently queried columns
+        # Crear índices para columnas consultadas frecuentemente
         try:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_interactions_timestamp ON interactions(timestamp DESC)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_episodic_timestamp ON episodic_memory(timestamp DESC)')
@@ -152,13 +152,13 @@ class DatabaseManager:
         
         conn.commit()
         
-        # FTS5 Virtual Tables for Fast Search
+        # Tablas Virtuales FTS5 para Búsqueda Rápida
         try:
-            # Facts FTS
+            # FTS para Hechos
             cursor.execute('''
                 CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(key, value, content='facts', content_rowid='rowid')
             ''')
-            # Triggers to keep facts_fts in sync
+            # Disparadores (Triggers) para mantener facts_fts sincronizado
             cursor.execute('''
                 CREATE TRIGGER IF NOT EXISTS facts_ai AFTER INSERT ON facts BEGIN
                   INSERT INTO facts_fts(rowid, key, value) VALUES (new.rowid, new.key, new.value);
@@ -176,11 +176,11 @@ class DatabaseManager:
                 END;
             ''')
 
-            # Memory FTS
+            # FTS para Memoria
             cursor.execute('''
                 CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts USING fts5(event_type, details, content='episodic_memory', content_rowid='id')
             ''')
-            # Triggers for memory_fts
+            # Disparadores para memory_fts
             cursor.execute('''
                 CREATE TRIGGER IF NOT EXISTS memory_ai AFTER INSERT ON episodic_memory BEGIN
                   INSERT INTO memory_fts(rowid, event_type, details) VALUES (new.id, new.event_type, new.details);
@@ -233,11 +233,11 @@ class DatabaseManager:
         return row['value'] if row else None
 
     def search_facts(self, query):
-        """Search for facts using FTS5 if available, else LIKE."""
+        """Busca hechos usando FTS5 si está disponible, si no, usa LIKE."""
         conn = self.get_connection()
         try:
-            # Try FTS search
-            # FTS query syntax: "query*" for prefix matching
+            # Intentar búsqueda FTS
+            # Sintaxis de consulta FTS: "query*" para coincidencia de prefijos
             fts_query = f'"{query}" OR {query}*' 
             cursor = conn.execute(
                 "SELECT key, value FROM facts_fts WHERE facts_fts MATCH ? ORDER BY rank LIMIT 10", 
@@ -245,7 +245,7 @@ class DatabaseManager:
             )
             return cursor.fetchall()
         except sqlite3.OperationalError:
-            # Fallback to LIKE
+            # Alternativa a LIKE
             wildcard = f"%{query.lower()}%"
             cursor = conn.execute(
                 "SELECT key, value FROM facts WHERE key LIKE ? OR value LIKE ?", 
@@ -299,7 +299,7 @@ class DatabaseManager:
         return cursor.fetchall()
 
     def search_memories(self, query, limit=5):
-        """Search episodic memory using FTS5 if available, else LIKE."""
+        """Busca en memoria episódica usando FTS5 si está disponible, si no, usa LIKE."""
         conn = self.get_connection()
         try:
             fts_query = f'"{query}" OR {query}*'
@@ -307,16 +307,16 @@ class DatabaseManager:
                 "SELECT event_type, details, timestamp FROM memory_fts WHERE memory_fts MATCH ? ORDER BY rank LIMIT ?", 
                 (fts_query, limit)
             )
-            # We need timestamp, but FTS table might not have it if we didn't include it. 
-            # Actually we didn't include timestamp in FTS table definition above.
-            # Let's join or just fetch from main table using rowid if needed, 
-            # BUT for simplicity let's just use what we have or fix the FTS definition.
-            # Wait, I defined FTS as external content table (content='episodic_memory').
-            # So we can select other columns from the virtual table if the backing table has them? 
-            # No, FTS5 external content tables only allow querying columns declared in FTS.
-            # We need to join with the main table to get the timestamp.
+            # Necesitamos timestamp, pero la tabla FTS podría no tenerlo si no lo incluimos. 
+            # De hecho, no incluimos timestamp en la definición de la tabla FTS arriba.
+            # Vamos a hacer un join o simplemente recuperar de la tabla principal usando rowid si es necesario, 
+            # PERO para simplificar usemos lo que tenemos o arreglemos la definición de FTS.
+            # Espera, definí FTS como tabla de contenido externo (content='episodic_memory').
+            # ¿Así que podemos seleccionar otras columnas de la tabla virtual si la tabla de respaldo las tiene? 
+            # No, las tablas de contenido externo de FTS5 solo permiten consultar columnas declaradas en FTS.
+            # Necesitamos hacer un join con la tabla principal para obtener el timestamp.
             
-            # Correctly join FTS table with main table to get timestamp
+            # Hacer join correctamente de la tabla FTS con la tabla principal para obtener timestamp
             cursor = conn.execute(
                 '''
                 SELECT e.event_type, e.details, e.timestamp 
@@ -337,11 +337,11 @@ class DatabaseManager:
             )
             return cursor.fetchall()
 
-    # --- Cortex Methods ---
+    # --- Métodos del Cortex ---
     def update_concept(self, word, sentiment_delta=0.0):
         conn = self.get_connection()
         try:
-            # Check if exists
+            # Comprobar si existe
             cursor = conn.execute("SELECT frequency, sentiment_score FROM concepts WHERE word = ?", (word,))
             row = cursor.fetchone()
             
@@ -404,13 +404,13 @@ class DatabaseManager:
 
     def get_path(self, start_node, end_node, max_depth=3):
         """
-        Finds a path between two concepts using BFS (Breadth-First Search).
-        Returns a list of (node, relation, next_node) tuples.
+        Encuentra un camino entre dos conceptos usando BFS (Búsqueda en Anchura / Breadth-First Search).
+        Devuelve una lista de tuplas (nodo, relación, siguiente_nodo).
         """
         start_node = start_node.lower()
         end_node = end_node.lower()
         
-        queue = deque([(start_node, [])]) # (current_node, path_so_far)
+        queue = deque([(start_node, [])]) # (nodo_actual, camino_hasta_ahora)
         visited = set([start_node])
         
         while queue:
@@ -422,7 +422,7 @@ class DatabaseManager:
             if len(path) >= max_depth:
                 continue
             
-            # Get neighbors
+            # Obtener vecinos
             relations = self.get_related_concepts(current)
             for target, rel_type, _ in relations:
                 if target not in visited:
@@ -434,18 +434,18 @@ class DatabaseManager:
 
     def infer_problems(self, source_node):
         """
-        Infers potential problems by checking 'uses' or 'needs' relations.
-        If A uses B, and B is 'down' or 'broken' (conceptually), then A might be affected.
-        For this simple version, we just return dependencies that should be checked.
+        Infiere problemas potenciales comprobando relaciones 'uses' (usa) o 'needs' (necesita).
+        Si A usa B, y B está 'down' (caído) o 'broken' (roto) (conceptualmente), entonces A podría verse afectado.
+        Para esta versión simple, solo devolvemos dependencias que deberían comprobarse.
         """
         dependencies = []
-        # Find everything source_node 'uses' or 'needs' or 'check'
+        # Encontrar todo lo que source_node 'uses', 'needs' o 'check' (comprueba)
         relations = self.get_related_concepts(source_node)
         for target, rel_type, _ in relations:
             if rel_type in ["uses", "needs", "check"]:
                 dependencies.append(target)
                 
-        # Recursive check (depth 1)
+        # Comprobación recursiva (profundidad 1)
         indirect = []
         for dep in dependencies:
             sub_rels = self.get_related_concepts(dep)
@@ -477,9 +477,9 @@ class DatabaseManager:
         return cursor.fetchall()
 
     def get_interactions_by_date(self, date_str):
-        """Get all interactions for a specific date (YYYY-MM-DD)."""
+        """Obtiene todas las interacciones para una fecha específica (YYYY-MM-DD)."""
         conn = self.get_connection()
-        # SQLite date function extracts YYYY-MM-DD from timestamp
+        # La función date de SQLite extrae YYYY-MM-DD del timestamp
         cursor = conn.execute(
             "SELECT user_input, neo_response FROM interactions WHERE date(timestamp) = ?", 
             (date_str,)
@@ -509,7 +509,7 @@ class DatabaseManager:
         if self.conn:
             self.conn.close()
 
-    # --- File Indexing Methods ---
+    # --- Métodos de Indexación de Archivos ---
 
     def index_file(self, path, name, extension, size, mtime):
         conn = self.get_connection()
@@ -525,7 +525,7 @@ class DatabaseManager:
             return False
 
     def search_files_index(self, query, limit=10):
-        """Search files by name using LIKE."""
+        """Busca archivos por nombre usando LIKE."""
         conn = self.get_connection()
         wildcard = f"%{query.lower()}%"
         cursor = conn.execute(

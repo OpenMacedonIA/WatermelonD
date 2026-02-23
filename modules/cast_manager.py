@@ -18,39 +18,39 @@ class CastManager:
         self.is_scanning = False
         
     def start_discovery(self):
-        """Starts discovering devices in background."""
+        """Inicia el descubrimiento de dispositivos en segundo plano."""
         if not CAST_AVAILABLE:
             return
             
         logger.info("Starting Chromecast discovery...")
-        # Discover devices
+        # Descubrir dispositivos
         self.casts = {c.name: c for c in pychromecast.get_chromecasts()[0]}
         logger.info(f"Discovered {len(self.casts)} cast devices: {list(self.casts.keys())}")
 
     def get_devices(self):
-        """Returns a list of discovered device names."""
+        """Devuelve una lista de nombres de dispositivos descubiertos."""
         return list(self.casts.keys())
 
     def play_media(self, device_name, media_url, content_type="video/mp4"):
-        """Plays media on a specific device."""
+        """Reproduce multimedia en un dispositivo específico."""
         if not CAST_AVAILABLE:
             return False, "Módulo Cast no disponible."
 
-        # Fuzzy match device name if needed, for now exact match or partial
+        # Búsqueda difusa del nombre del dispositivo si es necesario, por ahora coincidencia exacta o parcial
         target_cast = None
         
-        # Direct match
+        # Coincidencia directa
         if device_name in self.casts:
             target_cast = self.casts[device_name]
         else:
-            # Partial match
+            # Coincidencia parcial
             for name, cast in self.casts.items():
                 if device_name.lower() in name.lower():
                     target_cast = cast
                     break
         
         if not target_cast:
-            # Refresh discovery just in case
+            # Refrescar descubrimiento por si acaso
             self.start_discovery()
             return False, f"No encuentro el dispositivo '{device_name}'."
 
@@ -65,15 +65,15 @@ class CastManager:
             return False, f"Error al conectar con {device_name}."
 
     def stop_media(self, device_name=None):
-        """Stops media on a device (or all if None)."""
+        """Detiene multimedia en un dispositivo (o todos si es None)."""
         if not CAST_AVAILABLE:
             return False
             
         if device_name:
-             # Logic similar to play_media for finding device
+             # Lógica similar a play_media para encontrar dispositivo
              pass
         else:
-            # Stop all
+            # Detener todos
             for cast in self.casts.values():
                 try:
                     cast.wait()
@@ -84,9 +84,9 @@ class CastManager:
 
     def broadcast_media(self, media_url, content_type="audio/mp3"):
         """
-        Plays media on ALL discovered devices.
-        Note: This is not perfectly synchronized (10-500ms drift possible).
-        For perfect sync, use Google Home Groups and target the group name.
+        Reproduce multimedia en TODOS los dispositivos descubiertos.
+        Nota: Esto no está perfectamente sincronizado (posible desvío de 10-500ms).
+        Para sincronización perfecta, usar Grupos de Google Home y apuntar al nombre del grupo.
         """
         if not CAST_AVAILABLE or not self.casts:
             self.start_discovery()

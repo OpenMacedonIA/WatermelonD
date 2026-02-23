@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🔍 DIAGNÓSTICO DE COLEGA (Debian 12)"
+echo " DIAGNÓSTICO DE COLEGA (Debian 12)"
 echo "========================================"
 
 echo "1. ESTADO DEL SERVICIO:"

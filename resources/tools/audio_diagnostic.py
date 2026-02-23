@@ -92,7 +92,7 @@ def main():
             with open(user_service_file, 'r') as f:
                 content = f.read()
                 if "XDG_RUNTIME_DIR" in content:
-                    print("ℹ️ Note: XDG_RUNTIME_DIR is not strictly needed in user service file (it's inherited), but good if present in install script logic.")
+                    print("ℹ Note: XDG_RUNTIME_DIR is not strictly needed in user service file (it's inherited), but good if present in install script logic.")
         except Exception as e:
             print(f"[WARN] Cannot read service file: {e}")
     else:

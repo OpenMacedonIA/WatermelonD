@@ -11,7 +11,7 @@ except ImportError:
 
 class AIEngine:
     def __init__(self, model_path=None):
-        # Default paths
+        # Rutas por defecto
         self.default_path = "models/gemma-2-2b-it-Q4_K_M.gguf"
         
         if model_path and os.path.exists(model_path):
@@ -30,7 +30,7 @@ class AIEngine:
         self.llm = None
         self.is_ready = False
         
-        # NOTE: Model is NOT loaded here. It will be loaded on first use.
+        # NOTA: El modelo NO se carga aquí. Se cargará en el primer uso.
 
     def _ensure_model_loaded(self):
         """Carga el modelo si aún no está en memoria."""
@@ -47,24 +47,24 @@ class AIEngine:
         try:
             app_logger.info(f"Cargando modelo GGUF desde {self.model_path}...")
             
-            # Adjust context window based on model if needed, but 2048 is safe for most
+            # Ajustar la ventana de contexto según el modelo si es necesario, pero 2048 es seguro para la mayoría
             n_ctx = 2048
             if "llama-3" in self.model_path.lower():
-                n_ctx = 4096 # Llama 3 supports 8k, but 4k is safer for Nano
+                n_ctx = 4096 # Llama 3 soporta 8k, pero 4k es más seguro para Nano
             
             self.llm = Llama(
                 model_path=self.model_path,
                 n_ctx=n_ctx, 
-                n_threads=3, # Keep 3 threads for i3 (usually 2 cores/4 threads or 4 cores)
-                n_batch=512, # Optimized batch size
-                use_mmap=True, # Allow OS to manage memory paging
+                n_threads=3, # Mantener 3 hilos para i3 (usualmente 2 núcleos/4 hilos o 4 núcleos)
+                n_batch=512, # Tamaño de lote optimizado
+                use_mmap=True, # Permitir que el SO gestione la paginación de memoria
                 verbose=False
             )
             
             self.is_ready = True
             app_logger.info(f"Modelo {os.path.basename(self.model_path)} cargado correctamente.")
             
-            # Optimization: Free up initialization memory
+            # Optimización: Liberar memoria de inicialización
             import gc
             gc.collect()
         except Exception as e:
@@ -83,7 +83,7 @@ class AIEngine:
             output = self.llm(
                 prompt,
                 max_tokens=max_tokens,
-                stop=["<end_of_turn>"], # Gemma 2 stop token
+                stop=["<end_of_turn>"], # Token de parada de Gemma 2
                 echo=False,
                 temperature=0.7,
                 top_p=0.9,
@@ -108,7 +108,7 @@ class AIEngine:
             stream = self.llm(
                 prompt,
                 max_tokens=max_tokens,
-                stop=["<end_of_turn>"], # Gemma 2 stop token
+                stop=["<end_of_turn>"], # Token de parada de Gemma 2
                 echo=False,
                 temperature=0.7,
                 top_p=0.9,
@@ -124,5 +124,5 @@ class AIEngine:
             app_logger.error(f"Error generando stream: {e}")
             yield " Error."
 
-# Alias for backward compatibility if needed, but we will update imports
+# Alias para compatibilidad con versiones anteriores si es necesario, pero actualizaremos las importaciones
 GemmaEngine = AIEngine

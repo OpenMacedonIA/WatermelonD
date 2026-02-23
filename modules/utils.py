@@ -57,7 +57,7 @@ def number_to_text(text):
             new_words.append(w)
     return " ".join(new_words)
 
-# --- ALSA Error Suppression ---
+# --- Supresión de Errores ALSA ---
 ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
 
 def py_error_handler(filename, line, function, err, fmt):

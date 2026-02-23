@@ -3,13 +3,13 @@ import os
 import sys
 import threading
 
-# Add root to path
+# Añadir raíz a la ruta de búsqueda
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from modules.bus_client import BusClient
 from modules.web_admin import app, socketio
 
-# Setup Logging
+# Configurar registro
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [WEB] - %(levelname)s - %(message)s')
 logger = logging.getLogger("WebService")
 
@@ -18,29 +18,29 @@ class WebService:
         self.bus = BusClient(name="WebService")
         self.bus.connect()
         
-        # Register Bus Events to forward to Browser
+        # Registrar Eventos del Bus para enviar al Navegador
         self.bus.on('speak:start', self.on_speak_start)
         self.bus.on('speak:done', self.on_speak_done)
         self.bus.on('recognizer_loop:wakeword', self.on_wakeword)
         self.bus.on('recognizer_loop:record_begin', self.on_listening)
         self.bus.on('recognizer_loop:record_end', self.on_thinking)
         
-        # Also listen for generic face updates if any
+        # También escuchar actualizaciones genéricas de interfaz si las hay
         self.bus.on('face.update', self.on_face_update)
         
-        # Visual Skill Events
+        # Eventos de Habilidades Visuales
         self.bus.on('visual:show', self.on_visual_show)
         self.bus.on('visual:close', self.on_visual_close)
 
-        # Listen for GUI text commands
+        # Escuchar comandos de texto de la GUI
         socketio.on_event('gui:text_command', self.on_gui_text_command)
 
     def on_gui_text_command(self, data):
-        """Injects text from GUI as if it were a spoken utterance."""
+        """Inyecta texto desde la GUI como si fuera una locución hablada."""
         text = data.get('text')
         if text:
             logger.info(f"Injecting GUI Command: {text}")
-            # Emulate Mycroft/OVOS recognizer loop event
+            # Emular el evento del bucle reconocedor de Mycroft/OVOS
             self.bus.emit("recognizer_loop:utterance", {
                 "utterances": [text],
                 "lang": "es-es",
@@ -86,8 +86,8 @@ class WebService:
 
     def run(self):
         logger.info("Starting Web Service (Flask + SocketIO)...")
-        # Run Flask-SocketIO
-        # Note: We use allow_unsafe_werkzeug=True as in original code
+        # Ejecutar Flask-SocketIO
+        # Nota: Usamos allow_unsafe_werkzeug=True como en el código original
         socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
 
 if __name__ == "__main__":

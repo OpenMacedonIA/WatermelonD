@@ -44,8 +44,8 @@ class DecisionRouter:
     @lru_cache(maxsize=128)
     def _predict_cached(self, text):
         """
-        Cached prediction for repeated queries.
-        Returns: (label, score) tuple
+        Predicción en caché para consultas repetidas.
+        Devuelve: tupla (etiqueta, puntuación)
         """
         if not self.enabled or not self.classifier:
             return None, 0.0
@@ -80,6 +80,6 @@ class DecisionRouter:
             return "null", best_score
 
     def clear_cache(self):
-        """Clear prediction cache to free memory."""
+        """Limpia la caché de predicción para liberar memoria."""
         self._predict_cached.cache_clear()
         app_logger.info("Router prediction cache cleared")

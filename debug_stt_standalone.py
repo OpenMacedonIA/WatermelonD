@@ -3,18 +3,18 @@ import os
 import logging
 import time
 
-# Configure logging to stdout
+# Configurar logging a stdout
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [DEBUG] - %(levelname)s - %(message)s')
 logger = logging.getLogger("DebugSTT")
 
-# Add root to path
+# Añadir raíz al path
 sys.path.append(os.getcwd())
 
 print("================================================================")
 print("   DIAGNOSTICO DE STT (AUDIO TRANSCRIPTION) - COLEGA AI")
 print("================================================================")
 
-# 1. Check Vosk Import
+# 1. Comprobar importación de Vosk
 print("\n[1] Verificando librería 'vosk'...")
 try:
     import vosk
@@ -29,7 +29,7 @@ except Exception as e:
     print(f"[ERROR] ERROR DESCONOCIDO al importar vosk: {e}")
     sys.exit(1)
 
-# 2. Check Model Directory
+# 2. Comprobar directorio de modelos
 print("\n[2] Verificando modelos de voz...")
 MODEL_PATH = "vosk-models/es"
 if os.path.exists(MODEL_PATH):
@@ -41,9 +41,9 @@ if os.path.exists(MODEL_PATH):
 else:
     print(f"[ERROR] ERROR: No se encuentra el directorio '{MODEL_PATH}'.")
     print("   Solución: Ejecutar 'python resources/tools/download_vosk_model.py'")
-    # We don't exit here, maybe config points elsewhere
+    # No salimos aquí, tal vez la configuración apunte a otro lugar
 
-# 3. Test Model Loading
+# 3. Probar carga de modelos Vosk
 print("\n[3] Probando carga del modelo Vosk (Aislamiento)...")
 try:
     model = vosk.Model(MODEL_PATH)
@@ -53,15 +53,15 @@ except Exception as e:
     print(f"   Excepción: {e}")
     sys.exit(1)
 
-# 4. Test STT Service Initialization
+# 4. Probar inicialización del Servicio STT
 print("\n[4] Probando inicialización del Servicio STT...")
 try:
-    # Set dummy config if needed, but ConfigManager handles missing file
+    # Establecer configuración ficticia si es necesario, pero ConfigManager maneja el archivo faltante
     from modules.services.stt_service import STTService
     
     print("   -> Instanciando STTService...")
-    # This attempts to connect to Bus, which might fail if not running, 
-    # but shouldn't crash the script itself if handled.
+    # Esto intenta conectar al Bus, lo cual podría fallar si no está corriendo, 
+    # pero no debería crashear el script si se maneja adecuadamente.
     service = STTService()
     
     if service.vosk_model:

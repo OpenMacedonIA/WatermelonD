@@ -34,7 +34,7 @@ def get_system_info():
         }
     }
     
-    # Try to get git info
+    # Intentar obtener info de git
     try:
         commit = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL).decode().strip()
         info['app']['commit'] = commit

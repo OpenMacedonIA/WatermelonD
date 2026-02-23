@@ -10,7 +10,7 @@ echo "Configurando neo-uvas..."
 cd ../neo-uvas
 git init
 git add .
-git commit -m "Initial commit: Extracted Skills from NEOPapaya"
+git commit -m "Commit inicial: Habilidades extraídas de NEOPapaya"
 git branch -M main
 git remote add origin https://github.com/OpenMacedonIA/neo-uvas.git
 echo "neo-uvas listo."
@@ -20,7 +20,7 @@ echo "Configurando neo-cereza..."
 cd ../neo-cereza
 git init
 git add .
-git commit -m "Initial commit: Extracted Web Client from NEOPapaya"
+git commit -m "Commit inicial: Cliente web extraído de NEOPapaya"
 git branch -M main
 git remote add origin https://github.com/OpenMacedonIA/neo-cereza.git
 echo "neo-cereza listo."
@@ -36,7 +36,7 @@ echo "*.bin" >> .gitignore
 
 git init
 git add .
-git commit -m "Initial commit: Extracted AI Engine from NEOPapaya"
+git commit -m "Commit inicial: Motor de IA extraído de NEOPapaya"
 git branch -M main
 git remote add origin https://github.com/OpenMacedonIA/neo-mango.git
 echo "neo-mango listo."

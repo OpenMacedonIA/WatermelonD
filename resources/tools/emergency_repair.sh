@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🔧 INICIANDO REPARACIÓN DE EMERGENCIA DE COLEGA 🔧"
+echo " INICIANDO REPARACIÓN DE EMERGENCIA DE COLEGA "
 
 # 1. Matar procesos zombies
 echo ">>> Matando procesos zombies (Chromium, Python)..."
@@ -27,7 +27,7 @@ echo ">>> Reiniciando Servicio Neo..."
 systemctl --user daemon-reload
 systemctl --user restart neo.service
 
-echo "✅ REPARACIÓN COMPLETADA."
+echo " REPARACIÓN COMPLETADA."
 echo "Por favor, espera 15 segundos y di 'Neo' para probar."
 echo "Monitorizando logs... (Ctrl+C para salir)"
 journalctl --user -u neo.service -f -n 50

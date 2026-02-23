@@ -18,7 +18,7 @@ class SchedulerManager:
             self.init_app(app)
 
     def init_app(self, app):
-        """Initialize scheduler with Flask app."""
+        """Inicializa el programador de tareas con la app de Flask."""
         self.app = app
         
         # Configuración de persistencia (SQLite)
@@ -26,35 +26,35 @@ class SchedulerManager:
         app.config['SCHEDULER_JOBSTORES'] = {
             'default': SQLAlchemyJobStore(url='sqlite:///database/jobs.sqlite')
         }
-        app.config['SCHEDULER_API_ENABLED'] = True # /scheduler/jobs endpoint enabled by default in Flask-APScheduler, but we might build our own API
+        app.config['SCHEDULER_API_ENABLED'] = True # Punto de acceso /scheduler/jobs activado por defecto en Flask-APScheduler, pero podríamos construir nuestra propia API
         app.config['SCHEDULER_TIMEZONE'] = "Europe/Madrid" # Ajustar según config?
 
         self.scheduler.init_app(app)
         self.scheduler.start()
         logger.info("Scheduler started.")
 
-    # --- Allowed Job Functions ---
-    # These must be static or standalone functions ideally to be pickleable/callable easily, 
-    # but methods on instance work if instance is global.
-    # Flask-APScheduler usually looks for 'func' as string path 'module:function'.
+    # --- Funciones de Job Permitidas ---
+    # Estas deben ser, idealmente, estáticas o independientes para que se puedan serializar/llamar fácilmente, 
+    # pero los métodos de la instancia funcional si la instancia es global.
+    # Flask-APScheduler normalmente busca 'func' como la ruta del string 'module:function'.
     
     def add_bash_job(self, name, command, cron_expression):
         """
-        Adds a cron job that executes a bash command.
-        cron_expression: string format "minute hour day month day_of_week" (standard cron)
-                         OR specific params like "*/5 * * * *"
+        Añade un trabajo cron (cron job) que ejecuta un comando bash.
+        cron_expression: formato de string "minuto hora día mes día_de_la_semana" (cron estándar)
+                         O parámetros específicos como "*/5 * * * *"
         """
-        # Parse cron string "min hour day month dow"
-        # Example: "0 3 * * 2" -> At 03:00 on Tuesday.
+        # Analiza el string cron "min hour day month dow"
+        # Ejemplo: "0 3 * * 2" -> A las 03:00 del martes.
         
         try:
             parts = cron_expression.split()
             if len(parts) != 5:
-                return False, "Invalid cron format. Expected 5 parts: min hour day month dow"
+                return False, "Formato cron inválido. Se esperan 5 partes: min hora día mes día_semana"
             
             minute, hour, day, month, day_of_week = parts
             
-            # Create a unique ID
+            # Crea un ID único
             job_id = f"job_{int(time.time())}_{name.replace(' ', '_')}"
             
             self.scheduler.add_job(
@@ -91,7 +91,7 @@ class SchedulerManager:
             })
         return jobs
 
-# --- Standalone Functions for Jobs ---
+# --- Funciones independientes para los Jobs ---
 def run_bash_command(command):
     """Ejecuta un comando bash y loguea el resultado."""
     try:

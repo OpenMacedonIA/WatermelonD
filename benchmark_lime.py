@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Ensure we can import from current directory
+# Asegurar que podemos importar desde el directorio actual
 sys.path.append(os.getcwd())
 
 from test_lime_interactive import LimeTester
@@ -26,14 +26,14 @@ def run_tests():
 
     # Pruebas específicas para ver si ignora el ruido y obedece comandos de sistema
     pruebas_neocore = [
-        # --- 🐳 DOCKER (¿Sabe ignorar los .py?) ---
+        # ---  DOCKER (¿Sabe ignorar los .py?) ---
         "Despliega un contenedor redis en el puerto 6379",
         "Listame los contenedores activos",
         "Muestra los logs del contenedor llamado 'database'",
         "Para todos los contenedores que esten corriendo",
         "Ejecuta una terminal bash dentro del contenedor 'neocore_app'",
 
-        # --- 📂 NAVEGACIÓN Y ARCHIVOS (¿Sabe moverse?) ---
+        # ---  NAVEGACIÓN Y ARCHIVOS (¿Sabe moverse?) ---
         "Entra en el directorio TangerineUI",
         "Sube un nivel de directorio",
         "Dime la ruta actual (pwd)",  # A ver si aquí no dice 'echo'
@@ -41,7 +41,7 @@ def run_tests():
         "Muestrame las ultimas 10 lineas del changelog.md",
         "Cuenta cuantos archivos hay en la carpeta modules",
 
-        # --- ⚙️ ESTADO DEL SISTEMA (¿Sabe mirar el hardware?) ---
+        # ---  ESTADO DEL SISTEMA (¿Sabe mirar el hardware?) ---
         "Verifica el espacio libre en disco",
         "Dime cuanta memoria RAM se esta usando",
         "Muestrame los puertos que estan escuchando en el sistema",
@@ -63,20 +63,20 @@ def run_tests():
     # ==========================================
     # BUCLE DE EJECUCIÓN
     # ==========================================
-    print("\n--- 🔥 INICIANDO BATERÍA DE PRUEBAS SYSADMIN ---")
+    print("\n---  INICIANDO BATERÍA DE PRUEBAS SYSADMIN ---")
 
     # 1. Ejecutar pruebas con ruido (NeoCore)
-    print("\n--- 🏗️  TEST GROUP 1: CONTEXTO NEOCORE (RUIDOSO) ---")
+    print("\n---   GRUPO DE PRUEBAS 1: CONTEXTO NEOCORE (RUIDOSO) ---")
     for req in pruebas_neocore:
-        print(f"📝 Contexto: NeoCore | Request > {req}")
+        print(f" Contexto: NeoCore | Solicitud > {req}")
         # Adaptación para usar la clase LimeTester
         tester.infer(req, context_override=ctx_neocore)
         
 
     # 2. Ejecutar pruebas limpias
-    print("\n--- 🧹 TEST GROUP 2: CONTEXTO LIMPIO (SYSADMIN) ---")
+    print("\n--- 🧹 GRUPO DE PRUEBAS 2: CONTEXTO LIMPIO (SYSADMIN) ---")
     for req in pruebas_limpias:
-        print(f"📝 Contexto: []      | Request > {req}")
+        print(f" Contexto: []      | Solicitud > {req}")
         tester.infer(req, context_override=[])
 
 if __name__ == "__main__":

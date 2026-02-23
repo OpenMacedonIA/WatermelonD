@@ -12,7 +12,7 @@ import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 
-# Import brain module explicitly to access learn_alias if needed via direct import or ensure db has it
+# Importar el módulo brain explícitamente para acceder a learn_alias si es necesario mediante importación directa o asegurar que la bd lo tiene
 from modules.brain import Brain
 
 from modules.sysadmin import SysAdminManager
@@ -30,7 +30,7 @@ app = Flask(__name__, template_folder='../TangerineUI/templates', static_folder=
 
 config_manager = ConfigManager()
 
-# Persistent Secret Key
+# Clave Secreta Persistente
 secret_key = config_manager.get('secret_key')
 if not secret_key:
     secret_key = os.urandom(24).hex()
@@ -38,12 +38,12 @@ if not secret_key:
 
 app.secret_key = secret_key
 
-# Initialize CSRF Protection
+# Inicializar Protección CSRF
 csrf = CSRFProtect(app)
 
-# Initialize SocketIO
-# Revert to threading for compatibility with PyAudio/Voice Threads
-# Added keepalive settings to prevent disconnections
+# Inicializar SocketIO
+# Revertir a threading para compatibilidad con PyAudio/Voice Threads
+# Se añadieron configuraciones de keepalive para prevenir desconexiones
 socketio = SocketIO(
     app, 
     async_mode='threading', 
@@ -54,15 +54,15 @@ socketio = SocketIO(
     logger=False
 )
 
-# Initialize Rate Limiter
+# Inicializar Limitador de Tasa
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["10000 per day", "1000 per hour"],
-    storage_uri="memory://"  # Use Redis in production: "redis://localhost:6379"
+    storage_uri="memory://"  # Usar Redis en producción: "redis://localhost:6379"
 )
 
-# Global System Status
+# Estado Global del Sistema
 AUDIO_STATUS = {'output': False, 'input': False}
 
 def set_audio_status(output_enabled, input_enabled):
@@ -76,8 +76,8 @@ def inject_status():
 
 @socketio.on('message')
 def handle_message(data):
-    """Relay broadcast messages to all connected clients (Bus)."""
-    # print(f"DEBUG: Broadcasting message: {data}")
+    """Retransmite mensajes broadcast a todos los clientes conectados (Bus)."""
+    # print(f"DEBUG: Transmitiendo mensaje: {data}")
     emit('message', data, broadcast=True)
 
 from modules.bus_client import BusClient
@@ -89,37 +89,37 @@ file_manager = FileManager()
 wifi_manager = WifiManager()
 dashboard_manager = DashboardDataManager(config_manager)
 dashboard_manager = DashboardDataManager(config_manager)
-knowledge_base = KnowledgeBase() # RAG System
-scheduler_manager = SchedulerManager(app) # Task Scheduler
-brain = Brain() # Initialize independent Brain instance for Web Admin operations
+knowledge_base = KnowledgeBase() # Sistema RAG
+scheduler_manager = SchedulerManager(app) # Programador de Tareas
+brain = Brain() # Inicializar instancia Brain independiente para operaciones de Web Admin
 
-# --- Bus Client Integration ---
+# --- Integración de Cliente de Bus ---
 bus = BusClient(name="WebAdmin")
 
 def on_mic_status(message):
     data = message.get('data', {})
     muted = data.get('muted', False)
-    # Update global status
+    # Actualizar estado global
     AUDIO_STATUS['input'] = not muted
     
-    # Broadcast to Web Clients via SocketIO
+    # Retransmitir a Clientes Web vía SocketIO
     update_face('status_update', {'mic_muted': muted})
-    # Also emit specific event for dashboard
+    # También emitir evento específico para el dashboard
     try:
         socketio.emit('audio_status', AUDIO_STATUS)
     except:
         pass
 
 bus.on('mic:status', on_mic_status)
-# bus.connect()  <-- Deadlock Fix: Let run_forever handle it in thread
-# Run bus in background thread
+# bus.connect()  <-- Arreglo Deadlock: Dejar que run_forever lo maneje en hilo
+# Ejecutar bus en hilo en segundo plano
 import threading
-# threaded=True matches async_mode='threading' but we are moving to eventlet for stability
-# Note: Ensure eventlet is NOT globally monkey-patched in NeoCore.py to avoid PyAudio issues.
+# threaded=True coincide con async_mode='threading' pero nos movemos a eventlet para estabilidad
+# Nota: Asegurar que eventlet NO esté "monkey-patched" globalmente en NeoCore.py para evitar problemas con PyAudio.
 import threading
 threading.Thread(target=bus.run_forever, daemon=True).start()
 
-# --- Security Headers & Middlewares ---
+# --- Cabeceras de Seguridad y Middlewares ---
 @app.after_request
 def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
@@ -129,14 +129,14 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
-# --- Finder & Viewer API ---
+# --- API del Buscador y Visor ---
 
 @app.route('/api/viewer/serve/<encoded_path>')
 def serve_viewer_content(encoded_path):
     """
-    Serves local files for the PiP Viewer.
-    Requires path to be Base64 encoded to avoid URL issues.
-    Enforces Strict Whitelist.
+    Sirve archivos locales para el Visor PiP.
+    Requiere que la ruta esté codificada en Base64 para evitar problemas de URL.
+    Aplica Lista Blanca Estricta.
     """
     if not session.get('logged_in'):
         return abort(403)
@@ -144,11 +144,11 @@ def serve_viewer_content(encoded_path):
     try:
         decoded_path = base64.urlsafe_b64decode(encoded_path).decode('utf-8')
         
-        # Security Checks
+        # Controles de Seguridad
         if not os.path.exists(decoded_path):
             return abort(404)
             
-        # Extension Whitelist (Double Check)
+        # Lista Blanca de Extensiones (Doble Comprobación)
         ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.mp3', '.wav', '.ogg', '.pdf', '.md', '.txt', '.log', '.json', '.csv']
         ext = os.path.splitext(decoded_path)[1].lower()
         if ext not in ALLOWED_EXTS:
@@ -162,7 +162,7 @@ def serve_viewer_content(encoded_path):
 @app.route('/api/settings/user_docs', methods=['GET', 'POST'])
 def settings_user_docs():
     """
-    Read/Write config/user_docs.json for the Settings Editor.
+    Leer/Escribir config/user_docs.json para el Editor de Ajustes.
     """
     if not session.get('logged_in'):
         return abort(403)
@@ -178,7 +178,7 @@ def settings_user_docs():
     if request.method == 'POST':
         try:
             new_data = request.json
-            # Validate structure? For now assume user knows or frontend validates.
+            # ¿Validar estructura? Por ahora se asume que el usuario sabe o el frontend valida.
             with open(config_path, 'w') as f:
                 json.dump(new_data, f, indent=2)
             return jsonify({"status": "success", "message": "Docs updated"})
@@ -186,17 +186,17 @@ def settings_user_docs():
             return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# Simple in-memory Login Rate Limiter
+# Limitador de Tasa de Inicio de Sesión simple en memoria
 login_attempts = {}
 
 def rate_limit_login(func):
-    """Limit login attempts to 5 per minute per IP."""
+    """Limitar a 5 intentos de login por minuto por IP."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         ip = request.remote_addr
         now = time.time()
         
-        # Cleanup old attempts
+        # Limpiar intentos antiguos
         if ip in login_attempts:
             login_attempts[ip] = [t for t in login_attempts[ip] if now - t < 60]
             
@@ -233,10 +233,10 @@ def login():
         user = config_manager.get('admin_user', 'admin')
         stored_pass = config_manager.get('admin_pass', 'admin')
         
-        # Check if stored pass is plain text (basic migration)
-        # Werkzeug hashes usually start with method (pbkdf2:...)
+        # Comprobar si la contraseña guardada es texto plano (migración básica)
+        # Los hashes de Werkzeug normalmente empiezan por el método (pbkdf2:...)
         if not stored_pass.startswith(('pbkdf2:', 'scrypt:')):
-            # It's plain text, hash it immediately
+            # Es texto plano, hashearlo inmediatamente
             hashed = generate_password_hash(stored_pass)
             config_manager.set('admin_pass', hashed)
             stored_pass = hashed
@@ -248,7 +248,7 @@ def login():
             session['logged_in'] = True
             return redirect(url_for('dashboard'))
         else:
-            # Record attempt
+            # Registrar intento
             ip = request.remote_addr
             if ip not in login_attempts: login_attempts[ip] = []
             login_attempts[ip].append(time.time())
@@ -262,7 +262,7 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
 
-# --- PAGES ---
+# --- PÁGINAS ---
 
 @app.route('/dashboard')
 @login_required
@@ -324,7 +324,7 @@ def settings():
     """Renderiza y procesa la página de configuración."""
     config = config_manager.get_all() or {}
     
-    # List available voices
+    # Listar voces disponibles
     voices_dir = os.path.join(os.getcwd(), 'piper', 'voices')
     available_voices = []
     if os.path.exists(voices_dir):
@@ -332,7 +332,7 @@ def settings():
             if f.endswith('.onnx'):
                 available_voices.append(f)
     
-    # List available AI models (GGUF)
+    # Listar modelos de IA disponibles (GGUF)
     models_dir = os.path.join(os.getcwd(), 'models')
     available_models = []
     if os.path.exists(models_dir):
@@ -343,7 +343,7 @@ def settings():
     if request.method == 'POST':
         config_manager.set('admin_user', request.form['username'])
         
-        # Only update password if provided and not empty
+        # Solo actualizar contraseña si se proporciona y no está vacía
         new_pass = request.form.get('password')
         if new_pass and new_pass.strip():
             config_manager.set('admin_pass', generate_password_hash(new_pass))
@@ -351,17 +351,17 @@ def settings():
         config_manager.set('wake_word', request.form['wake_word'])
         config_manager.set('neo_ssh_enabled', 'neo_ssh_enabled' in request.form)
         
-        # Custom CSS
+        # CSS Personalizado
         custom_css = request.form.get('custom_css', '')
         config_manager.set('custom_css', custom_css)
 
-        # Handle AI Model
+        # Manejar Modelo IA
         selected_model = request.form.get('ai_model')
         if selected_model:
             full_model_path = os.path.join(models_dir, selected_model)
             config_manager.set('ai_model_path', full_model_path)
 
-        # Handle TTS Model
+        # Manejar Modelo TTS
         selected_voice = request.form.get('tts_model')
         if selected_voice:
             full_path = os.path.join(voices_dir, selected_voice)
@@ -372,22 +372,22 @@ def settings():
         flash('Configuración guardada correctamente.', 'success')
         return redirect(url_for('settings'))
     
-    # Construct full system info
+    # Construir info del sistema completa
     raw_info = sys_admin.get_system_info()
     
-    # Ensure all required keys exist
+    # Asegurar que todas las claves requeridas existen
     system_info = raw_info if raw_info else {}
     
-    # APP Info
+    # Info de la APP
     if 'app' not in system_info:
         system_info['app'] = {}
     system_info['app']['name'] = 'WatermelonD'
-    system_info['app']['version'] = '2.5.0' # Todo: Get from config
+    system_info['app']['version'] = '2.5.0' # Por hacer: Obtener de la config
     system_info['app']['branch'] = get_git_branch()
     
-    import platform # Added for system info retrieval
+    import platform # Añadido para la obtención de info del sistema
     
-    # OS Info
+    # Info del SO
     if 'os' not in system_info:
         system_info['os'] = {
             'system': system_info.get('system', 'Unknown'),
@@ -397,7 +397,7 @@ def settings():
             'processor': platform.processor() or 'Unknown'
         }
         
-    # Python Info
+    # Info de Python
     if 'python' not in system_info:
         system_info['python'] = {
             'version': platform.python_version(),
@@ -405,12 +405,12 @@ def settings():
             'compiler': platform.python_compiler()
         }
     
-    # Libraries Info
+    # Info de Librerías
     if 'libraries' not in system_info:
         import flask
         import flask_socketio
         import jinja2
-        import platform # Fix NameError
+        import platform # Arreglar NameError
         
         try:
             import importlib.metadata
@@ -487,14 +487,14 @@ def update_face(state, data=None):
 def restart_system():
     """API para reiniciar el servicio (o sistema si es posible)."""
     try:
-        # Try user service restart first (soft restart)
+        # Intentar primero el reinicio del servicio de usuario (reinicio suave)
         subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
         return jsonify({'status': 'success', 'message': 'Reiniciando servicio Neo...'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 def get_git_branch():
-    """Returns the current git branch."""
+    """Devuelve la rama actual de git."""
     try:
         branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).strip()
         return branch
@@ -509,17 +509,17 @@ def update_system():
         branch = get_git_branch()
         app_logger.info(f"Updating system from branch: {branch}")
         
-        # 1. Git Pull Specific Branch
+        # 1. Hacer Git Pull a la Rama Específica
         cmd = ['git', 'pull', 'origin', branch]
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
              return jsonify({'success': False, 'message': f'Git Pull Error ({branch}): {result.stderr}'})
 
-        # 2. Update Submodules
+        # 2. Actualizar Submódulos
         subprocess.run(['git', 'submodule', 'update', '--init', '--recursive'], capture_output=True)
 
-        # 3. Restart Service
+        # 3. Reiniciar Servicio
         subprocess.Popen(['systemctl', '--user', 'restart', 'neo.service'])
         return jsonify({'success': True, 'message': f'Actualizado desde {branch}. Reiniciando... \n{result.stdout}'})
     except Exception as e:
@@ -549,18 +549,18 @@ def check_updates():
 @app.route('/api/audio/toggle', methods=['POST'])
 @login_required
 def api_audio_toggle():
-    """Toggles microphone mute state."""
+    """Alterna el estado de silenciamiento del micrófono."""
     bus.emit('mic:toggle', {})
-    # Return optimistic status, actual confirmation comes via socketio
+    # Devolver estado optimista, la confirmación real viene vía socketio
     new_state = not AUDIO_STATUS['input']
-    AUDIO_STATUS['input'] = new_state # Optimistic local update
+    AUDIO_STATUS['input'] = new_state # Actualización local optimista
     return jsonify({'success': True, 'muted': not new_state})
 
 @app.route('/api/audio/status', methods=['GET'])
 @login_required
 def api_audio_status():
-    """Returns current audio status."""
-    # Force refresh request only if connected to avoid log spam
+    """Devuelve el estado actual de audio."""
+    # Forzar petición de refresco solo si está conectado para evitar spam en logs
     if bus.connected:
         bus.emit('mic:get_status', {})
     return jsonify(AUDIO_STATUS)
@@ -602,7 +602,7 @@ def api_ollama_status():
         
     logs = ""
     try:
-        # Get last 50 lines of ollama logs
+        # Obtener las últimas 50 líneas de los logs de ollama
         result = subprocess.run(['journalctl', '-u', 'ollama', '-n', '50', '--no-pager'], capture_output=True, text=True)
         logs = result.stdout
     except Exception as e:
@@ -627,7 +627,7 @@ def api_logs_read():
         try:
             if os.path.exists('logs/app.log'):
                 with open('logs/app.log', 'r') as f:
-                    content = f.read()[-10000:] # Last 10k chars
+                    content = f.read()[-10000:] # Últimos 10k caracteres
             else:
                 content = "Log file not found."
         except Exception as e:
@@ -673,11 +673,11 @@ def api_wifi_scan():
     """API para escanear redes WiFi."""
     result = wifi_manager.scan()
     
-    # If scan() returns error dict, pass it through
+    # Si scan() devuelve un diccionario de error, pasarlo
     if isinstance(result, dict) and 'error' in result:
         return jsonify(result)
     
-    # Otherwise, return list of networks
+    # De lo contrario, devolver lista de redes
     return jsonify(result)
 
 @app.route('/api/wifi/connect', methods=['POST'])
@@ -755,7 +755,7 @@ def api_terminal():
     """API para ejecutar comandos en la terminal con estado (cwd) por sesión."""
     data = request.json
     cmd = data.get('command')
-    term_id = str(data.get('term_session', '1')) # Default to session 1
+    term_id = str(data.get('term_session', '1')) # Por defecto a sesión 1
     
     # Inicializar store de sesiones
     if 'term_cwds' not in session:
@@ -798,7 +798,7 @@ def api_terminal_complete():
     term_id = str(data.get('term_session', '1'))
     
     if 'term_cwds' not in session or term_id not in session['term_cwds']:
-        # Fallback
+        # Alternativa
         current_cwd = os.path.expanduser('~')
     else:
         current_cwd = session['term_cwds'][term_id]
@@ -843,7 +843,7 @@ def api_actions():
     
     return jsonify({'success': False, 'output': 'Acción desconocida'})
 
-# --- SSH API ---
+# --- API SSH ---
 
 @app.route('/api/ssh/list', methods=['GET'])
 @login_required
@@ -885,48 +885,48 @@ def api_ssh_delete():
 
 @app.route('/api/command/inject', methods=['POST'])
 def api_command_inject():
-    """Injects a text command into the system via the Bus. No auth required for kiosk mode."""
+    """Inyecta un comando de texto en el sistema a través del Bus. No requiere autenticación para el modo kiosco."""
     try:
         data = request.json
         text = data.get('text')
         if not text:
             return jsonify({'success': False, 'message': 'No text provided'})
             
-        # Emit to NeoCore
+        # Emitir a NeoCore
         bus.emit('command:inject', {'text': text})
         return jsonify({'success': True, 'message': f"Sent: {text}"})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# --- MQTT AGENTS API ---
+# --- API DE AGENTES MQTT ---
 
 @app.route('/api/mqtt/agents', methods=['GET'])
 @login_required
 def api_mqtt_agents():
-    """Returns list of registered MQTT agents and their status."""
+    """Devuelve la lista de agentes MQTT registrados y su estado."""
     mqtt_config = config_manager.get('mqtt', {})
     agents = mqtt_config.get('agents', {})
     
-    # Get live status from MQTT manager if available
-    # For now, we'll return the stored agent data
+    # Obtener estado en vivo del administrador MQTT si está disponible
+    # Por ahora, devolveremos los datos del agente almacenados
     return jsonify(agents)
 
 @app.route('/api/mqtt/broker/info', methods=['GET'])
 @login_required
 def api_mqtt_broker_info():
-    """Returns MQTT broker information."""
+    """Devuelve información del broker MQTT."""
     import socket
     
     mqtt_config = config_manager.get('mqtt', {})
     broker_address = mqtt_config.get('broker_address', '0.0.0.0')
     broker_port = mqtt_config.get('broker_port', 1883)
     
-    # Get local IP addresses
+    # Obtener direcciones IP locales
     def get_local_ips():
-        """Get all local IP addresses, filtering out loopback"""
+        """Obtener todas las direcciones IP locales, filtrando loopback"""
         ips = []
         try:
-            # Method 1: Connect to a public DNS to find the route
+            # Método 1: Conectar a un DNS público para encontrar la ruta
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.settimeout(0.5)
             s.connect(("8.8.8.8", 80))
@@ -938,7 +938,7 @@ def api_mqtt_broker_info():
             pass
             
         try:
-            # Method 2: Get all interfaces via netifaces (best) or hostname fallback
+            # Método 2: Obtener todas las interfaces a través de netifaces (mejor) o fallback a hostname
             import netifaces as ni
             for interface in ni.interfaces():
                 try:
@@ -951,7 +951,7 @@ def api_mqtt_broker_info():
                 except:
                     pass
         except ImportError:
-            # Fallback for when netifaces is not installed
+            # Alternativa para cuando netifaces no está instalado
             try:
                 hostname = socket.gethostname()
                 host_ips = socket.gethostbyname_ex(hostname)[2]
@@ -975,7 +975,7 @@ def api_mqtt_broker_info():
 @app.route('/api/mqtt/agent/register', methods=['POST'])
 @login_required
 def api_mqtt_agent_register():
-    """Register a new MQTT agent."""
+    """Registrar un nuevo agente MQTT."""
     data = request.json
     agent_id = data.get('agent_id')
     
@@ -985,7 +985,7 @@ def api_mqtt_agent_register():
     mqtt_config = config_manager.get('mqtt', {})
     agents = mqtt_config.get('agents', {})
     
-    # Add or update agent
+    # Añadir o actualizar agente
     agents[agent_id] = {
         'id': agent_id,
         'registered_at': time.time(),
@@ -1001,7 +1001,7 @@ def api_mqtt_agent_register():
 @app.route('/api/mqtt/agent/<agent_id>', methods=['DELETE'])
 @login_required
 def api_mqtt_agent_delete(agent_id):
-    """Delete/unregister an MQTT agent."""
+    """Eliminar/desregistrar un agente MQTT."""
     mqtt_config = config_manager.get('mqtt', {})
     agents = mqtt_config.get('agents', {})
     
@@ -1016,19 +1016,19 @@ def api_mqtt_agent_delete(agent_id):
 @app.route('/api/mqtt/generate_installer', methods=['POST'])
 @login_required
 def api_mqtt_generate_installer():
-    """Generate a custom installer script with broker IP pre-configured."""
+    """Generar un script de instalación personalizado con IP del broker preconfigurada."""
     try:
         mqtt_config = config_manager.get('mqtt', {})
         broker_port = mqtt_config.get('broker_port', 1883)
         
-        # Get local IP
+        # Obtener IP local
         import socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         broker_ip = s.getsockname()[0]
         s.close()
         
-        # Read the template installer
+        # Leer la plantilla del instalador
         installer_path = os.path.join(os.getcwd(), 'modules', 'BerryConnect', 'PiZero', 'install.sh')
         if not os.path.exists(installer_path):
             return jsonify({'success': False, 'message': 'Installer template not found'})
@@ -1036,7 +1036,7 @@ def api_mqtt_generate_installer():
         with open(installer_path, 'r') as f:
             installer_content = f.read()
         
-        # Create pre-configured version
+        # Crear versión preconfigurada
         preconfigured = installer_content.replace(
             'BROKER_IP=${BROKER_IP:-192.168.1.100}',
             f'BROKER_IP={broker_ip}'
@@ -1057,7 +1057,7 @@ def api_mqtt_generate_installer():
 @app.route('/api/mqtt/agent/<agent_id>/command', methods=['POST'])
 @login_required
 def api_mqtt_send_command(agent_id):
-    """Send a command to a specific agent."""
+    """Enviar un comando a un agente específico."""
     try:
         from modules.mqtt_manager import mqtt_manager
         
@@ -1068,12 +1068,12 @@ def api_mqtt_send_command(agent_id):
         if not command:
             return jsonify({'success': False, 'message': 'Command is required'})
         
-        # Validate command
+        # Validar comando
         valid_commands = ['ping', 'get_status', 'reboot', 'shutdown', 'restart_agent', 'update_config']
         if command not in valid_commands:
             return jsonify({'success': False, 'message': f'Invalid command. Valid: {valid_commands}'})
         
-        # Send command via MQTT manager
+        # Enviar comando a través del administrador MQTT
         if hasattr(bus, 'mqtt_manager') and bus.mqtt_manager:
             command_id = bus.mqtt_manager.send_command(agent_id, command, params)
             if command_id:
@@ -1090,7 +1090,7 @@ def api_mqtt_send_command(agent_id):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-# --- SKILLS API ---
+# --- API DE SKILLS ---
 
 @app.route('/api/skills', methods=['GET'])
 @login_required
@@ -1112,7 +1112,7 @@ def api_skills_toggle():
         return jsonify({'success': False, 'message': 'Nombre de skill requerido'})
 
     try:
-        # Load, modify, save
+        # Cargar, modificar, guardar
         skills_path = 'config/skills.json'
         with open(skills_path, 'r') as f:
             skills_config = json.load(f)
@@ -1159,7 +1159,7 @@ def api_skills_save_config():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-# --- NLU TRAINING API ---
+# --- API DE ENTRENAMIENTO NLU ---
 
 @app.route('/api/nlu/inbox', methods=['GET'])
 @login_required
@@ -1194,7 +1194,7 @@ def api_nlu_train():
         return jsonify({'success': False, 'message': 'Faltan datos'})
 
     try:
-        # 1. Add to learned_intents.json
+        # 1. Añadir a learned_intents.json
         learned_path = 'config/learned_intents.json'
         learned_data = {}
         if os.path.exists(learned_path):
@@ -1210,7 +1210,7 @@ def api_nlu_train():
         with open(learned_path, 'w') as f:
             json.dump(learned_data, f, indent=4)
             
-        # Update intents.json if needed (optional, logic kept simple)
+        # Actualizar intents.json si es necesario (opcional, lógica simple)
         
         return jsonify({'success': True})
     except Exception as e:
@@ -1228,16 +1228,16 @@ def api_nlu_train_alias():
         return jsonify({'success': False, 'message': 'Faltan datos'})
 
     try:
-        # 1. Use Brain to store Alias
+        # 1. Usar Brain para almacenar Alias
         if brain.learn_alias(trigger, command):
             
-            # 2. Remove from Inbox
+            # 2. Eliminar de Bandeja de Entrada
             inbox_path = 'data/nlu_inbox.json'
             if os.path.exists(inbox_path):
                 with open(inbox_path, 'r', encoding='utf-8') as f:
                     inbox = json.load(f)
                 
-                # Filter out the learned trigger
+                # Filtrar el disparador aprendido
                 new_inbox = [i for i in inbox if i['text'] != trigger]
                 
                 with open(inbox_path, 'w', encoding='utf-8') as f:
@@ -1256,7 +1256,7 @@ def api_nlu_train_alias():
         with open(learned_path, 'w') as f:
             json.dump(learned_data, f, indent=4)
             
-        # 2. Remove from inbox
+        # 2. Eliminar de la bandeja de entrada
         inbox_path = 'data/nlu_inbox.json'
         if os.path.exists(inbox_path):
             with open(inbox_path, 'r') as f:
@@ -1285,7 +1285,7 @@ def api_health_status():
         try:
             with open(history_path, 'r') as f:
                 data = json.load(f)
-                # Filter last 24h
+                # Filtrar últimas 24h
                 now = time.time()
                 recent = [i for i in data if now - i['timestamp'] < 86400]
                 recent_incidents = len(recent)
@@ -1302,7 +1302,7 @@ def api_health_status():
         'last_message': last_event
     })
 
-# --- DASHBOARD API ---
+# --- API DEL DASHBOARD ---
 
 @app.route('/api/dashboard/layout', methods=['GET', 'POST'])
 @login_required
@@ -1331,7 +1331,7 @@ def api_dashboard_layout():
                 return jsonify([])
         return jsonify([])
 
-# --- FILES API ---
+# --- API DE ARCHIVOS ---
 
 @app.route('/api/files/list', methods=['POST'])
 @login_required
@@ -1339,7 +1339,7 @@ def api_files_list():
     """Lista directorio."""
     path = request.json.get('path')
     if not path:
-        path = os.path.expanduser('~') # Default to HOME instead of /
+        path = os.path.expanduser('~') # Por defecto a HOME en lugar de /
     success, items = file_manager.list_directory(path)
     if success:
         return jsonify({'success': True, 'items': items})
@@ -1366,27 +1366,27 @@ def api_files_save():
 @app.route('/api/visual/content', methods=['GET'])
 def api_visual_content():
     """Sirve contenido visual (imágenes, PDFs) para la interfaz facial."""
-    # Security: Add path validation
+    # Seguridad: Añadir validación de ruta
     path = request.args.get('path')
     
     if not path:
         return jsonify({'error': 'No path specified'}), 400
     
-    # Resolve to absolute path to prevent traversal
+    # Resolver a ruta absoluta para prevenir salto de directorio
     try:
         abs_path = os.path.realpath(path)
     except Exception as e:
         app_logger.warning(f"Invalid path provided: {path}, error: {e}")
         return jsonify({'error': 'Invalid path'}), 400
     
-    # Define allowed base directories
+    # Definir directorios base permitidos
     ALLOWED_DIRS = [
-        os.path.expanduser('~'),  # User home directory
-        '/tmp',                   # Temp directory
-        os.getcwd()               # Current working directory
+        os.path.expanduser('~'),  # Directorio home del usuario
+        '/tmp',                   # Directorio temporal
+        os.getcwd()               # Directorio de trabajo actual
     ]
     
-    # Check if path is within allowed directories
+    # Comprobar si la ruta está dentro de los directorios permitidos
     if not any(abs_path.startswith(os.path.realpath(d)) for d in ALLOWED_DIRS):
         app_logger.warning(f"Access denied - path outside allowed dirs: {abs_path}")
         return jsonify({'error': 'Access denied'}), 403
@@ -1397,14 +1397,14 @@ def api_visual_content():
     if not os.path.isfile(abs_path):
         return jsonify({'error': 'Path is not a file'}), 400
     
-    # Serve the file
+    # Servir el archivo
     try:
         return send_file(abs_path)
     except Exception as e:
         app_logger.error(f"Error serving file {abs_path}: {e}")
         return jsonify({'error': 'Error serving file'}), 500
 
-# --- KNOWLEDGE API ---
+# --- API DE CONOCIMIENTO ---
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'docs', 'brain_memory')
 
@@ -1421,7 +1421,7 @@ def api_knowledge_upload():
         
     if file:
         filename = file.filename
-        # Ensure uploads folder exists
+        # Asegurarse de que exista la carpeta de subidas
         if not os.path.exists(UPLOAD_FOLDER):
             os.makedirs(UPLOAD_FOLDER)
             
@@ -1433,12 +1433,12 @@ def api_knowledge_upload():
 @login_required
 def api_knowledge_list_docs():
     """Lista los documentos en la carpeta brain_memory."""
-    # Docs path is hardcoded in KnowledgeBase init to "docs" or passed via constructor.
-    # We should use the same logic. 
-    # For now, listing 'docs' dir.
+    # La ruta de Docs está hardcodeada en el init de KnowledgeBase a "docs" o pasada vía constructor.
+    # Deberíamos usar la misma lógica.
+    # Por ahora, listando directorio 'docs'.
     docs_path = os.path.join(os.getcwd(), 'docs')
     if os.path.exists(docs_path):
-         # Just list files 
+         # Solo listar archivos
          files = []
          for root, dirs, filenames in os.walk(docs_path):
              for f in filenames:
@@ -1453,14 +1453,14 @@ def api_knowledge_train():
     """Dispara la re-ingesta de documentos en ChromaDB."""
     try:
         force = request.json.get('force', False)
-        # Re-initialize to ensure it picks up new files if needed, or just call ingest
-        # knowledge_base is global
+        # Re-inicializar para asegurarse de que recoge nuevos archivos si es necesario, o solo llamar a ingest
+        # knowledge_base es global
         knowledge_base.ingest_docs(force=force)
         return jsonify({'success': True, 'message': 'Entrenamiento completado.'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-# --- SCHEDULER API ---
+# --- API DEL PROGRAMADOR ---
 
 @app.route('/api/tasks/list', methods=['GET'])
 @login_required
@@ -1538,22 +1538,22 @@ def run_server():
     port = web_config.get('port', 5000)
     debug_mode = web_config.get('debug', False)
     
-    # Check for SSL Certs
+    # Comprobar Certificados SSL
     cert_dir = os.path.join(os.getcwd(), 'config', 'certs')
     cert_file = os.path.join(cert_dir, 'neo.crt')
     key_file = os.path.join(cert_dir, 'neo.key')
     
     ssl_context = None
     if os.path.exists(cert_file) and os.path.exists(key_file):
-        print(f"🔒 HTTPS Enabled. Using certs from {cert_dir}")
-        # ssl_context = (cert_file, key_file) # Disabled for Kiosk compatibility
+        print(f" HTTPS Enabled. Using certs from {cert_dir}")
+        # ssl_context = (cert_file, key_file) # Desactivado para compatibilidad con Kiosco
         ssl_context = None 
     else:
         print("[WARN] HTTPS Disabled. Certs not found in config/certs/")
         
     print(f"[START] Neo Web Admin running on https://{host}:{port}" if ssl_context else f"[START] Neo Web Admin running on http://{host}:{port}")
     
-    # FORCE DEBUG=FALSE to avoid Werkzeug fallback which causes 'write() before start_response'
-    # NOTE: eventlet does not support 'ssl_context' (uses keyfile/certfile), so we remove it. 
-    # SSL is currently disabled in code above (ssl_context=None).
+    # FORZAR DEBUG=FALSE para evitar el fallback de Werkzeug que causa 'write() before start_response'
+    # NOTA: eventlet no soporta 'ssl_context' (usa keyfile/certfile), así que lo eliminamos.
+    # SSL está actualmente desactivado en el código superior (ssl_context=None).
     socketio.run(app, host=host, port=port, debug=False, use_reloader=False, log_output=False, allow_unsafe_werkzeug=True)

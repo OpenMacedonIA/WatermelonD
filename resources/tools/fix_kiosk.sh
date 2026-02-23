@@ -2,7 +2,7 @@
 # Script de reparación automática para Kiosk/Web Interface
 # Ejecutar en el servidor (Debian 12)
 
-echo "🔧 Iniciando reparación de Kiosk y Dependencias..."
+echo " Iniciando reparación de Kiosk y Dependencias..."
 
 # 1. Definir directorios
 BASE_DIR="$(pwd)"
@@ -11,15 +11,15 @@ STATIC_JS_DIR="$BASE_DIR/web_client/static/js"
 
 # 2. Instalar dependencias faltantes de Python
 if [ -d "$VENV_DIR" ]; then
-    echo "📦 Instalando librerías Python faltantes (Flask-WTF, eventlet)..."
+    echo " Instalando librerías Python faltantes (Flask-WTF, eventlet)..."
     $VENV_DIR/bin/pip install Flask-WTF eventlet --no-cache-dir
 else
-    echo "❌ ERROR: No se encuentra el entorno virtual en $VENV_DIR"
+    echo " ERROR: No se encuentra el entorno virtual en $VENV_DIR"
     exit 1
 fi
 
 # 5. Reiniciar servicio y limpiar procesos (MODO NUCLEAR)
-echo "🔪 Matando TODOS los procesos de Chromium..."
+echo " Matando TODOS los procesos de Chromium..."
 pkill -9 -f chromium
 pkill -9 -f chromium-browser
 killall -9 chromium chromium-browser 2>/dev/null
@@ -29,7 +29,7 @@ rm -rf ~/.config/chromium/Singleton*
 rm -rf ~/.cache/chromium
 rm -f ~/.config/chromium/Profile*/Singleton*
 
-echo "📝 Reescribiendo .xinitrc con limpieza automática..."
+echo " Reescribiendo .xinitrc con limpieza automática..."
 cat << 'EOF' > ~/.xinitrc
 #!/bin/bash
 # Desactivar ahorro de energía
@@ -65,7 +65,7 @@ done
 EOF
 chmod +x ~/.xinitrc
 
-echo "🔄 Reiniciando servicio Neo..."
+echo " Reiniciando servicio Neo..."
 systemctl --user restart neo.service
 
-echo "✅ Reparación completada. El bloqueo de Chromium debería haber desaparecido."
+echo " Reparación completada. El bloqueo de Chromium debería haber desaparecido."

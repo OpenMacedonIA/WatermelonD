@@ -16,14 +16,14 @@ class SSHManager:
         self.config_manager = ConfigManager()
         self.servers_file = self.config_manager.get('paths', {}).get('servers', 'jsons/servers.json')
         self.servers = self._load_servers()
-        self.active_connections = {} # alias -> client
+        self.active_connections = {} # alias -> cliente
 
     def _load_servers(self):
         if os.path.exists(self.servers_file):
             try:
                 with open(self.servers_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    # Migrate old plain text if necessary? For now assume mixed
+                    # ¿Migrar texto plano antiguo si es necesario? Por ahora asumir mixto
                     return data
             except Exception as e:
                 logger.error(f"Error cargando servidores: {e}")
@@ -31,14 +31,14 @@ class SSHManager:
         return {}
     
     def _obfuscate(self, text):
-        """Encrypt password using Fernet (replaces Base64)."""
+        """Encripta contraseña usando Fernet (reemplaza Base64)."""
         if not text:
             return None
         crypto = get_crypto()
         return crypto.encrypt(text)
 
     def _deobfuscate(self, text):
-        """Decrypt password (supports Fernet and legacy Base64)."""
+        """Desencripta contraseña (soporta Fernet y Base64 heredado)."""
         if not text:
             return None
         crypto = get_crypto()

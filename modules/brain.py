@@ -11,14 +11,14 @@ logger = logging.getLogger("NeoBrain")
 
 class Brain:
     """
-    Brain handles Episodic Memory and Learning.
-    Block 2 Upgrade: Context Snapshots & Fuzzy Recall.
+    Brain maneja la Memoria Episódica y el Aprendizaje.
+    Mejora del Bloque 2: Instantáneas de Contexto y Recuperación Difusa (Fuzzy Recall).
     """
     def __init__(self):
         self.db = DatabaseManager()
-        self.short_term_memory = deque(maxlen=5) # Context of last 5 interactions
+        self.short_term_memory = deque(maxlen=5) # Contexto de las últimas 5 interacciones
         self.aliases_cache = self.db.get_all_aliases()
-        self.ai_engine = None # Injected later
+        self.ai_engine = None # Inyectado más tarde
         logger.info("Neo Brain (Block 2 Upgraded) initialized.")
 
     def set_ai_engine(self, ai_engine):
@@ -26,7 +26,7 @@ class Brain:
 
     def process_input(self, user_input):
         """
-        Check if the input matches a learned alias.
+        Comprueba si la entrada coincide con un alias aprendido.
         """
         user_input_lower = user_input.lower()
         if user_input_lower in self.aliases_cache:
@@ -52,17 +52,17 @@ class Brain:
             return self.short_term_memory[-1]
         return None
 
-    # --- Block 2: Advanced Episodic Memory ---
+    # --- Bloque 2: Memoria Episódica Avanzada ---
 
     def remember_event(self, event_type, details, sentiment="neutral"):
         """
-        Store an episodic event with a snapshot of the current context.
+        Almacena un evento episódico con una instantánea del contexto actual.
         """
-        # Capture Context (Mocked for now, could be real system stats)
+        # Capturar Contexto (Simulado por ahora, podrían ser estadísticas reales del sistema)
         context = {
             "last_interaction": self.get_last_context(),
-            "system_load": "low", # Placeholder
-            "active_window": "unknown" # Placeholder
+            "system_load": "low", # Marcador de posición
+            "active_window": "unknown" # Marcador de posición
         }
         context_json = json.dumps(context)
         
@@ -73,46 +73,46 @@ class Brain:
 
     def recall_events(self, event_type, limit=5, fuzzy_query=None):
         """
-        Recall recent episodic events.
-        If fuzzy_query is provided, filters events by similarity to details.
+        Recuperar eventos episódicos recientes.
+        Si se proporciona fuzzy_query, filtra los eventos por similitud con los detalles.
         """
         events = self.db.get_recent_events(event_type, limit=limit)
         
         if not fuzzy_query or not fuzz:
             return events
             
-        # Fuzzy Filter
+        # Filtro Difuso (Fuzzy)
         filtered_events = []
         for event in events:
-            # event is a Row object, access by name
+            # event es un objeto Row, acceder por nombre
             details = event['details']
             score = fuzz.token_set_ratio(fuzzy_query, details)
-            if score > 60: # Threshold
+            if score > 60: # Umbral
                 filtered_events.append(event)
                 logger.debug(f"Brain: Fuzzy match '{fuzzy_query}' vs '{details}' = {score}")
         
         return filtered_events
 
-    # --- RAG: Retrieval Augmented Generation ---
+    # --- RAG: Retrieval Augmented Generation (Generación Aumentada con Recuperación) ---
 
     def retrieve_context(self, user_input):
         """
-        Retrieves relevant context from Facts and Episodic Memory based on user input.
-        Returns a formatted string or None.
+        Recupera el contexto relevante de los Hechos y la Memoria Episódica basándose en la entrada del usuario.
+        Devuelve una cadena formateada o None.
         """
         if not user_input:
             return None
 
-        # 1. Extract potential keywords (simplified)
-        # We use the whole input for LIKE search, which is crude but effective for "Who is X?"
-        # For better results, we might want to extract nouns, but let's start simple.
+        # 1. Extraer posibles palabras clave (simplificado)
+        # Usamos toda la entrada para la búsqueda LIKE, que es rudo pero efectivo para "¿Quién es X?"
+        # Para mejores resultados, podríamos querer extraer sustantivos, pero empecemos simple.
         
-        # Avoid searching for common stopwords if possible, but for now pass the raw input
-        # or maybe just the longest word? No, let's pass the whole phrase for now 
-        # but if it's too long, maybe just search for entities.
-        # Let's try searching for the input directly first.
+        # Evitar buscar palabras vacías comunes (stopwords) si es posible, pero por ahora pasamos la entrada cruda
+        # ¿o tal vez solo la palabra más larga? No, pasemos la frase entera por ahora 
+        # pero si es demasiado larga, quizás solo busquemos entidades.
+        # Intentemos buscar la entrada directamente primero.
         
-        # Optimization: If input is "Who is X", search for "X"
+        # Optimización: Si la entrada es "Quién es X", buscar "X"
         search_term = user_input
         
         facts = self.db.search_facts(search_term)
@@ -137,20 +137,20 @@ class Brain:
 
     def consolidate_memory(self):
         """
-        Generates a summary of yesterday's interactions and stores it.
-        Should be called once a day (e.g. at startup or midnight).
+        Genera un resumen de las interacciones de ayer y lo almacena.
+        Debería llamarse una vez al día (ej. en el arranque o a medianoche).
         """
         from datetime import datetime, timedelta
         
-        # Calculate yesterday's date
+        # Calcular fecha de ayer
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         
-        # Check if summary already exists
+        # Comprobar si ya existe el resumen
         if self.db.get_daily_summary(yesterday):
             logger.info(f"Summary for {yesterday} already exists.")
             return False
 
-        # Get interactions
+        # Obtener interacciones
         interactions = self.db.get_interactions_by_date(yesterday)
         if not interactions:
             logger.info(f"No interactions found for {yesterday}.")
@@ -160,7 +160,7 @@ class Brain:
             logger.warning("Cannot consolidate memory: AI Engine not available.")
             return False
 
-        # Format for summarization
+        # Formatear para resumir
         text_block = "\n".join([f"User: {i['user_input']}\nNeo: {i['neo_response']}" for i in interactions])
         
         # Prompt

@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from modules.sysadmin import SysAdminManager
 
-# Configure Logging
+# Configurar Logging
 logger = logging.getLogger("HealthManager")
 
 class HealthManager:
@@ -23,19 +23,18 @@ class HealthManager:
         self.thread = None
         
         # Estado de los servicios monitorizados
-        # Estado de los servicios monitorizados
         self.monitored_services = [
             'nginx', 'apache2', 'lighttpd',       # Web Servers
             'mosquitto',                          # MQTT
-            'ollama',                             # AI
-            'networking', 'NetworkManager',       # Network
-            'cron',                               # Scheduling
-            'mysql', 'mariadb', 'postgresql',     # Databases
+            'ollama',                             # IA
+            'networking', 'NetworkManager',       # Red
+            'cron',                               # Programación
+            'mysql', 'mariadb', 'postgresql',     # Bases de datos
             'redis', 'mongodb', 
-            'ssh', 'sshd',                        # Remote Access
-            'fail2ban', 'ufw',                    # Security
-            'docker',                             # Containers
-            # 'bluetooth', 'avahi-daemon'           # Hardware/Discovery (Disabled: unsupported env)
+            'ssh', 'sshd',                        # Acceso remoto
+            'fail2ban', 'ufw',                    # Seguridad
+            'docker',                             # Contenedores
+            # 'bluetooth', 'avahi-daemon'           # Hardware/Descubrimiento (Desactivado: entorno no soportado)
         ]
         
         # Historial de incidentes
@@ -43,27 +42,27 @@ class HealthManager:
         self.incident_history = self._load_history()
         
         # Configuración de recuperación
-        self.recovery_attempts = {} # {service: count}
+        self.recovery_attempts = {} # {servicio: conteo}
         self.max_attempts = 3
         self.cooldown_window = 300 # 5 minutos para resetear intentos
-        self.last_recovery_time = {} # {service: timestamp}
+        self.last_recovery_time = {} # {servicio: marca de tiempo}
 
     def start(self):
         """Inicia el hilo de monitorización."""
         if self.running: return
         
-        # Check for systemd (Fix for Distrobox/Containers)
+        # Comprobar systemd (Arreglo para Distrobox/Contenedores)
         if not os.path.exists("/run/systemd/system"):
-            logger.warning("Systemd not detected (Container/Distrobox?). Disabling service auto-healing.")
+            logger.warning("Systemd no detectado (¿Contenedor/Distrobox?). Desactivando auto-curación de servicios.")
             self.monitored_services = []
         else:
-            # Filter services that are not installed
+            # Filtrar servicios que no están instalados
             valid_services = []
             for srv in self.monitored_services:
                 if self.sys_admin.is_service_installed(srv):
                     valid_services.append(srv)
                 else:
-                    logger.info(f"ℹ️ Skipping {srv}: Service not found on system.")
+                    logger.info(f"ℹ Omitiendo {srv}: Servicio no encontrado en el sistema.")
             self.monitored_services = valid_services
             
         logger.info(f"HealthManager checking: {self.monitored_services}")
@@ -96,7 +95,7 @@ class HealthManager:
 
     def _check_services(self):
         """Comprueba el estado de los servicios críticos y actúa si fallan."""
-        # Check only specific services we care about
+        # Comprobar solo servicios específicos que nos importan
         services_status = self.sys_admin.get_services(self.monitored_services) 
 
         
@@ -109,8 +108,8 @@ class HealthManager:
                 continue
 
             if status != 'active' and status != 'activating':
-                # Ignore 'activating' because it might just be starting up.
-                logger.warning(f"Service DOWN detected: {name} (Status: {status})")
+                # Ignorar 'activating' porque podría estar simplemente iniciándose.
+                logger.warning(f"Servicio CAÍDO detectado: {name} (Estado: {status})")
                 self._handle_failure(name)
             else:
                 # Si está activo, reseteamos contadores si ha pasado tiempo suficiente
@@ -131,7 +130,7 @@ class HealthManager:
             # Intentar reinicio
             success, msg = self.sys_admin.control_service(service_name, 'restart')
             
-            # Increment attempts regardless of outcome to avoid infinite loops
+            # Incrementar intentos independientemente del resultado para evitar bucles infinitos
             self.recovery_attempts[service_name] = attempts + 1
             self.last_recovery_time[service_name] = time.time()
 
@@ -142,12 +141,12 @@ class HealthManager:
                 logger.error(f"Recovery failed for {service_name}: {msg}")
                 self._log_incident(service_name, "RECOVERY_FAILED")
         else:
-            # STOP SPAMMING: If max attempts reached, log once and do nothing.
-            # We check if we already logged the "Give up" message to avoid repeating it every 30s
+            # DEJAR DE HACER SPAM: Si se alcanzó el máximo de intentos, registrar una vez y no hacer nada.
+            # Comprobamos si ya registramos el mensaje de "Rendirse" para evitar repetirlo cada 30s
             if attempts == self.max_attempts:
-                 logger.critical(f"Give up on {service_name}. Max attempts reached. Will not try again until cooldown or manual fix.")
-                 self.recovery_attempts[service_name] = attempts + 1 # Increment once more to silence this block
-            # If attempts > max_attempts, we do nothing (silent ignore)
+                 logger.critical(f"Rindiéndome con {service_name}. Máximo de intentos alcanzado. No volveré a intentar hasta enfriamiento o arreglo manual.")
+                 self.recovery_attempts[service_name] = attempts + 1 # Incrementar una vez más para silenciar este bloque
+            # Si attempts > max_attempts, no hacemos nada (ignorar en silencio)
 
     def _analyze_risks(self):
         """

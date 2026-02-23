@@ -8,13 +8,13 @@ logger = logging.getLogger("NeoSherlock")
 
 class Sherlock:
     """
-    Sherlock is the Diagnostic Reasoning Engine for T.I.O.
-    Block 4 Upgrade: Real Command Execution & Dynamic Trees.
+    Sherlock es el Motor de Razonamiento Diagnóstico para T.I.O.
+    Mejora Bloque 4: Ejecución Real de Comandos y Árboles Dinámicos.
     """
     def __init__(self, event_queue):
         self.db = DatabaseManager()
         self.event_queue = event_queue
-        # Map concepts to real commands
+        # Mapea conceptos a comandos reales
         self.command_map = {
             "internet": "ping -c 1 8.8.8.8",
             "router": "ping -c 1 192.168.1.1", # Assumption
@@ -30,23 +30,23 @@ class Sherlock:
 
     def run_diagnosis(self):
         """
-        Runs a general system diagnosis (Internet, Disk, Memory, CPU).
+        Ejecuta un diagnóstico general del sistema (Internet, Disco, Memoria, CPU).
         """
-        logger.info("Sherlock: Running general diagnosis...")
+        logger.info("Sherlock: Ejecutando diagnóstico general...")
         problems = []
         
-        # Check Internet
+        # Comprobar internet
         if not self._run_command(self.command_map['internet'])['success']:
             problems.append("No hay conexión a Internet.")
             
-        # Check Disk
+        # Comprobar disco
         disk = self._run_command(self.command_map['disk'])
         if disk['success'] and '100%' in disk['output']:
             problems.append("El disco está lleno.")
             
-        # Check Memory
+        # Comprobar memoria
         mem = self._run_command(self.command_map['memory'])
-        # Simple heuristic: if 'available' is very low (parsing needed, but let's keep it simple for now)
+        # Heurística simple: si lo disponible es muy bajo (necesita análisis pero se mantiene simple por ahora)
         
         if not problems:
             return "Todos los sistemas vitales (Red, Disco, Memoria) parecen nominales."
@@ -55,22 +55,22 @@ class Sherlock:
 
     def diagnose(self, problem_description):
         """
-        Main entry point for diagnosis.
+        Punto de entrada principal para el diagnóstico.
         """
-        logger.info(f"Sherlock: Diagnosing '{problem_description}'...")
+        logger.info(f"Sherlock: Diagnosticando '{problem_description}'...")
         
-        # 1. Identify Concepts (Simplified)
+        # 1. Identificar Conceptos (Simplificado)
         concepts = [word for word in self.command_map.keys() if word in problem_description.lower()]
         
         if not concepts:
-            # Try to infer from Knowledge Graph
-            # e.g. "web" -> infer "nginx"
+            # Intentar deducir (infer) desde el Gráfico de Conocimiento
+            # ej "web" -> deduce "nginx"
             pass 
 
         if not concepts:
             return "No tengo ni idea de qué me hablas, Watson. Sé más específico."
 
-        # 2. Execute Diagnostics
+        # 2. Ejecutar Pruebas Diagnósticas
         report = []
         for concept in concepts:
             cmd = self.command_map.get(concept)
@@ -80,11 +80,11 @@ class Sherlock:
                 status = "OK" if result['success'] else "FALLO"
                 report.append(f"{concept}: {status}")
                 
-                # Knowledge Graph Pathfinding (if failed)
+                # Pathfinding del Gráfico de Conocimiento (si falló)
                 if not result['success']:
                     self.event_queue.put({'type': 'speak', 'text': f"¡Ojo! {concept} ha fallado. Buscando culpables..."})
-                    # Find dependencies
-                    # e.g. nginx failed -> check port 80? check config?
+                    # Encontrar dependencias
+                    # ej nginx falló -> comprueba puerto 80? comprueba conf?
                     pass
 
         if report:
@@ -94,8 +94,8 @@ class Sherlock:
 
     def _run_command(self, cmd):
         try:
-            # SECURITY WARNING: This executes shell commands.
-            # Ensure cmd comes from trusted self.command_map only.
+            # ADVERTENCIA DE SEGURIDAD: Esto ejecuta comandos de terminal (shell).
+            # Asegúrate que el comndo viene únicamente del mapeado confiable command_map
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
             return {
                 'success': result.returncode == 0,

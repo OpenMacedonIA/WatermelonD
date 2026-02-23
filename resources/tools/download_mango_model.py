@@ -25,8 +25,8 @@ def download_mango():
         revision = "main"
         model_name = "MANGO (Legacy)"
 
-    print(f"ℹ️  Selected Model: {model_name}")
-    print(f"ℹ️  Repository: {repo_id}")
+    print(f"ℹ  Selected Model: {model_name}")
+    print(f"ℹ  Repository: {repo_id}")
     
     # Check if model seems populated (simple check)
     if os.path.exists(target_dir):
@@ -36,7 +36,7 @@ def download_mango():
             print(f"[OK] {model_name} already exists in {target_dir}. Skipping download.")
             return
 
-    print(f"⬇️ Downloading {repo_id} (Branch: {revision}) to {target_dir}...")
+    print(f" Downloading {repo_id} (Branch: {revision}) to {target_dir}...")
     
     try:
         # Download the snapshot

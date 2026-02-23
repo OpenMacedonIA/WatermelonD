@@ -324,7 +324,7 @@ class SecureIntentMatcher:
             command: Comando en lenguaje natural
             extractors: Dict de {nombre_variable: patron_regex}
         
-        Returns:
+        Devuelve:
             Dict con valores extraídos
         """
         context = {}
@@ -346,7 +346,7 @@ class SecureIntentMatcher:
         Args:
             command: Comando en lenguaje natural
         
-        Returns:
+        Devuelve:
             (cmd, context, category) o None si no hay match
         """
         command_lower = command.lower()
@@ -362,7 +362,7 @@ class SecureIntentMatcher:
                         extractors = intent.get('context_extractors', {})
                         context = self.extract_context(command, extractors)
                         
-                        # Si requiere contexto pero no se extrajo, skip
+                        # Si requiere contexto pero no se extrajo, saltar
                         if not context:
                             logger.debug(f"Intent '{trigger}' requiere contexto pero no se extrajo")
                             continue

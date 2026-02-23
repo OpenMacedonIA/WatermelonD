@@ -19,7 +19,7 @@ class TextNormalizer:
         self.dict_path = dict_path
         self.threshold = threshold
         self.replacements = {} # Mapa plano: "doker" -> "docker"
-        self.canonical_set = set() # Conjunto de palabras correctas para fast-skip
+        self.canonical_set = set() # Conjunto de palabras correctas para omitir búsqueda rápida (fast-skip)
         
         self.load_dictionary()
 
@@ -36,7 +36,7 @@ class TextNormalizer:
             with open(self.dict_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 
-            # Aplanar estructura: Categoría -> Lista -> Variants -> Map
+            # Aplanar estructura: Categoría -> Lista -> Variantes -> Mapa
             for category, items in data.items():
                 for item in items:
                     canonical = item.get("canonical", "").lower()
@@ -64,27 +64,27 @@ class TextNormalizer:
         words = text.split()
         normalized_words = []
         
-        # Obtenemos lista de variantes conocidas para fuzzy matching rápido
+        # Obtenemos lista de variantes conocidas para coincidencia rápida
         known_errors = list(self.replacements.keys())
         
         for word in words:
             word_lower = word.lower()
             
-            # 1. Si ya es correcto, pasamos (Fast Path)
+            # 1. Si ya es correcto, pasamos (Ruta rápida)
             if word_lower in self.canonical_set:
                 normalized_words.append(word)
                 continue
                 
-            # 2. Si está en la lista exacta de errores (Dict Lookup - O(1))
+            # 2. Si está en la lista exacta de errores (Búsqueda en diccionario - O(1))
             if word_lower in self.replacements:
                 corrected = self.replacements[word_lower]
                 normalized_words.append(corrected)
                 continue
             
-            # 3. Fuzzy Matching (Solo si no hubo match exacto)
+            # 3. Coincidencia difusa (Solo si no hubo match exacto)
             # Buscamos si la palabra se parece a algún error conocido (ej. "dokker" -> "doker" -> "docker")
             # O mejor: mapeamos variantes a su canon. 
-            # Pero fuzzing contra TODAS las variantes es lento.
+            # Pero la coincidencia difusa cruzando TODAS las variantes es lento.
             # ESTRATEGIA OPTIMIZADA: Scannear solo si la palabra tiene longitud > 3 (evitar corrección de 'a', 'de')
             
             if len(word_lower) > 3:

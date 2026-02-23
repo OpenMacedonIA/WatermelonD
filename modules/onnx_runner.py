@@ -32,9 +32,9 @@ class SpecificModelRunner:
     def __init__(self, models_base_path="models", stats_path="data/model_stats.json"):
         self.models_base_path = models_base_path
         self.stats_path = stats_path
-        self.sessions = {} # Cache sessions: label -> InferenceSession
-        self.tokenizers = {} # Cache tokenizers: label -> AutoTokenizer
-        self.last_access = {} # label -> timestamp (para LRU eviction y TTL)
+        # Caché de sesiones: etiqueta -> InferenceSession
+        self.tokenizers = {} # Caché de tokenizadores: etiqueta -> AutoTokenizer
+        self.last_access = {} # etiqueta -> marca de tiempo (para desalojo LRU y TTL)
         self.max_models = self.MAX_MODELS_IN_MEMORY
         
         self.stats = self._load_stats()
@@ -43,7 +43,7 @@ class SpecificModelRunner:
         
         if ONNX_AVAILABLE:
             self._preload_top_models()
-            # Start TTL cleanup thread
+            # Iniciar hilo de limpieza TTL
             self._cleanup_thread = threading.Thread(
                 target=self._ttl_cleanup_loop, 
                 daemon=True, 
@@ -85,7 +85,7 @@ class SpecificModelRunner:
                 app_logger.warning(f"Fallo pre-carga de {label}: {e}")
     
     def _ttl_cleanup_loop(self):
-        """Background thread to unload idle models based on TTL."""
+        """Hilo en segundo plano para descargar modelos inactivos basado en TTL."""
         while not self._stop_cleanup:
             try:
                 time.sleep(self.CLEANUP_INTERVAL_SECONDS)
@@ -94,7 +94,7 @@ class SpecificModelRunner:
                 app_logger.error(f"Error in TTL cleanup loop: {e}")
     
     def _cleanup_expired_models(self):
-        """Unload models that haven't been accessed within TTL."""
+        """Descarga los modelos al que no se ha accedido dentro del tiempo TTL."""
         with self._cleanup_lock:
             now = time.time()
             to_remove = []
@@ -119,7 +119,7 @@ class SpecificModelRunner:
 
             model_dir = os.path.join(self.models_base_path, label)
             
-            # Check for encoder-decoder architecture (T5-style models)
+            # Comprobar arquitectura encoder-decoder (modelos tipo T5)
             encoder_file = os.path.join(model_dir, "encoder_model_quantized.onnx")
             decoder_file = os.path.join(model_dir, "decoder_model_quantized.onnx")
             single_model_file = os.path.join(model_dir, "model.onnx")
@@ -127,14 +127,14 @@ class SpecificModelRunner:
             if not os.path.exists(model_dir):
                 raise FileNotFoundError(f"Model directory not found: {model_dir}")
             
-            # Determine model type
+            # Determinar tipo de modelo
             if os.path.exists(encoder_file) and os.path.exists(decoder_file):
                 app_logger.info(f"Cargando Modelo Encoder-Decoder ({label}) en RAM...")
                 tokenizer = AutoTokenizer.from_pretrained(model_dir)
                 encoder_session = ort.InferenceSession(encoder_file)
                 decoder_session = ort.InferenceSession(decoder_file)
                 
-                # Store as tuple (encoder, decoder)
+                # Almacenar como tupla (encoder, decoder)
                 self.sessions[label] = (encoder_session, decoder_session)
                 self.tokenizers[label] = tokenizer
                 self.last_access[label] = time.time()
@@ -165,17 +165,17 @@ class SpecificModelRunner:
                 del self.sessions[lru_label]
                 del self.tokenizers[lru_label]
                 del self.last_access[lru_label]
-                # Force GC optional here, but Python refcounting usually sufficient for classes
+                # Forzar GC opcional aquí, pero el recuento de referencias de Python suele ser suficiente para clases
 
     def generate_command(self, text, label):
         if not ONNX_AVAILABLE:
             raise ImportError("Librerías ONNX no disponibles.")
 
-        # 1. Update Stats (Learning)
+        # 1. Actualizar Estadísticas (Aprendizaje)
         self.stats[label] = self.stats.get(label, 0) + 1
-        self._save_stats() # Persist learning
+        self._save_stats() # Persistir aprendizaje
 
-        # 2. Manage Memory & Load
+        # 2. Gestionar Memoria y Carga
         try:
             self._manage_memory(label)
             self._load_model_into_memory(label)
@@ -183,22 +183,22 @@ class SpecificModelRunner:
             app_logger.error(f"Error cargando modelo {label}: {e}")
             raise e
 
-        # 3. Inference
+        # 3. Inferencia
         try:
             session = self.sessions[label]
             tokenizer = self.tokenizers[label]
             
-            # Check if encoder-decoder (tuple) or single model
+            # Comprobar si es un encoder-decoder (tupla) o un solo modelo
             if isinstance(session, tuple):
-                # Encoder-Decoder T5-style model
+                # Modelo Encoder-Decoder tipo T5
                 encoder_session, decoder_session = session
                 
-                # Tokenize input
+                # Tokenizar entrada
                 inputs = tokenizer(text, return_tensors="np", padding=True, truncation=True)
                 input_ids = inputs["input_ids"].astype("int64")
                 attention_mask = inputs["attention_mask"].astype("int64")
                 
-                # Run encoder
+                # Ejecutar encoder
                 encoder_outputs = encoder_session.run(
                     None,
                     {
@@ -208,10 +208,10 @@ class SpecificModelRunner:
                 )
                 encoder_hidden_states = encoder_outputs[0]
                 
-                # Prepare decoder input (start with pad token)
+                # Preparar entrada del decoder (empezar con token de relleno / pad)
                 decoder_input_ids = np.array([[tokenizer.pad_token_id]], dtype=np.int64)
                 
-                # Simple greedy decoding (max 50 tokens)
+                # Descodificación avariciosa simple (máx 50 tokens)
                 max_length = 50
                 generated_ids = []
                 for _ in range(max_length):
@@ -237,7 +237,7 @@ class SpecificModelRunner:
                 
                 command = tokenizer.decode(generated_ids, skip_special_tokens=True)
             else:
-                # Single model (legacy path)
+                # Un solo modelo (ruta anterior/heredada)
                 input_ids = tokenizer(text, return_tensors="np").input_ids.astype("int64")
                 
                 output_names = [output.name for output in session.get_outputs()]

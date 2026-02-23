@@ -36,35 +36,35 @@ class VoiceManager:
         self.vosk_model = None
         self.whisper_model = None
         self.is_listening = False
-        self.is_processing = False # Flag to pause listening during processing
-        self.is_muted = False # Mute flag
+        self.is_processing = False # Bandera para pausar escucha durante procesamiento
+        self.is_muted = False # Bandera de silenciamiento
         
         self.setup_vosk()
         self.setup_whisper()
         
-        # --- BUS CLIENT ---
+        # --- CLIENTE DE BUS ---
         self.bus = BusClient(name="VoiceManager")
         self.bus.on('recognizer_loop:audio', self.on_audio_data)
         self.bus.on('mic:toggle', self.on_mic_toggle)
         self.bus.on('mic:get_status', self.on_mic_get_status)
-        # self.bus.connect() <-- Deadlock Fix: Let run_forever handle it in thread
-        # Start bus thread
+        # self.bus.connect() <-- Arreglo Deadlock: Dejar que run_forever lo maneje en hilo
+        # Iniciar hilo de bus
         threading.Thread(target=self.bus.run_forever, daemon=True).start()
         
-        # Disable Sherlock setup if minimal? Keeping it for now.
+        # ¿Deshabilitar configuración Sherlock si es mínima? Manteniéndolo por ahora.
         self.setup_sherpa()
 
     def setup_vosk(self):
         """Carga el modelo de reconocimiento de voz Vosk."""
         if VOSK_DISPONIBLE:
-            # Resolve absolute path relative to project root (assuming run from project root or finding it)
-            # Default fallback
+            # Resolver ruta absoluta relativa a la raíz del proyecto (asumiendo ejecución desde ahí o encontrándola)
+            # Alternativa predeterminada
             config_path = self.config_manager.get('stt', {}).get('model_path', "vosk-models/es")
             
-            # Try to resolve absolute path
+            # Intentar resolver ruta absoluta
             if not os.path.isabs(config_path):
-                # Assume 2 levels up from modules/voice_manager.py is project root? 
-                # Or just use os.getcwd() if we trust setup. But simpler to use os.path.abspath
+                # ¿Asumir que 2 niveles arriba de modules/voice_manager.py es la raíz del proyecto? 
+                # O simplemente usar os.getcwd() si confiamos en la configuración. Es más sencillo usar os.path.abspath
                 model_path = os.path.abspath(config_path)
             else:
                 model_path = config_path
@@ -86,10 +86,10 @@ class VoiceManager:
         """Carga el modelo Faster-Whisper."""
         if WHISPER_DISPONIBLE:
             model_size = self.config_manager.get('stt', {}).get('whisper_model', "medium")
-            model_path = "models/whisper" # Local path
+            model_path = "models/whisper" # Ruta local
             try:
-                # Run on CPU with INT8 (fast enough for medium on modern CPU)
-                # Or CUDA if available (auto-detected usually, but let's be safe with cpu for now or auto)
+                # Ejecutar en CPU con INT8 (suficientemente rápido para mediano en CPU moderna)
+                # O CUDA si disponible (se autodetecta, pero para mayor seguridad usar cpu o auto por ahora)
                 device = "cpu" 
                 compute_type = "int8"
                 
@@ -105,7 +105,7 @@ class VoiceManager:
             return None
             
         words = set()
-        # Wake words list
+        # Lista de palabras de activación
         wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro', 'hermano', 'colega', 'nen'])
         if isinstance(wake_words, str): wake_words = [wake_words]
         
@@ -148,21 +148,21 @@ class VoiceManager:
         
         text_lower = text.lower()
         
-        # 1. Direct Match (Fastest)
+        # 1. Coincidencia Directa (Más Rápido)
         for ww in wake_words:
             if ww.lower() in text_lower:
                 return ww.lower()
         
-        # 2. Fuzzy Match (RapidFuzz)
-        if VOSK_DISPONIBLE: # Reusing VOSK flag for general optional libs check or check rapidfuzz explicitly
+        # 2. Coincidencia Difusa (RapidFuzz)
+        if VOSK_DISPONIBLE: # Reusando bandera VOSK para control general de librerías opcionales o comprobar rapidfuzz explícitamente
             try:
                 from rapidfuzz import fuzz
-                # Check each word in the text against wake words
+                # Comprobar cada palabra en el texto contra palabras de activación
                 words = text_lower.split()
                 for word in words:
                     for ww in wake_words:
                         ratio = fuzz.ratio(word, ww.lower())
-                        if ratio > 85: # 85% similarity
+                        if ratio > 85: # 85% de similitud
                             vosk_logger.info(f"Fuzzy Wake Word Detected: '{word}' ~= '{ww}' ({ratio}%)")
                             return ww.lower()
             except ImportError:
@@ -171,17 +171,17 @@ class VoiceManager:
         return None
 
     def on_audio_data(self, message):
-        """Callback placeholder (Bus mode disabled for now)."""
+        """Marcador de posición para callback (Modo bus deshabilitado por ahora)."""
         pass
 
     def on_mic_toggle(self, message):
-        """Toggle mute state."""
+        """Alternar estado de silenciamiento."""
         self.is_muted = not self.is_muted
         app_logger.info(f"Microphone Muted: {self.is_muted}")
         self.bus.emit('mic:status', {'muted': self.is_muted})
 
     def on_mic_get_status(self, message):
-        """Emit current status."""
+        """Emitir estado actual."""
         self.bus.emit('mic:status', {'muted': self.is_muted})
 
     def _continuous_voice_listener(self, intents):
@@ -203,7 +203,7 @@ class VoiceManager:
                 vosk_logger.error("Modelo Vosk no cargado. No se puede iniciar escucha.")
                 return
 
-            # Init Recognizer
+            # Inicializar Reconocedor
             if not hasattr(self, 'recognizer') or self.recognizer is None:
                 use_grammar = self.config_manager.get('stt', {}).get('use_grammar', True)
                 if use_grammar and intents:
@@ -224,7 +224,7 @@ class VoiceManager:
             last_face_update = 0
             
             while self.is_listening:
-                 # Pause logic
+                 # Lógica de pausa
                  if self.speaker.is_busy or self.is_processing or self.is_muted:
                      time.sleep(0.1)
                      continue
@@ -238,7 +238,7 @@ class VoiceManager:
                              ww = self._check_wake_word(command)
                              self.on_command_detected(command, ww if ww else 'neo')
                      else:
-                         # Partial
+                         # Parcial
                          partial = json.loads(self.recognizer.PartialResult())
                          if partial.get('partial') and self.update_face:
                              current_time = time.time()
@@ -250,7 +250,7 @@ class VoiceManager:
                      vosk_logger.error(f"Error reading audio stream: {e}")
                      time.sleep(0.5)
 
-            # Cleanup
+            # Limpieza
             stream.stop_stream()
             stream.close()
             p.terminate()
@@ -263,7 +263,7 @@ class VoiceManager:
 
     def _whisper_listener(self):
         """Bucle de escucha para Faster-Whisper con VAD basado en energía."""
-        # ... (Existing Whisper code kept for reference or fallback) ...
+        # ... (Código actual de Whisper mantenido para referencia o alternativa) ...
         pass
 
     def setup_sherpa(self):
@@ -273,7 +273,7 @@ class VoiceManager:
             import sherpa_onnx
             model_dir = self.config_manager.get('stt', {}).get('sherpa_model_path', "models/sherpa/sherpa-onnx-whisper-small")
             
-            # Whisper ONNX files (Small INT8)
+            # Archivos ONNX Whisper (Pequeño INT8)
             encoder = os.path.join(model_dir, "small-encoder.int8.onnx")
             decoder = os.path.join(model_dir, "small-decoder.int8.onnx")
             tokens = os.path.join(model_dir, "small-tokens.txt")
@@ -306,7 +306,7 @@ class VoiceManager:
         """Bucle de escucha para Sherpa-ONNX (Offline Whisper con VAD)."""
         if getattr(self, 'sherpa_recognizer', None) is None:
             vosk_logger.error("Sherpa Recognizer no inicializado. Comprueba que los archivos del modelo existan. El hilo de voz quedará en reposo.")
-            # Sleep in a loop to keep the thread alive and prevent the watchdog from continuously restarting it
+            # Dormir en bucle para mantener el hilo vivo y prevenir que watchdog lo reinicie continuamente
             while self.is_listening:
                 time.sleep(5)
             return
@@ -317,8 +317,8 @@ class VoiceManager:
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
         RATE = 16000
-        THRESHOLD = 500 # Sensitivity (matched to debug script)
-        SILENCE_LIMIT = 20 # ~1s silence to trigger
+        THRESHOLD = 500 # Sensibilidad (coincide con el script de depuración)
+        SILENCE_LIMIT = 20 # ~1s de silencio para activarse
         
         p = pyaudio.PyAudio()
         device_index = self.config_manager.get('stt', {}).get('input_device_index', None)
@@ -336,7 +336,7 @@ class VoiceManager:
         is_recording = False
         last_face_update = 0
         
-        # --- Voice Auth Buffer (Rolling 5s) ---
+        # --- Búfer de Autenticación de Voz (Rotativo de 5s) ---
         from collections import deque
         rolling_buffer = deque(maxlen=int(16000 / CHUNK * 5)) # 5 seconds
         
@@ -350,7 +350,7 @@ class VoiceManager:
                 shorts = struct.unpack("%dh" % (len(data) / 2), data)
                 rms = np.sqrt(np.mean(np.square(shorts)))
                 
-                # Update Rolling Buffer (for biometrics)
+                # Actualizar Búfer Rotativo (para biometría)
                 rolling_buffer.append(data)
                 
                 if rms > THRESHOLD:
@@ -369,7 +369,7 @@ class VoiceManager:
                     audio_buffer.append(data)
                     
                     if silence_frames > SILENCE_LIMIT:
-                        # End of speech
+                        # Fin del habla
                         if self.update_face: self.update_face('thinking')
                         
                         raw_data = b''.join(audio_buffer)
@@ -384,9 +384,9 @@ class VoiceManager:
                             vosk_logger.info(f"Sherpa escuchó: '{text}'")
                             ww = self._check_wake_word(text)
                             
-                            # Provide context buffer (last 5s + current phrase)
-                            # Actually, audio_buffer contains the phrase. 
-                            # Ideally we pass audio_buffer for biometrics.
+                            # Proveer búfer de contexto (últimos 5s + frase actual)
+                            # En realidad, audio_buffer contiene la frase. 
+                            # Idealmente pasaríamos audio_buffer para biometría.
                             
                             self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
                         

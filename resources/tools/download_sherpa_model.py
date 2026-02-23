@@ -133,7 +133,7 @@ def list_models():
     """List available models"""
     print("\n Available Sherpa-ONNX Whisper Models:\n")
     for name, info in MODELS.items():
-        status = " Installed" if os.path.exists(os.path.join(DEST_BASE_DIR, info["dir_name"])) else "❌ Not installed"
+        status = " Installed" if os.path.exists(os.path.join(DEST_BASE_DIR, info["dir_name"])) else " Not installed"
         print(f"  {name.upper():<10} | Size: {info['size']:<10} | Speed: {info['speed']:<20} | Accuracy: {info['accuracy']:<15} | {status}")
     print()
 

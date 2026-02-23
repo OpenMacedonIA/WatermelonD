@@ -74,7 +74,7 @@ class SysAdminManager:
             processes.sort(key=lambda p: p['cpu_percent'], reverse=True)
             return processes[:limit]
         except Exception as e:
-            print(f"Error getting processes: {e}")
+            print(f"Error obteniendo procesos: {e}")
             return []
 
     def get_ram_usage(self):
@@ -97,7 +97,7 @@ class SysAdminManager:
     def is_service_installed(self, service_name):
         """Comprueba si un servicio existe en el sistema (instalado/loaded)."""
         try:
-            # Opción 1: Check unit file presence
+            # Opción 1: Comprobar la presencia del unit file
             # systemctl list-unit-files <name>*
             cmd = subprocess.run(
                 ['systemctl', 'list-unit-files', f'{service_name}*', '--no-pager'], 
@@ -145,10 +145,10 @@ class SysAdminManager:
         
         try:
             if service_name in ['neo', 'neo.service']:
-                # Neo runs as user service
+                # Neo se ejecuta como servicio de usuario
                 subprocess.run(['systemctl', '--user', action, 'neo.service'], check=True)
             else:
-                # System services require sudo
+                # Los servicios del sistema requieren sudo
                 subprocess.run(['sudo', 'systemctl', action, service_name], check=True)
                 
             return True, f"Servicio {service_name} {action} ejecutado."
@@ -176,7 +176,7 @@ class SysAdminManager:
                 if iface in stats:
                     iface_info['is_up'] = stats[iface].isup
                 
-                # IP Address
+                # Dirección IP
                 for addr in addr_list:
                     if addr.family == socket.AF_INET:
                         iface_info['ip'] = addr.address
@@ -193,7 +193,7 @@ class SysAdminManager:
         Soporta timeout de 10 segundos y directorio de trabajo personalizado.
         """
         try:
-            # Prevent ping from running infinitely
+            # Prevenir que ping se ejecute infinitamente
             if command.strip().startswith('ping') and '-c' not in command:
                 command += ' -c 4'
                 
@@ -324,7 +324,7 @@ class SysAdminManager:
         """Ejecuta un test de velocidad usando speedtest-cli."""
         try:
             # Usar subprocess para llamar a speedtest-cli --simple
-            # Output format:
+            # Formato de salida:
             # Ping: 12.34 ms
             # Download: 100.00 Mbit/s
             # Upload: 50.00 Mbit/s
@@ -405,7 +405,7 @@ class SysAdminManager:
 
         except Exception as e:
             logging.error(f"Error validando flags: {e}")
-            return True, None # Fail safe open
+            return True, None # Permite temporalmente a prueba de fallos
 
     def analyze_command_risk(self, command):
         """
@@ -449,4 +449,4 @@ class SysAdminManager:
             
         except Exception as e:
             logging.error(f"Error analizando riesgo: {e}")
-            return 'caution' # Fail safe
+            return 'caution' # Prueba de fallos

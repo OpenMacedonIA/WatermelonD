@@ -283,7 +283,7 @@ function install_standard() {
         mkdir -p "$dir"
         chmod 775 "$dir"
     done
-    # Config initialization (use .example as template)
+    # Inicialización de la configuración (usar .example como plantilla)
     if [ ! -f "config/config.json" ]; then
         if [ -f "config/config.json.example" ]; then
             echo "Creando config.json desde template..."
@@ -313,7 +313,7 @@ function install_standard() {
     # --- MODELOS ---
     echo "[PASO 4/6] Configurando Modelos..."
     
-    # Sherpa-ONNX (Default STT Engine)
+    # Sherpa-ONNX (Motor STT por Defecto)
     if [ ! -d "models/sherpa/sherpa-onnx-whisper-medium" ]; then
         echo "Descargando Sherpa-ONNX Whisper Medium..."
         if [ -f "resources/tools/download_sherpa_model.py" ]; then
@@ -330,7 +330,7 @@ function install_standard() {
     [ -f "resources/tools/install_piper.py" ] && $VENV_DIR/bin/python resources/tools/install_piper.py
 
     # Gemma
-    # Gemma (MANGO Legacy - Removed in favor of Grape)
+    # Gemma (MANGO Legado - Eliminado a favor de Grape)
     if [ ! -d "models/gemma-2-2b-it-Q4_K_M.gguf" ]; then
          [ -f "resources/tools/download_model.py" ] && $VENV_DIR/bin/python resources/tools/download_model.py
     fi
@@ -366,8 +366,8 @@ function install_standard() {
         git clone https://huggingface.co/jrodriiguezg/grape-pinot models/pinot
     fi
 
-    # Decision Router Model (Grape-Route)
-    # Removing potential bad clones (HTML files) from non-LFS downloads
+    # Modelo de Decision Router (Grape-Route)
+    # Eliminación de posibles clones malos (archivos HTML) de descargas sin LFS
     [ -d "models/grape-route" ] && rm -rf "models/grape-route"
 
     if [ ! -d "models/grape-route" ]; then
@@ -375,7 +375,7 @@ function install_standard() {
         git clone https://huggingface.co/jrodriiguezg/minilm-l12-grape-route models/grape-route
     fi
 
-    # Grape-Syrah (Network)
+    # Grape-Syrah (Red)
     if [ ! -d "models/syrah" ]; then
         echo "Descargando Grape-Syrah..."
         git clone https://huggingface.co/jrodriiguezg/grape-syrah models/syrah
@@ -423,16 +423,16 @@ SyslogIdentifier=watermelon_core
 WantedBy=default.target
 EOT
 
-    # Configure sudo for WiFi scanning (no password required)
+    # Configurar sudo para el escaneo WiFi (sin contraseña)
     echo "Configurando permisos sudo para escaneo WiFi..."
     sudo tee /etc/sudoers.d/watermelond-wifi > /dev/null <<EOF
-# WatermelonD WiFi Scanning - No password required
+# Escaneo WiFi de WatermelonD - No requiere contraseña
 $USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/iwlist * scan
 $USER_NAME ALL=(ALL) NOPASSWD: /usr/sbin/iw dev * scan
 $USER_NAME ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi *
 EOF
     sudo chmod 0440 /etc/sudoers.d/watermelond-wifi
-    echo "✓ Permisos de escaneo WiFi configurados"
+    echo " Permisos de escaneo WiFi configurados"
 
     # Recargar y Habilitar (Solo Core)
     sudo loginctl enable-linger $USER_NAME
@@ -440,7 +440,7 @@ EOF
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
-    # Servicio Grape Updater (Auto-Update Models on Boot)
+    # Servicio Grape Updater (Auto-Actualización de Modelos en el Inicio)
     cat <<EOT > "$USER_HOME/.config/systemd/user/grape_updater.service"
 [Unit]
 Description=Grape Models Auto-Updater
@@ -505,7 +505,7 @@ EOT
         openssl req -x509 -newkey rsa:4096 -keyout "config/certs/neo.key" -out "config/certs/neo.crt" -days 3650 -nodes -subj "/CN=$(hostname)"
         chmod 600 config/certs/neo.key
         
-        # Show certificate information to user
+        # Mostrar información del certificado al usuario
         CERT_PATH="$(pwd)/config/certs/neo.crt"
         echo ""
         echo "================================================================"
@@ -774,7 +774,7 @@ function setup_ssh_servers_whiptail() {
             python3 -c "import json; data=json.load(open('jsons/servers.json')); data['$SSH_ALIAS']={'host':'$SSH_HOST','user':'$SSH_USER','port':$SSH_PORT,'key_path':None,'password':'$ENC_PASS'}; json.dump(data, open('jsons/servers.json','w'), indent=4)"
         fi
         
-        whiptail --msgbox "✓ Servidor '$SSH_ALIAS' añadido correctamente" 8 50
+        whiptail --msgbox " Servidor '$SSH_ALIAS' añadido correctamente" 8 50
     done
     
     # Mostrar resumen
@@ -821,7 +821,7 @@ function setup_network_aliases_whiptail() {
         # Agregar a skills.json usando Python
         python3 -c "import json; data=json.load(open('config/skills.json')); data.setdefault('network',{}).setdefault('config',{}).setdefault('aliases',{})['$ALIAS_NAME']='$ALIAS_IP'; json.dump(data, open('config/skills.json','w'), indent=4, ensure_ascii=False)"
         
-        whiptail --msgbox "✓ Alias '$ALIAS_NAME' → '$ALIAS_IP' añadido" 8 50
+        whiptail --msgbox " Alias '$ALIAS_NAME' → '$ALIAS_IP' añadido" 8 50
     done
     
     # Mostrar resumen

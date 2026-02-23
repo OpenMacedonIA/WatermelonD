@@ -42,8 +42,8 @@ sudo chmod 0440 "$SUDOERS_FILE"
 
 echo ""
 if [ -f "$SUDOERS_FILE" ]; then
-    echo "✅ Éxito: Permisos aplicados."
+    echo " Éxito: Permisos aplicados."
     echo "Ahora NeoCore podrá reiniciar servicios sin pedir contraseña."
 else
-    echo "❌ Error: No se pudo crear el archivo."
+    echo " Error: No se pudo crear el archivo."
 fi

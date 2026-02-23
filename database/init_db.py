@@ -1,20 +1,20 @@
 from modules.database import DatabaseManager
 import logging
 
-# Configure basic logging
+# Configurar logging básico
 logging.basicConfig(level=logging.INFO)
 
 def init():
-    print("Initializing Neo Brain Database...")
+    print("Inicializando Base de Datos Neo Brain...")
     try:
         db = DatabaseManager()
-        # The __init__ method of DatabaseManager calls init_db(), which creates tables if they don't exist.
-        # We can also explicitly check connection here.
+        # El método __init__ de DatabaseManager llama a init_db(), que crea las tablas si no existen.
+        # También podemos comprobar la conexión aquí explícitamente.
         conn = db.get_connection()
-        print("Database 'brain.db' created/verified successfully.")
+        print("Base de datos 'brain.db' creada/verificada exitosamente.")
         db.close()
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        print(f"Error inicializando base de datos: {e}")
         exit(1)
 
 if __name__ == "__main__":

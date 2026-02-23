@@ -38,7 +38,7 @@ class FileManager:
         if not os.path.isfile(path):
             return False, "No es un archivo válido."
         
-        # Check size limit (e.g., 1MB) to prevent freezing
+        # Límite de tamaño de comprobación (ej. 1MB) para prevenir bloqueos
         if os.path.getsize(path) > 1024 * 1024:
             return False, "El archivo es demasiado grande para editarlo aquí (>1MB)."
 
@@ -70,7 +70,7 @@ class FileManager:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
             
             results = []
-            for _ in range(20): # Limit to 20 results
+            for _ in range(20): # Límite a 20 resultados
                 line = process.stdout.readline()
                 if not line:
                     break

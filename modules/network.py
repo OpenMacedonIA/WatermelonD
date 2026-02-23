@@ -90,7 +90,7 @@ class NetworkManager:
         
         output = self.run_command(f"whois {domain}")
         if output:
-            # Filtrar salida para no leer todo el tocho
+            # Filtrar salida para no leer todo el texto
             lines = output.split('\n')
             relevant = [line for line in lines if "Registrar:" in line or "Creation Date:" in line or "Registry Expiry Date:" in line]
             if relevant:

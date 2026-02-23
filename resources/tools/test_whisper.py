@@ -53,4 +53,4 @@ except Exception as e:
     print(f"[ERROR] Transcription failed: {e}")
     sys.exit(1)
 
-print("\n🎉 Faster-Whisper seems operational.")
+print("\n Faster-Whisper seems operational.")

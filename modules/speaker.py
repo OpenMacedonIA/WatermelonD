@@ -24,9 +24,9 @@ class Speaker:
         self.event_queue = event_queue
         self._is_busy = False
         self.is_available = False
-        self.voice = None # PiperVoice instance
+        self.voice = None # Instancia de PiperVoice
         
-        # Load Config
+        # Cargar configuración
         self.config = self._load_config()
         tts_config = self.config.get('tts', {})
         
@@ -34,14 +34,14 @@ class Speaker:
         self.piper_model = tts_config.get('piper_model', 'piper/voices/es_ES-davefx-medium.onnx')
         self.espeak_args = tts_config.get('espeak_args', '-v es')
         
-        # Resolve paths
+        # Resolver rutas
         cwd = os.getcwd()
         if not os.path.exists(self.piper_model):
             potential_model = os.path.join(cwd, self.piper_model)
             if os.path.exists(potential_model):
                 self.piper_model = potential_model
 
-        # Check Availability
+        # Comprobar disponibilidad
         self.is_available = self._check_engine()
 
         if self.is_available:
@@ -68,7 +68,7 @@ class Speaker:
                 tts_logger.warning("Módulo 'piper' no instalado. Buscando binario...")
                 if os.path.exists("piper_bin/piper/piper"):
                     tts_logger.info("Binario Piper encontrado.")
-                    # Check model existence
+                    # Comprobar existencia del modelo
                     if os.path.isfile(self.piper_model):
                         return True
                     else:
@@ -80,7 +80,7 @@ class Speaker:
                 
             if os.path.isfile(self.piper_model):
                 try:
-                    # Load model once
+                    # Cargar modelo una vez
                     self.voice = PiperVoice.load(self.piper_model)
                     tts_logger.info(f"Modelo Piper cargado: {self.piper_model}")
                     return True
@@ -91,7 +91,7 @@ class Speaker:
                 tts_logger.warning(f"Modelo Piper no encontrado en {self.piper_model}")
                 return False
             
-            # Check for aplay
+            # Comprobar utilidad aplay
             import shutil
             if not shutil.which('aplay'):
                 tts_logger.error("Comando 'aplay' no encontrado. Instala alsa-utils.")
@@ -100,7 +100,7 @@ class Speaker:
             return True
         
         if self.engine == 'espeak':
-            # Check if espeak is installed
+            # Comprobar si espeak está instalado
             try:
                 subprocess.run(['which', 'espeak'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return True
@@ -118,14 +118,14 @@ class Speaker:
     def _process_queue(self):
         """Procesa la cola de habla (TTS)."""
         while True:
-            # Blocking get with timeout - prevents CPU spinning
+            # Get bloqueante con tiempo de espera - evita que la CPU se revolucione
             try:
                 item = self.speak_queue.get(timeout=1.0)
             except queue.Empty:
-                # No items in queue, loop continues
+                # Si no hay items en la cola, continuar el bucle
                 continue
             
-            # Handle WAV file directly
+            # Manejar el archivo WAV directamente
             if isinstance(item, dict) and item.get('type') == 'wav':
                 file_path = item.get('path')
                 tts_logger.info(f"Reproduciendo WAV: {file_path}")
@@ -141,7 +141,7 @@ class Speaker:
                     self.speak_queue.task_done()
                 continue
 
-            # Handle Text
+            # Manejar Texto
             text = item
             tts_logger.info(f"Speaker Queue recibió: '{text}'")
             self._is_busy = True
@@ -150,10 +150,10 @@ class Speaker:
                 
                 # --- DUMMY MODE ---
                 if self.engine == 'dummy':
-                    # print(f"\n[T.I.O. DICE]: {text}\n") # Reduced verbosity
+                    # print(f"\n[T.I.O. DICE]: {text}\n") # Verbosidad reducida
                     time.sleep(1) 
 
-                    # Logic continues to finally block
+                    # La lógica continúa hasta el bloque finally
                 
                 else:
                     # --- TTS CACHE ---
@@ -169,13 +169,13 @@ class Speaker:
                             self.event_queue.put({'type': 'speaker_status', 'status': 'speaking'})
                             subprocess.run(command, shell=True, capture_output=True, text=True, timeout=15)
                     else:
-                        # Generate Audio
+                        # Generar audio
 
                         if self.engine == 'piper':
                             self.event_queue.put({'type': 'speaker_status', 'status': 'speaking'})
                             
                             if self.voice:
-                                # Python API Mode
+                                # Modo de API de Python
                                 try:
                                     stream = self.voice.synthesize(text)
                                     first_chunk = next(stream)
@@ -193,22 +193,22 @@ class Speaker:
                                     tts_logger.error(f"Error crítico en Piper (Python): {e}")
                             
                             else:
-                                # Binary Mode
+                                # Modo Binario
                                 piper_bin = "piper_bin/piper/piper"
                                 if os.path.exists(piper_bin):
                                     try:
                                         # echo 'text' | ./piper --model model.onnx --output_raw | aplay ...
-                                        # Piper binary outputs raw 16-bit mono signed PCM
-                                        # We need to know the sample rate. Usually 22050 for medium models.
-                                        # We can parse it from json config but let's assume 22050 for now or read from config.
+                                        # El binario de Piper devuelve raw 16-bit mono PCM firmado
+                                        # Necesitamos saber la frecuencia de muestreo. Normalmente 22050 para modelos medianos.
+                                        # Lo podemos parchear desde la config json pero asumiremos 22050 por ahora o la leemos desde la config.
                                         
-                                        # Construct command pipeline
+                                        # Construir tubería de comandos (pipeline)
                                         # echo text | piper ... | aplay ...
                                         
                                         safe_text = shlex.quote(text)
                                         model_path = self.piper_model
                                         
-                                        # Check if model exists
+                                        # Comprobar si existe el modelo
                                         if not os.path.exists(model_path):
                                             tts_logger.error(f"Modelo no encontrado: {model_path}")
                                             return

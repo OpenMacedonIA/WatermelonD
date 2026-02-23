@@ -29,7 +29,7 @@ class FaceDB:
         for name, encoding in zip(self.known_face_names, self.known_face_encodings):
             data[name] = encoding.tolist()
         
-        # Ensure directory exists
+        # Asegurar que el directorio existe
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         
         with open(self.db_path, 'w') as f:
@@ -49,22 +49,22 @@ class VisionManager:
         self.thread = None
         self.video_capture = None
         
-        # Optimization Pipeline
+        # Tubería (Pipeline) de Optimización
         self.motion_detected = False
         self.face_detected = False
         self.last_frame = None
         
-        # Load Haar Cascade for fast face detection
+        # Cargar Haar Cascade para detección rápida de rostros
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
-        # Cooldowns
+        # Tiempos de recarga (Cooldowns)
         self.last_wake_event = 0
-        self.wake_cooldown = 10 # Seconds between wake events
+        self.wake_cooldown = 10 # Segundos entre eventos de activación
 
     def start(self):
         if self.running: return
         
-        # Try index 0, then 1
+        # Probar índice 0, luego 1
         self.video_capture = cv2.VideoCapture(0)
         if not self.video_capture.isOpened():
             self.video_capture = cv2.VideoCapture(1)
@@ -86,7 +86,7 @@ class VisionManager:
             self.video_capture.release()
 
     def _detect_motion(self, frame):
-        """Returns True if significant motion is detected."""
+        """Devuelve True si se detecta movimiento significativo."""
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (21, 21), 0)
         
@@ -98,13 +98,13 @@ class VisionManager:
         thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
         thresh = cv2.dilate(thresh, None, iterations=2)
         
-        # Check for contours
+        # Comprobar contornos
         contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         self.last_frame = gray
         
         for c in contours:
-            if cv2.contourArea(c) > 500: # Minimum area
+            if cv2.contourArea(c) > 500: # Área mínima
                 return True
         return False
 
@@ -115,37 +115,37 @@ class VisionManager:
                 time.sleep(1)
                 continue
 
-            # 1. Resize for speed (320x240 is enough for detection)
+            # 1. Redimensionar para mayor velocidad (320x240 es suficiente para detección)
             small_frame = cv2.resize(frame, (320, 240))
             
-            # 2. Motion Detection (Stage 1)
+            # 2. Detección de Movimiento (Fase 1)
             if not self._detect_motion(small_frame):
-                # No motion? Sleep longer
+                # ¿No hay movimiento? Dormir más tiempo
                 time.sleep(0.5)
                 continue
             
-            # 3. Face Detection - Haar (Stage 2)
+            # 3. Detección de Rostros - Haar (Fase 2)
             gray = cv2.cvtColor(small_frame, cv2.COLOR_BGR2GRAY)
             faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
             
             if len(faces) > 0:
-                # Face detected!
+                # ¡Rostro detectado!
                 now = time.time()
                 if now - self.last_wake_event > self.wake_cooldown:
                     print("Vision: Face detected! Waking up...")
                     self.event_queue.put({'type': 'vision_wake', 'msg': 'User present'})
                     self.last_wake_event = now
                     
-                    # 4. Recognition (Stage 3 - Optional/Throttled)
-                    # We only do this if we really need to know WHO it is
-                    # For now, just waking up is enough for the requirement.
+                    # 4. Reconocimiento (Fase 3 - Opcional/Limitado por acelerador)
+                    # Solo hacemos esto si realmente necesitamos saber QUIÉN es
+                    # Por ahora, con despertarse es suficiente para el requisito.
                     # self._identify_user(small_frame)
             
-            # If motion but no face, sleep a bit less
+            # Si hay movimiento pero no hay rostro, dormir un poco menos
             time.sleep(0.2)
 
     def _identify_user(self, frame):
-        # Heavy operation, call sparingly
+        # Operación pesada, llamar con moderación
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(rgb_frame)
         face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
@@ -162,13 +162,13 @@ class VisionManager:
 
     def learn_user(self, name):
         """
-        Attempts to learn a new face from the current video stream.
-        Returns: (success, message)
+        Intenta aprender un nuevo rostro a partir del flujo de vídeo actual.
+        Devuelve: (éxito, mensaje)
         """
         if not self.video_capture or not self.video_capture.isOpened():
             return False, "Cámara no disponible."
 
-        # Capture a fresh frame
+        # Capturar un frame fresco
         ret, frame = self.video_capture.read()
         if not ret:
             return False, "No pude capturar imagen."
@@ -182,7 +182,7 @@ class VisionManager:
         if len(face_locations) > 1:
             return False, "Veo demasiadas caras. Ponte tú solo."
 
-        # Generate encoding
+        # Generar incrustación (encoding)
         face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
         if len(face_encodings) > 0:
             encoding = face_encodings[0]

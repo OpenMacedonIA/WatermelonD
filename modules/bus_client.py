@@ -12,7 +12,7 @@ class BusClient:
         self.host = host
         self.port = port
         self.name = name
-        self.handlers = {} # Map event_type -> [callbacks]
+        self.handlers = {} # Mapa event_type -> [callbacks]
         self.connected = False
 
         self._setup_events()
@@ -32,7 +32,7 @@ class BusClient:
         @self.sio.event
         def message(data):
             """
-            Handle incoming messages from the bus.
+            Manejar mensajes entrantes del bus.
             """
             msg_type = data.get('type')
             msg_data = data.get('data', {})
@@ -47,13 +47,13 @@ class BusClient:
                         logger.error(f"Error in callback for {msg_type}: {e}")
 
     def on(self, event_type, callback):
-        """Register a callback for a specific event type."""
+        """Registrar un callback para un tipo de evento específico."""
         if event_type not in self.handlers:
             self.handlers[event_type] = []
         self.handlers[event_type].append(callback)
 
     def emit(self, event_type, data=None):
-        """Send a message to the bus."""
+        """Enviar un mensaje al bus."""
         if data is None:
             data = {}
         
@@ -72,27 +72,27 @@ class BusClient:
             logger.warning(f"Cannot emit {event_type}: Not connected")
 
     def run_forever(self):
-        """Connect and keep running (blocking)."""
+        """Conectar y mantener en ejecución (bloqueante)."""
         self.connect()
         self.sio.wait()
 
     def connect(self):
-        """Connect to the bus with retry logic."""
+        """Conectar al bus con lógica de reintento."""
         url = f"http://{self.host}:{self.port}"
         print(f"DEBUG: BusClient connecting to {url}")
         
         while not self.connected:
             try:
-                # Force polling because server is running in threading mode (no websockets)
+                # Forzar polling porque el servidor se está ejecutando en modo threading (sin websockets)
                 self.sio.connect(url, transports=['polling'], wait_timeout=5)
-                # If we get here, connection successful (event handler sets self.connected)
-                # self.connected = True # Let the event handler do this
+                # Si llegamos aquí, conexión exitosa (el manejador de eventos establece self.connected)
+                # self.connected = True # Dejar que el manejador de eventos haga esto
                 break 
             except Exception as e:
-                if self.host != 'localhost': # Only log errors for remote connections to avoid local spam during startup
+                if self.host != 'localhost': # Solo registrar errores para conexiones remotas para evitar spam local durante inicio
                     logger.warning(f"Connection failed ({url}): {e}. Retrying in 5s...")
                 else:
-                    # Debug only for localhost to keep logs clean
+                    # Debug solo para localhost para mantener los logs limpios
                     logger.debug(f"Connection failed ({url}): {e}. Retrying in 5s...")
                 time.sleep(5)
 
@@ -100,7 +100,7 @@ class BusClient:
         self.sio.disconnect()
 
 if __name__ == "__main__":
-    # Test Client
+    # Cliente de Prueba
     logging.basicConfig(level=logging.INFO)
     client = BusClient(name="TestClient")
     client.connect()

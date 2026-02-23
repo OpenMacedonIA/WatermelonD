@@ -1,12 +1,12 @@
 import eventlet
-# Monkey patch for eventlet (required for async) - MUST BE FIRST
+# Monkey patch para eventlet (requerido para asincronía) - DEBE SER EL PRIMERO
 eventlet.monkey_patch()
 
 import logging
 from flask import Flask
 from flask_socketio import SocketIO, emit
 
-# Configure Logging
+# Configurar Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [BUS] - %(levelname)s - %(message)s')
 logger = logging.getLogger("MessageBus")
 
@@ -31,8 +31,8 @@ class MessageBus:
         @self.socketio.on('message')
         def handle_message(data):
             """
-            Broadcasts any received message to all other clients.
-            Data structure expected:
+            Emite cualquier mensaje recibido a todos los demás clientes.
+            Estructura de datos esperada:
             {
                 "type": "event.name",
                 "data": { ... }
@@ -40,8 +40,8 @@ class MessageBus:
             """
             msg_type = data.get('type', 'unknown')
             # logger.debug(f"Bus received: {msg_type}")
-            # Broadcast back to all clients (including sender, or exclude if needed)
-            # OVOS bus usually broadcasts to everyone.
+            # Emitir de vuelta a todos los clientes (incluido el remitente, o excluir si es necesario)
+            # El bus de OVOS normalmente emite a todo el mundo.
             emit('message', data, broadcast=True, include_self=False)
 
     def run(self):

@@ -22,7 +22,7 @@ class MQTTManager:
         self.thread = None
 
     def start(self):
-        """Starts the MQTT loop in a background thread."""
+        """Inicia el bucle MQTT en un hilo de fondo."""
         if self.running: return
         
         self.running = True
@@ -31,19 +31,19 @@ class MQTTManager:
         logger.info("MQTTManager started (Background).")
 
     def _loop(self):
-        """Main loop that tries to connect and reconnect."""
+        """Bucle principal que intenta conectarse y reconectarse."""
         while self.running:
             try:
                 if not self.connected:
                     logger.info(f"Connecting to MQTT Broker at {self.broker_address}...")
                     self.client.connect(self.broker_address, self.broker_port, 60)
-                    self.client.loop_start() # Use paho's threaded loop
+                    self.client.loop_start() # Usa el bucle con hilos de paho
                     self.connected = True
                     
-                    # Notify UI of connection attempt success (optional)
+                    # Notificar a la UI del éxito del intento de conexión (opcional)
                     # self.event_queue.put({'type': 'mqtt_status', 'status': 'connected'})
                 
-                time.sleep(5) # Check connection status periodically
+                time.sleep(5) # Comprobar estado de conexión periódicamente
                 
             except Exception as e:
                 logger.warning(f"MQTT Connection failed: {e}. Retrying in 10s...")
@@ -57,14 +57,14 @@ class MQTTManager:
     
     def send_command(self, agent_id, command, params=None):
         """
-        Send a command to a specific agent
+        Enviar un comando a un agente específico
         
         Args:
-            agent_id: Agent hostname/ID
-            command: Command name (reboot, shutdown, ping, etc.)
-            params: Optional parameters dict
+            agent_id: Hostname/ID del Agente
+            command: Nombre del comando (reboot, shutdown, ping, etc.)
+            params: Dict de parámetros opcionales
         Returns:
-            Command ID for tracking
+            ID del comando para seguimiento
         """
         import uuid
         import time as tm
@@ -91,7 +91,7 @@ class MQTTManager:
         if rc == 0:
             logger.info("Connected to MQTT Broker!")
             self.connected = True
-            # Subscribe to all agent topics
+            # Suscribirse a todos los tópicos de agentes
             client.subscribe("wamd/agents/#")
         else:
             logger.error(f"Failed to connect, return code {rc}")
@@ -106,17 +106,17 @@ class MQTTManager:
             topic = msg.topic
             payload = json.loads(msg.payload.decode())
             
-            # Topic format: wamd/agents/{hostname}/{type}
+            # Formato de Tópico: wamd/agents/{hostname}/{type}
             parts = topic.split('/')
             if len(parts) < 4: return
             
             agent_name = parts[2]
-            msg_type = parts[3] # telemetry, alerts, or responses
+            msg_type = parts[3] # telemetría, alertas, o respuestas
             
             logger.debug(f"MQTT Msg from {agent_name} ({msg_type}): {payload}")
             
             if msg_type == 'alerts':
-                # Critical alerts -> Speak or Action
+                # Alertas críticas -> Hablar o Acción
                 alert_msg = payload.get('alert') or payload.get('msg')
                 if alert_msg:
                     self.event_queue.put({
@@ -126,9 +126,9 @@ class MQTTManager:
                     })
             
             elif msg_type == 'telemetry':
-                # Telemetry -> Just notify UI (Pop-up)
-                # We assume the first telemetry message means "Connected" if we haven't seen it recently
-                # For now, just forward everything to UI via event_queue
+                # Telemetría -> Solo notificar a UI (Pop-up)
+                # Asumimos que el primer mensaje de telemetría significa "Conectado" si no lo hemos visto recientemente
+                # Por ahora, simplemente reenviar todo a la UI a través de event_queue
                 self.event_queue.put({
                     'type': 'mqtt_telemetry',
                     'agent': agent_name,
@@ -136,7 +136,7 @@ class MQTTManager:
                 })
             
             elif msg_type == 'responses':
-                # Command responses -> Forward to UI/logs
+                # Respuestas a comandos -> Reenviar a UI/logs
                 self.event_queue.put({
                     'type': 'mqtt_response',
                     'agent': agent_name,
