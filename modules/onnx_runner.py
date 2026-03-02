@@ -33,6 +33,7 @@ class SpecificModelRunner:
         self.models_base_path = models_base_path
         self.stats_path = stats_path
         # Caché de sesiones: etiqueta -> InferenceSession
+        self.sessions = {}   # Caché de sesiones: etiqueta -> InferenceSession ó (encoder, decoder)
         self.tokenizers = {} # Caché de tokenizadores: etiqueta -> AutoTokenizer
         self.last_access = {} # etiqueta -> marca de tiempo (para desalojo LRU y TTL)
         self.max_models = self.MAX_MODELS_IN_MEMORY
