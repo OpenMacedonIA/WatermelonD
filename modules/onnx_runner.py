@@ -155,10 +155,25 @@ class SpecificModelRunner:
                 tokenizer = AutoTokenizer.from_pretrained(model_dir)
                 app_logger.info(f"Tokenizer cargado desde directorio local: {model_dir}")
             else:
-                # Usar tokenizer base conocido (evita cargar basura del cache HuggingFace)
-                tok_base = self.MODEL_TOKENIZER_BASE.get(label, 't5-small')
-                app_logger.info(f"Sin tokenizer local para '{label}', usando base: {tok_base}")
-                tokenizer = AutoTokenizer.from_pretrained(tok_base)
+                # Buscar tokenizer en modelos hermanos locales antes de intentar descarga
+                sibling_models = ["chardonnay", "pinot", "syrah", "malbec"]
+                tok_loaded = False
+                for sibling in sibling_models:
+                    if sibling == label:
+                        continue
+                    sibling_dir = os.path.join(self.models_base_path, sibling)
+                    if os.path.exists(os.path.join(sibling_dir, 'tokenizer.json')):
+                        try:
+                            tokenizer = AutoTokenizer.from_pretrained(sibling_dir)
+                            app_logger.info(f"Tokenizer para '{label}' cargado desde hermano local: {sibling_dir}")
+                            tok_loaded = True
+                            break
+                        except Exception:
+                            continue
+                if not tok_loaded:
+                    tok_base = self.MODEL_TOKENIZER_BASE.get(label, 't5-small')
+                    app_logger.info(f"Sin tokenizer local para '{label}', descargando base: {tok_base}")
+                    tokenizer = AutoTokenizer.from_pretrained(tok_base)
 
             # --- Archivos ONNX ---
             encoder_file     = os.path.join(model_dir, "encoder_model_quantized.onnx")
@@ -244,120 +259,87 @@ class SpecificModelRunner:
             
             # Comprobar si es un encoder-decoder (tupla) o un solo modelo
             if isinstance(session, tuple):
-                # Modelo Encoder-Decoder tipo T5 (exportado con optimum)
+                # Modelo Encoder-Decoder tipo T5 (exportado con optimum/ORTModelForSeq2SeqLM)
                 encoder_session, decoder_session, dec_past_session = session
 
-                # Tokenizar entrada
+                # --- Tokenizar ---
                 inputs = tokenizer(
-                    text,
-                    return_tensors="np",
-                    padding=True,
-                    truncation=True,
-                    max_length=512
+                    text, return_tensors="np",
+                    padding=True, truncation=True, max_length=512
                 )
                 input_ids      = inputs["input_ids"].astype("int64")
                 attention_mask = inputs["attention_mask"].astype("int64")
+                app_logger.debug(f"input_ids shape: {input_ids.shape}, tokens[:6]: {input_ids[0][:6].tolist()}")
 
-                app_logger.debug(f"input_ids shape: {input_ids.shape}, muestra: {input_ids[0][:8].tolist()}")
+                # --- Encoder ---
+                enc_out               = encoder_session.run(None, {"input_ids": input_ids, "attention_mask": attention_mask})
+                encoder_hidden_states = enc_out[0]
 
-                # 1. Encoder
-                enc_out = encoder_session.run(
-                    None,
-                    {"input_ids": input_ids, "attention_mask": attention_mask}
-                )
-                # encoder output name puede ser 'last_hidden_state' o index 0
-                encoder_hidden_states = enc_out[0]  # shape: (1, seq_len, d_model)
-
-                # 2. Primer paso del decoder (sin past_key_values)
-                #    decoder_start_token_id = 0 para T5
-                dec_input_ids = np.array([[0]], dtype=np.int64)
-
+                # --- Paso 1: decoder_model sin past (token de inicio = 0) ---
                 dec1_out = decoder_session.run(
                     None,
                     {
-                        "input_ids":              dec_input_ids,
+                        "input_ids":              np.array([[0]], dtype=np.int64),
                         "encoder_hidden_states":  encoder_hidden_states,
                         "encoder_attention_mask": attention_mask,
                     }
                 )
-                # Salidas: [logits, present.0.decoder.key, present.0.decoder.value,
-                #           present.0.encoder.key, present.0.encoder.value, ...]
-                logits     = dec1_out[0]          # (1, 1, vocab_size)
-                past_kv    = dec1_out[1:]         # todos los present.*
+                # Mapa nombre->tensor para todos los present.* de este paso
+                dec_out_names = [o.name for o in decoder_session.get_outputs()]
+                present_map   = {dec_out_names[i]: dec1_out[i] for i in range(1, len(dec_out_names))}
 
-                # Nombres de past_key_values para decoder_with_past
-                past_input_names = (
-                    [i.name for i in dec_past_session.get_inputs()]
-                    if dec_past_session else []
-                )
-
+                logits        = dec1_out[0]
                 next_token_id = int(logits[0, -1, :].argmax())
-                app_logger.debug(f"Primer token generado: {next_token_id} ('{tokenizer.decode([next_token_id])}'). eos={tokenizer.eos_token_id}")
+                app_logger.debug(f"Primer token: {next_token_id} ('{tokenizer.decode([next_token_id])}') eos={tokenizer.eos_token_id}")
 
                 generated_ids = []
-                if next_token_id != tokenizer.eos_token_id:
-                    generated_ids.append(next_token_id)
 
-                # 3. Pasos siguientes con KV-cache (decoder_with_past)
-                max_new_tokens = 128
-                for step in range(max_new_tokens):
+                # --- Loop de generación con KV-cache ---
+                for step in range(128):
                     if next_token_id == tokenizer.eos_token_id:
                         break
+                    generated_ids.append(next_token_id)
 
-                    if dec_past_session is not None:
-                        # Construir feed con past_key_values.*
-                        dec_input_ids = np.array([[next_token_id]], dtype=np.int64)
-                        past_feed = {
-                            "input_ids":              dec_input_ids,
-                            "encoder_hidden_states":  encoder_hidden_states,
-                            "encoder_attention_mask": attention_mask,
-                        }
-                        # Mapear present.X.* -> past_key_values.X.*
-                        # Los nombres en past_input_names son 'past_key_values.N.decoder.key' etc.
-                        # Las salidas del paso anterior son 'present.N.decoder.key' etc.
-                        # Solo los decoder past (encoder past es constante y ya está cacheado)
-                        dec_past_input_names = set(past_input_names)
-                        for idx_past, name in enumerate(past_input_names):
-                            if name.startswith('past_key_values.'):
-                                # Mapear: past_key_values.N.X -> present.N.X (del paso anterior)
-                                present_name = name.replace('past_key_values.', 'present.')
-                                # Buscar el índice en las salidas del paso anterior
-                                all_out_names_dec = [o.name for o in decoder_session.get_outputs()]
-                                if present_name in all_out_names_dec:
-                                    pidx = all_out_names_dec.index(present_name)
-                                    past_feed[name] = past_kv[pidx - 1]  # -1 porque logits es idx 0
-                                # Si no, buscar por orden posicional
-                        # Fallback sencillo: asignar present.* a past_key_values.* en orden
-                        pk_names = [n for n in past_input_names if 'past_key_values' in n]
-                        if pk_names and not any(n in past_feed for n in pk_names):
-                            for i, pk_name in enumerate(pk_names):
-                                if i < len(past_kv):
-                                    past_feed[pk_name] = past_kv[i]
-
-                        dec_past_out = dec_past_session.run(None, past_feed)
-                        logits   = dec_past_out[0]
-                        past_kv  = dec_past_out[1:]
-                    else:
-                        # Sin decoder_with_past: re-alimentar todos los tokens generados
-                        all_ids   = [0] + generated_ids + [next_token_id]
-                        dec_input_ids = np.array([all_ids], dtype=np.int64)
+                    if dec_past_session is None:
+                        # Fallback: re-alimentar todos los tokens acumulados
+                        all_ids = [0] + generated_ids
                         dec_out = decoder_session.run(
                             None,
                             {
-                                "input_ids":              dec_input_ids,
+                                "input_ids":              np.array([all_ids], dtype=np.int64),
                                 "encoder_hidden_states":  encoder_hidden_states,
                                 "encoder_attention_mask": attention_mask,
                             }
                         )
-                        logits  = dec_out[0]
-                        past_kv = dec_out[1:]
+                        logits = dec_out[0]
+                        dec_out_names2 = [o.name for o in decoder_session.get_outputs()]
+                        present_map = {dec_out_names2[i]: dec_out[i] for i in range(1, len(dec_out_names2))}
+                    else:
+                        # Con KV-cache: sólo el último token + past_key_values
+                        past_feed = {
+                            "input_ids":              np.array([[next_token_id]], dtype=np.int64),
+                            "encoder_hidden_states":  encoder_hidden_states,
+                            "encoder_attention_mask": attention_mask,
+                        }
+                        # Mapear past_key_values.N.X -> present.N.X usando present_map
+                        for inp in dec_past_session.get_inputs():
+                            if inp.name.startswith('past_key_values.'):
+                                present_name = inp.name.replace('past_key_values.', 'present.')
+                                if present_name in present_map:
+                                    past_feed[inp.name] = present_map[present_name]
+
+                        dec_past_out      = dec_past_session.run(None, past_feed)
+                        logits            = dec_past_out[0]
+                        # Actualizar present_map solo con decoder past (encoder past = constante)
+                        dec_past_out_names = [o.name for o in dec_past_session.get_outputs()]
+                        for i, name in enumerate(dec_past_out_names[1:], start=1):
+                            present_map[name] = dec_past_out[i]
 
                     next_token_id = int(logits[0, -1, :].argmax())
-                    if next_token_id == tokenizer.eos_token_id:
-                        break
-                    generated_ids.append(next_token_id)
 
                 command = tokenizer.decode(generated_ids, skip_special_tokens=True)
+
+
             else:
                 # Un solo modelo (ruta anterior/heredada)
                 input_ids = tokenizer(text, return_tensors="np").input_ids.astype("int64")
