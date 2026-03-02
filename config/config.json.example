@@ -12,7 +12,8 @@
     "neo_ssh_enabled": true,
     "secret_key": "CHANGE_THIS_SECRET_KEY_ON_FIRST_RUN",
     "stt": {
-        "engine": "vosk",
+        "engine": "sherpa",
+        "sherpa_model_path": "models/sherpa/sherpa-onnx-whisper-small",
         "input_device_index": null
     },
     "web_admin": {

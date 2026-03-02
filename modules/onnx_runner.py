@@ -24,6 +24,16 @@ class SpecificModelRunner:
     - TTL-based cleanup: Descarga modelos inactivos después de 5 minutos.
     """
     
+    # Prefijos de tarea para modelos T5 (deben coincidir con el prefijo de entrenamiento)
+    # Si un modelo no está en este mapa, no se añade prefijo.
+    MODEL_TASK_PREFIXES = {
+        "malbec":      "translate Spanish to Bash: ",
+        "syrah":       "translate Spanish to Bash: ",
+        "pinot":       "translate Spanish to Bash: ",
+        "grape-route": "translate Spanish to Bash: ",
+        "chardonnay":  "translate Spanish to Bash: ",
+    }
+    
     # Constants
     MAX_MODELS_IN_MEMORY = 3
     MODEL_TTL_SECONDS = 300  # 5 minutes
@@ -176,7 +186,14 @@ class SpecificModelRunner:
         self.stats[label] = self.stats.get(label, 0) + 1
         self._save_stats() # Persistir aprendizaje
 
-        # 2. Gestionar Memoria y Carga
+        # 2. Añadir prefijo de tarea si el modelo lo requiere
+        # Los modelos T5 fine-tuned necesitan el prefijo con el que fueron entrenados
+        task_prefix = self.MODEL_TASK_PREFIXES.get(label, "")
+        if task_prefix and not text.startswith(task_prefix):
+            text = task_prefix + text
+            app_logger.info(f"Prefijo de tarea aplicado: '{task_prefix[:40]}...'")
+
+        # 3. Gestionar Memoria y Carga
         try:
             self._manage_memory(label)
             self._load_model_into_memory(label)
@@ -209,11 +226,14 @@ class SpecificModelRunner:
                 )
                 encoder_hidden_states = encoder_outputs[0]
                 
-                # Preparar entrada del decoder (empezar con token de relleno / pad)
-                decoder_input_ids = np.array([[tokenizer.pad_token_id]], dtype=np.int64)
+                # Preparar entrada del decoder: T5 usa decoder_start_token_id=0
+                decoder_start_id = getattr(tokenizer, 'decoder_start_token_id', None)
+                if decoder_start_id is None:
+                    decoder_start_id = tokenizer.pad_token_id
+                decoder_input_ids = np.array([[decoder_start_id]], dtype=np.int64)
                 
-                # Descodificación avariciosa simple (máx 50 tokens)
-                max_length = 50
+                # Descodificación avariciosa (máx 128 tokens para comandos largos)
+                max_length = 128
                 generated_ids = []
                 for _ in range(max_length):
                     decoder_outputs = decoder_session.run(

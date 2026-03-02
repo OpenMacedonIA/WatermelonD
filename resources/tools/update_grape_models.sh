@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # update_grape_models.sh
-# Checks for updates in Grape model repositories.
+# Checks for updates in Grape model repositories (git-tracked only).
 
-MODELS_DIR="$(dirname "$0")/../../models"
+# Resolver ruta absoluta correcta independientemente de dónde se llame el script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODELS_DIR="${SCRIPT_DIR}/../../models"
+MODELS_DIR="$(realpath "${MODELS_DIR}")"
 
 echo "=== Auto-Update Grape Models ==="
 date
@@ -32,7 +35,7 @@ update_repo() {
             echo "$NAME is up to date."
         fi
     else
-        echo "Directory $REPO_DIR is not a git repository or does not exist."
+        echo "[INFO] $NAME: directorio local (no es un repo git, sin actualización automática). → $REPO_DIR"
     fi
 }
 

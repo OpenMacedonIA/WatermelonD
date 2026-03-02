@@ -57,13 +57,14 @@ if [ ! -d ".git" ]; then
 
     # 2.1 Seleccionar Rama
     BRANCH_OPT=$(whiptail --title "Selección de Rama" --menu "Elige la rama a instalar:" 15 70 2 \
-        "1" "Main (Estable) - Recomendado para producción" \
-        "2" "RC_180226 (Release Candidate) - Próxima versión (Recomendado)" \
+        "1" "Main (Estable) - Para producción consolidada" \
+        "2" "RC_180226 (Release Candidate) - Versión actual recomendada" \
         3>&1 1>&2 2>&3)
     
-    if [[ "$BRANCH_OPT" == "2" ]]; then
-        BRANCH="rc_180226"
+    if [[ "$BRANCH_OPT" == "1" ]]; then
+        BRANCH="main"
     else
+        # Por defecto y opción 2: rama RC con las últimas mejoras
         BRANCH="rc_180226"
     fi
     
@@ -105,9 +106,23 @@ echo "[ACTUALIZACIÓN] Buscando cambios en el repositorio..."
 if [ -d ".git" ] && command -v git &> /dev/null; then
     # Guardar el hash actual
     CURRENT_HASH=$(git rev-parse HEAD 2>/dev/null)
-    
-    # Intentar actualizar
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    TARGET_BRANCH="rc_180226"
+
+    echo "Rama local actual: $CURRENT_BRANCH"
+
+    # Si estamos en 'main' u otra rama antigua, migrar a la rama recomendada
+    if [ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]; then
+        echo "----------------------------------------------------------------"
+        echo "  La rama actual ($CURRENT_BRANCH) no es la recomendada ($TARGET_BRANCH)."
+        echo "  Migrando automáticamente a $TARGET_BRANCH..."
+        echo "----------------------------------------------------------------"
+        git fetch origin
+        git checkout "$TARGET_BRANCH" || git checkout -b "$TARGET_BRANCH" --track "origin/$TARGET_BRANCH"
+        CURRENT_BRANCH="$TARGET_BRANCH"
+    fi
+
+    # Actualizar la rama actual
     echo "Actualizando desde rama: $CURRENT_BRANCH"
     if git pull origin "$CURRENT_BRANCH" && git submodule update --init --recursive; then
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
@@ -117,6 +132,8 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
             echo "Reiniciando el instalador para aplicar los cambios..."
             echo "----------------------------------------------------------------"
             exec "$0" "$@"
+        else
+            echo " Instalador ya en la última versión de $CURRENT_BRANCH."
         fi
     else
         echo "  Error al actualizar (git pull falló). Continuando con la versión actual..."
@@ -884,6 +901,16 @@ use_legacy_face = "$USE_LEGACY_FACE".lower() == "true"
 if 'tangerine' not in config:
     config['tangerine'] = {}
 config['tangerine']['use_legacy_face'] = use_legacy_face
+
+# Forzar motor STT = sherpa (predeterminado obligatorio del sistema).
+# Sherpa-ONNX ofrece mejor precisión en español.
+# Para sistemas MUY lentos se puede volver a 'vosk' editando config.json manualmente:
+#   "stt": { "engine": "vosk", "model_path": "vosk-models/es" }
+if 'stt' not in config:
+    config['stt'] = {}
+config['stt']['engine'] = 'sherpa'
+if 'sherpa_model_path' not in config['stt']:
+    config['stt']['sherpa_model_path'] = 'models/sherpa/sherpa-onnx-whisper-small'
 
 # Guardar
 with open(config_path, 'w') as f:
