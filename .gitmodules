@@ -9,7 +9,7 @@
 [submodule "TangerineUI"]
 	path = TangerineUI
 	url = https://github.com/OpenMacedonIA/TangerineUI	
-	branch = rc_180226
+	branch = rc_230226
 [submodule "modules/Watermelon-extras"]
 	path = modules/Watermelon-extras
 	url = https://github.com/OpenMacedonIA/Watermelon-extras

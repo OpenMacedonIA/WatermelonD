@@ -76,7 +76,7 @@ if [ ! -d ".git" ]; then
              echo "Directorio vacío detectado. Clonando..."
              git clone -b "$BRANCH" https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
              cd "$TARGET_DIR"
-             git submodule update --init --recursive
+             git submodule update --init --remote --recursive
         else
              if ! whiptail --title "Directorio Existente" --yesno "AVISO: El directorio $TARGET_DIR ya existe y no está vacío.\n\n¿Continuar y tratar de actualizar/instalar ahí?" 12 70; then
                  whiptail --msgbox "Instalación cancelada por el usuario." 8 50
@@ -87,7 +87,7 @@ if [ ! -d ".git" ]; then
         echo "Creando directorio $TARGET_DIR y clonando..."
         git clone -b "$BRANCH" https://github.com/OpenMacedonIA/WatermelonD.git "$TARGET_DIR"
         cd "$TARGET_DIR"
-        git submodule update --init --recursive
+        git submodule update --init --remote --recursive
     fi
 
     # 4. Traspaso de ejecución
@@ -124,7 +124,7 @@ if [ -d ".git" ] && command -v git &> /dev/null; then
 
     # Actualizar la rama actual
     echo "Actualizando desde rama: $CURRENT_BRANCH"
-    if git pull origin "$CURRENT_BRANCH" && git submodule update --init --recursive; then
+    if git pull origin "$CURRENT_BRANCH" && git submodule update --init --remote --recursive; then
         NEW_HASH=$(git rev-parse HEAD 2>/dev/null)
         if [ "$CURRENT_HASH" != "$NEW_HASH" ]; then
             echo "----------------------------------------------------------------"
