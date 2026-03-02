@@ -19,7 +19,6 @@ from modules.sysadmin import SysAdminManager
 from modules.database import DatabaseManager
 from modules.config_manager import ConfigManager
 from modules.ssh_manager import SSHManager
-from modules.ssh_manager import SSHManager
 from modules.file_manager import FileManager
 from modules.wifi_manager import WifiManager
 from modules.dashboard_data import DashboardDataManager
@@ -88,7 +87,6 @@ ssh_manager = SSHManager()
 file_manager = FileManager()
 wifi_manager = WifiManager()
 dashboard_manager = DashboardDataManager(config_manager)
-dashboard_manager = DashboardDataManager(config_manager)
 knowledge_base = KnowledgeBase() # Sistema RAG
 scheduler_manager = SchedulerManager(app) # Programador de Tareas
 brain = Brain() # Inicializar instancia Brain independiente para operaciones de Web Admin
@@ -144,19 +142,24 @@ def serve_viewer_content(encoded_path):
     try:
         decoded_path = base64.urlsafe_b64decode(encoded_path).decode('utf-8')
         
-        # Controles de Seguridad
-        if not os.path.exists(decoded_path):
+        # Prevenir path traversal: resolver ruta real y verificar que está dentro del proyecto
+        project_root = os.path.realpath(os.getcwd())
+        real_path = os.path.realpath(decoded_path)
+        if not real_path.startswith(project_root):
+            return abort(403, description="Access denied: path outside project")
+        
+        if not os.path.exists(real_path):
             return abort(404)
             
-        # Lista Blanca de Extensiones (Doble Comprobación)
+        # Lista Blanca de Extensiones
         ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.mp3', '.wav', '.ogg', '.pdf', '.md', '.txt', '.log', '.json', '.csv']
-        ext = os.path.splitext(decoded_path)[1].lower()
+        ext = os.path.splitext(real_path)[1].lower()
         if ext not in ALLOWED_EXTS:
             return abort(403, description="File type not allowed")
             
-        return send_file(decoded_path)
+        return send_file(real_path)
     except Exception as e:
-        print(f"Error serving file: {e}")
+        app_logger.error(f"Error serving file: {e}")
         return abort(500)
 
 @app.route('/api/settings/user_docs', methods=['GET', 'POST'])
@@ -212,7 +215,7 @@ def login_required(view):
     """Decorador para proteger rutas que requieren autenticación."""
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session.get('logged_in') is None:
+        if not session.get('logged_in'):
             return redirect(url_for('login'))
         return view(**kwargs)
     return wrapped_view
@@ -475,10 +478,9 @@ def update_face(state, data=None):
     try:
         if data is None:
             data = {}
-        print(f"DEBUG: Emitting face_update: {state}")
         socketio.emit('face_update', {'state': state, 'data': data})
     except Exception as e:
-        print(f"Error updating face: {e}")
+        app_logger.warning(f"Error updating face: {e}")
 
 # --- API ---
 
@@ -742,7 +744,7 @@ def api_config_save():
             json.dump(new_config, f, indent=4)
             
         # Recargar config en memoria
-        config_manager.load_config()
+        config_manager.load()
         
         return jsonify({'success': True})
     except Exception as e:

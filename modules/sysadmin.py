@@ -46,9 +46,9 @@ class SysAdminManager:
         return "N/A"
 
     def get_cpu_usage(self):
-        """Obtiene el porcentaje de uso de la CPU."""
+        """Obtiene el porcentaje de uso de la CPU (no bloqueante)."""
         try:
-            return f"{psutil.cpu_percent(interval=0.1)}%"
+            return f"{psutil.cpu_percent(interval=None)}%"
         except Exception:
             return "N/A"
 
@@ -256,8 +256,6 @@ class SysAdminManager:
         except Exception as e:
             logging.error(f"Error en autocompletado: {e}")
             return []
-            logging.error(f"Error en autocompletado: {e}")
-            return []
 
     def get_battery_status(self):
         """Devuelve el estado de la batería (si existe)."""
@@ -308,11 +306,6 @@ class SysAdminManager:
             logging.error(f"Error system info: {e}")
             return {}
 
-    def _sizeof_fmt(self, num, suffix="B"):
-        for unit in ["", "Ki", "Mi", "Gi", "Ti"]:
-            if abs(num) < 1024.0:
-                return f"{num:3.1f}{unit}{suffix}"
-            num /= 1024.0
     def _sizeof_fmt(self, num, suffix="B"):
         for unit in ["", "Ki", "Mi", "Gi", "Ti"]:
             if abs(num) < 1024.0:
@@ -398,14 +391,9 @@ class SysAdminManager:
             
             return True, None
 
-            if invalid_flags:
-                return False, f"Flags posiblemente inválidos detectados: {', '.join(invalid_flags)} para el comando '{executable}'"
-            
-            return True, None
-
         except Exception as e:
             logging.error(f"Error validando flags: {e}")
-            return True, None # Permite temporalmente a prueba de fallos
+            return True, None  # Fail-open: permite continuar si no se puede validar
 
     def analyze_command_risk(self, command):
         """

@@ -603,8 +603,28 @@ class NeoCore:
              # Play a random "thinking" sound immediately
              self.speaker.play_random_filler()
              
-             # Remove wake word from command if present
-             command_clean = command_lower.replace(wake_word, "").strip() if wake_word in command_lower else command_lower
+             # Eliminar la wake word de la frase (puede estar en CUALQUIER posición)
+             # Recorremos todas las wake words configuradas para eliminar la que aparezca
+             import re as _re
+             all_wake_words = self.config_manager.get('wake_words', ['neo', 'tio', 'bro'])
+             if isinstance(all_wake_words, str):
+                 all_wake_words = [all_wake_words]
+             
+             command_clean = command_lower
+             for ww in all_wake_words:
+                 # Eliminar la WW con límites de palabra, case-insensitive
+                 pattern = _re.compile(r'\b' + _re.escape(ww.lower()) + r'\b[,\s]*', _re.IGNORECASE)
+                 command_clean = pattern.sub('', command_clean).strip()
+             
+             # Limpiar espacios/comas residuales
+             command_clean = _re.sub(r'\s{2,}', ' ', command_clean).strip(' ,')
+             
+             if not command_clean:
+                 app_logger.debug("Comando vacío tras eliminar wake word. Ignorando.")
+                 self.voice_manager.set_processing(False)
+                 return
+             
+             app_logger.info(f"Comando limpio (sin WW): '{command_clean}'")
              
              # Extend active listening for follow-up
              self.active_listening_end_time = time.time() + 8
@@ -1054,7 +1074,7 @@ class NeoCore:
                             fs_context = self._get_filesystem_context()
                         # --------------------------------------------------------
 
-                        final_prompt = f"Contexto: {fs_context} | Instrucción: {command_text}"
+                        final_prompt = f"Contexto: {fs_context} | {command_text}"
                         self.app_logger.info(f"ONNX Prompt: {final_prompt}")
 
                         generated_command = self.onnx_runner.generate_command(final_prompt, router_label)

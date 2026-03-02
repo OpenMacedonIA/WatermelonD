@@ -7,7 +7,10 @@
     "wake_words": [
         "neo",
         "tio",
-        "bro"
+        "bro",
+        "wamd",
+        "guamde",
+        "wamde"
     ],
     "neo_ssh_enabled": true,
     "secret_key": "CHANGE_THIS_SECRET_KEY_ON_FIRST_RUN",

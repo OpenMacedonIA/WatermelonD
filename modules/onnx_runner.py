@@ -116,9 +116,11 @@ class SpecificModelRunner:
             
             for label in to_remove:
                 app_logger.info(f"TTL Cleanup: Descargando modelo '{label}' (idle {self.MODEL_TTL_SECONDS}s)")
-                del self.sessions[label]
-                del self.tokenizers[label]
-                del self.last_access[label]
+                # Usar pop() con default None para evitar KeyError en race conditions
+                # (el hilo de inferencia pudo cargar el modelo justo antes del cleanup)
+                self.sessions.pop(label, None)
+                self.tokenizers.pop(label, None)
+                self.last_access.pop(label, None)
 
 
     def _load_model_into_memory(self, label):
@@ -201,7 +203,7 @@ class SpecificModelRunner:
             app_logger.error(f"Error cargando modelo {label}: {e}")
             raise e
 
-        # 3. Inferencia
+        # 4. Inferencia
         try:
             session = self.sessions[label]
             tokenizer = self.tokenizers[label]

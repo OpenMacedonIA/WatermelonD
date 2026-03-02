@@ -39,20 +39,27 @@ class VoiceManager:
         self.is_processing = False # Bandera para pausar escucha durante procesamiento
         self.is_muted = False # Bandera de silenciamiento
         
-        self.setup_vosk()
-        self.setup_whisper()
+        # Leer engine configurado UNA VEZ (evita múltiples get() redundantes)
+        stt_engine = config_manager.get('stt', {}).get('engine', 'sherpa')
+        
+        # Cargar solo el engine que vamos a usar — no desperdiciar RAM
+        if stt_engine == 'vosk':
+            self.setup_vosk()
+        elif stt_engine == 'whisper':
+            self.setup_whisper()
+        else:
+            # sherpa (predeterminado) — setup al final del __init__
+            pass
         
         # --- CLIENTE DE BUS ---
         self.bus = BusClient(name="VoiceManager")
         self.bus.on('recognizer_loop:audio', self.on_audio_data)
         self.bus.on('mic:toggle', self.on_mic_toggle)
         self.bus.on('mic:get_status', self.on_mic_get_status)
-        # self.bus.connect() <-- Arreglo Deadlock: Dejar que run_forever lo maneje en hilo
-        # Iniciar hilo de bus
         threading.Thread(target=self.bus.run_forever, daemon=True).start()
         
-        # ¿Deshabilitar configuración Sherlock si es mínima? Manteniéndolo por ahora.
-        self.setup_sherpa()
+        if stt_engine == 'sherpa':
+            self.setup_sherpa()
 
     def setup_vosk(self):
         """Carga el modelo de reconocimiento de voz Vosk."""
