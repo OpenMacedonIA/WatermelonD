@@ -33,6 +33,16 @@ class SpecificModelRunner:
         "grape-route": "translate Spanish to Bash: ",
         "chardonnay":  "translate Spanish to Bash: ",
     }
+
+    # Tokenizer base para modelos que no incluyen archivos de tokenizer propios.
+    # Los modelos Grape están fine-tuned sobre t5-small (vocab_size=32100).
+    MODEL_TOKENIZER_BASE = {
+        "malbec":      "t5-small",
+        "syrah":       "t5-small",
+        "pinot":       "t5-small",
+        "grape-route": "t5-small",
+        "chardonnay":  "t5-small",
+    }
     
     # Constants
     MAX_MODELS_IN_MEMORY = 3
@@ -124,39 +134,63 @@ class SpecificModelRunner:
 
 
     def _load_model_into_memory(self, label):
-        """Carga física del modelo. No gestiona eviction."""
+        """Carga física del modelo en memoria. No gestiona eviction."""
         with self._cleanup_lock:
             if label in self.sessions:
                 self.last_access[label] = time.time()
                 return
 
             model_dir = os.path.join(self.models_base_path, label)
-            
-            # Comprobar arquitectura encoder-decoder (modelos tipo T5)
-            encoder_file = os.path.join(model_dir, "encoder_model_quantized.onnx")
-            decoder_file = os.path.join(model_dir, "decoder_model_quantized.onnx")
-            single_model_file = os.path.join(model_dir, "model.onnx")
-            
+
             if not os.path.exists(model_dir):
                 raise FileNotFoundError(f"Model directory not found: {model_dir}")
-            
-            # Determinar tipo de modelo
+
+            # --- Tokenizer ---
+            # Comprobar si el directorio tiene archivos de tokenizer propios
+            has_local_tokenizer = any(
+                os.path.exists(os.path.join(model_dir, f))
+                for f in ['tokenizer.json', 'spiece.model', 'tokenizer_config.json']
+            )
+            if has_local_tokenizer:
+                tokenizer = AutoTokenizer.from_pretrained(model_dir)
+                app_logger.info(f"Tokenizer cargado desde directorio local: {model_dir}")
+            else:
+                # Usar tokenizer base conocido (evita cargar basura del cache HuggingFace)
+                tok_base = self.MODEL_TOKENIZER_BASE.get(label, 't5-small')
+                app_logger.info(f"Sin tokenizer local para '{label}', usando base: {tok_base}")
+                tokenizer = AutoTokenizer.from_pretrained(tok_base)
+
+            # --- Archivos ONNX ---
+            encoder_file     = os.path.join(model_dir, "encoder_model_quantized.onnx")
+            decoder_file     = os.path.join(model_dir, "decoder_model_quantized.onnx")
+            dec_past_file    = os.path.join(model_dir, "decoder_with_past_model_quantized.onnx")
+            # Fallback a no-quantized si no hay cuantizados
+            if not os.path.exists(encoder_file):
+                encoder_file  = os.path.join(model_dir, "encoder_model.onnx")
+            if not os.path.exists(decoder_file):
+                decoder_file  = os.path.join(model_dir, "decoder_model.onnx")
+            if not os.path.exists(dec_past_file):
+                dec_past_file = os.path.join(model_dir, "decoder_with_past_model.onnx")
+            single_model_file = os.path.join(model_dir, "model.onnx")
+
+            sess_opts = ort.SessionOptions()
+            sess_opts.log_severity_level = 3  # Suprimir warnings verbosos de ONNX
+
             if os.path.exists(encoder_file) and os.path.exists(decoder_file):
                 app_logger.info(f"Cargando Modelo Encoder-Decoder ({label}) en RAM...")
-                tokenizer = AutoTokenizer.from_pretrained(model_dir)
-                encoder_session = ort.InferenceSession(encoder_file)
-                decoder_session = ort.InferenceSession(decoder_file)
-                
-                # Almacenar como tupla (encoder, decoder)
-                self.sessions[label] = (encoder_session, decoder_session)
+                encoder_session  = ort.InferenceSession(encoder_file,  sess_options=sess_opts)
+                decoder_session  = ort.InferenceSession(decoder_file,  sess_options=sess_opts)
+                dec_past_session = ort.InferenceSession(dec_past_file, sess_options=sess_opts) \
+                    if os.path.exists(dec_past_file) else None
+
+                # Tupla (encoder, decoder_init, decoder_with_past)
+                self.sessions[label] = (encoder_session, decoder_session, dec_past_session)
                 self.tokenizers[label] = tokenizer
                 self.last_access[label] = time.time()
-                
+
             elif os.path.exists(single_model_file):
                 app_logger.info(f"Cargando Modelo Single ({label}) en RAM...")
-                tokenizer = AutoTokenizer.from_pretrained(model_dir)
-                session = ort.InferenceSession(single_model_file)
-                
+                session = ort.InferenceSession(single_model_file, sess_options=sess_opts)
                 self.sessions[label] = session
                 self.tokenizers[label] = tokenizer
                 self.last_access[label] = time.time()
@@ -210,54 +244,119 @@ class SpecificModelRunner:
             
             # Comprobar si es un encoder-decoder (tupla) o un solo modelo
             if isinstance(session, tuple):
-                # Modelo Encoder-Decoder tipo T5
-                encoder_session, decoder_session = session
-                
+                # Modelo Encoder-Decoder tipo T5 (exportado con optimum)
+                encoder_session, decoder_session, dec_past_session = session
+
                 # Tokenizar entrada
-                inputs = tokenizer(text, return_tensors="np", padding=True, truncation=True)
-                input_ids = inputs["input_ids"].astype("int64")
+                inputs = tokenizer(
+                    text,
+                    return_tensors="np",
+                    padding=True,
+                    truncation=True,
+                    max_length=512
+                )
+                input_ids      = inputs["input_ids"].astype("int64")
                 attention_mask = inputs["attention_mask"].astype("int64")
-                
-                # Ejecutar encoder
-                encoder_outputs = encoder_session.run(
+
+                app_logger.debug(f"input_ids shape: {input_ids.shape}, muestra: {input_ids[0][:8].tolist()}")
+
+                # 1. Encoder
+                enc_out = encoder_session.run(
+                    None,
+                    {"input_ids": input_ids, "attention_mask": attention_mask}
+                )
+                # encoder output name puede ser 'last_hidden_state' o index 0
+                encoder_hidden_states = enc_out[0]  # shape: (1, seq_len, d_model)
+
+                # 2. Primer paso del decoder (sin past_key_values)
+                #    decoder_start_token_id = 0 para T5
+                dec_input_ids = np.array([[0]], dtype=np.int64)
+
+                dec1_out = decoder_session.run(
                     None,
                     {
-                        "input_ids": input_ids,
-                        "attention_mask": attention_mask
+                        "input_ids":              dec_input_ids,
+                        "encoder_hidden_states":  encoder_hidden_states,
+                        "encoder_attention_mask": attention_mask,
                     }
                 )
-                encoder_hidden_states = encoder_outputs[0]
-                
-                # Preparar entrada del decoder: T5 usa decoder_start_token_id=0
-                decoder_start_id = getattr(tokenizer, 'decoder_start_token_id', None)
-                if decoder_start_id is None:
-                    decoder_start_id = tokenizer.pad_token_id
-                decoder_input_ids = np.array([[decoder_start_id]], dtype=np.int64)
-                
-                # Descodificación avariciosa (máx 128 tokens para comandos largos)
-                max_length = 128
+                # Salidas: [logits, present.0.decoder.key, present.0.decoder.value,
+                #           present.0.encoder.key, present.0.encoder.value, ...]
+                logits     = dec1_out[0]          # (1, 1, vocab_size)
+                past_kv    = dec1_out[1:]         # todos los present.*
+
+                # Nombres de past_key_values para decoder_with_past
+                past_input_names = (
+                    [i.name for i in dec_past_session.get_inputs()]
+                    if dec_past_session else []
+                )
+
+                next_token_id = int(logits[0, -1, :].argmax())
+                app_logger.debug(f"Primer token generado: {next_token_id} ('{tokenizer.decode([next_token_id])}'). eos={tokenizer.eos_token_id}")
+
                 generated_ids = []
-                for _ in range(max_length):
-                    decoder_outputs = decoder_session.run(
-                        None,
-                        {
-                            "input_ids": decoder_input_ids,
-                            "encoder_hidden_states": encoder_hidden_states,
-                            "encoder_attention_mask": attention_mask
-                        }
-                    )
-                    logits = decoder_outputs[0]
-                    next_token_id = logits[0, -1, :].argmax()
-                    
+                if next_token_id != tokenizer.eos_token_id:
+                    generated_ids.append(next_token_id)
+
+                # 3. Pasos siguientes con KV-cache (decoder_with_past)
+                max_new_tokens = 128
+                for step in range(max_new_tokens):
                     if next_token_id == tokenizer.eos_token_id:
                         break
-                    
-                    generated_ids.append(int(next_token_id))
-                    decoder_input_ids = np.concatenate([
-                        decoder_input_ids,
-                        np.array([[next_token_id]], dtype=np.int64)
-                    ], axis=1)
-                
+
+                    if dec_past_session is not None:
+                        # Construir feed con past_key_values.*
+                        dec_input_ids = np.array([[next_token_id]], dtype=np.int64)
+                        past_feed = {
+                            "input_ids":              dec_input_ids,
+                            "encoder_hidden_states":  encoder_hidden_states,
+                            "encoder_attention_mask": attention_mask,
+                        }
+                        # Mapear present.X.* -> past_key_values.X.*
+                        # Los nombres en past_input_names son 'past_key_values.N.decoder.key' etc.
+                        # Las salidas del paso anterior son 'present.N.decoder.key' etc.
+                        # Solo los decoder past (encoder past es constante y ya está cacheado)
+                        dec_past_input_names = set(past_input_names)
+                        for idx_past, name in enumerate(past_input_names):
+                            if name.startswith('past_key_values.'):
+                                # Mapear: past_key_values.N.X -> present.N.X (del paso anterior)
+                                present_name = name.replace('past_key_values.', 'present.')
+                                # Buscar el índice en las salidas del paso anterior
+                                all_out_names_dec = [o.name for o in decoder_session.get_outputs()]
+                                if present_name in all_out_names_dec:
+                                    pidx = all_out_names_dec.index(present_name)
+                                    past_feed[name] = past_kv[pidx - 1]  # -1 porque logits es idx 0
+                                # Si no, buscar por orden posicional
+                        # Fallback sencillo: asignar present.* a past_key_values.* en orden
+                        pk_names = [n for n in past_input_names if 'past_key_values' in n]
+                        if pk_names and not any(n in past_feed for n in pk_names):
+                            for i, pk_name in enumerate(pk_names):
+                                if i < len(past_kv):
+                                    past_feed[pk_name] = past_kv[i]
+
+                        dec_past_out = dec_past_session.run(None, past_feed)
+                        logits   = dec_past_out[0]
+                        past_kv  = dec_past_out[1:]
+                    else:
+                        # Sin decoder_with_past: re-alimentar todos los tokens generados
+                        all_ids   = [0] + generated_ids + [next_token_id]
+                        dec_input_ids = np.array([all_ids], dtype=np.int64)
+                        dec_out = decoder_session.run(
+                            None,
+                            {
+                                "input_ids":              dec_input_ids,
+                                "encoder_hidden_states":  encoder_hidden_states,
+                                "encoder_attention_mask": attention_mask,
+                            }
+                        )
+                        logits  = dec_out[0]
+                        past_kv = dec_out[1:]
+
+                    next_token_id = int(logits[0, -1, :].argmax())
+                    if next_token_id == tokenizer.eos_token_id:
+                        break
+                    generated_ids.append(next_token_id)
+
                 command = tokenizer.decode(generated_ids, skip_special_tokens=True)
             else:
                 # Un solo modelo (ruta anterior/heredada)
