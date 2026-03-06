@@ -83,8 +83,8 @@ class BusClient:
         
         while not self.connected:
             try:
-                # Forzar polling porque el servidor se está ejecutando en modo threading (sin websockets)
-                self.sio.connect(url, transports=['polling'], wait_timeout=5)
+                # Remover restricción 'polling' (causa cuellos de botella y AssertionsErrors en Werkzeug 3.0)
+                self.sio.connect(url, wait_timeout=5)
                 # Si llegamos aquí, conexión exitosa (el manejador de eventos establece self.connected)
                 # self.connected = True # Dejar que el manejador de eventos haga esto
                 break 
