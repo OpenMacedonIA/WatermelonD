@@ -885,6 +885,37 @@ def api_ssh_delete():
     return jsonify({'success': False, 'message': 'Servidor no encontrado'})
 
 
+@app.route('/api/voice/audio', methods=['POST'])
+@login_required
+def voice_audio_inject():
+    """Recibe audio crudo (PCM16 base64) del navegador e inyecta en el bus STT."""
+    import logging
+    va_logger = logging.getLogger("VoiceAudio")
+    try:
+        data = request.get_json(silent=True) or {}
+        b64_audio = data.get('audio')
+        rate = data.get('rate', 16000)
+
+        if not b64_audio:
+            return jsonify({'status': 'error', 'message': 'No audio data provided'}), 400
+
+        # Verificar decodificabilidad y tamaño mínimo
+        import base64 as _b64
+        raw = _b64.b64decode(b64_audio)
+        va_logger.info(f"Received browser audio: {len(raw)} bytes @ {rate}Hz")
+
+        bus.emit('recognizer_loop:audio', {
+            'data': b64_audio,
+            'rate': rate,
+            'width': 2,
+            'channels': 1,
+            'source': 'browser'
+        })
+        return jsonify({'status': 'ok', 'bytes': len(raw)})
+    except Exception as e:
+        va_logger.error(f"voice_audio_inject error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/command/inject', methods=['POST'])
 def api_command_inject():
     """Inyecta un comando de texto en el sistema a través del Bus. No requiere autenticación para el modo kiosco."""

@@ -35,6 +35,12 @@ class WebService:
         # Escuchar comandos de texto de la GUI
         socketio.on_event('gui:text_command', self.on_gui_text_command)
 
+        # Reenviar resultados STT y respuestas IA al navegador
+        self.bus.on('recognizer_loop:utterance', self.on_utterance)
+        self.bus.on('speak:say', self.on_speak_say)
+        self.bus.on('ai:response', self.on_ai_response)
+
+
     def on_gui_text_command(self, data):
         """Inyecta texto desde la GUI como si fuera una locución hablada."""
         text = data.get('text')
@@ -83,6 +89,30 @@ class WebService:
         """Reenvía evento de cerrar contenido visual."""
         logger.info("Visual Close")
         socketio.emit('visual:close', {})
+
+    def on_utterance(self, message):
+        """Retransmite el texto transcrito al navegador como stt:result."""
+        data = message.get('data', {})
+        utterances = data.get('utterances', [])
+        if utterances:
+            text = utterances[0]
+            logger.info(f"STT Result → browser: {text}")
+            socketio.emit('stt:result', {'text': text})
+
+    def on_speak_say(self, message):
+        """Retransmite el texto que Neo va a decir al navegador como ai:response."""
+        data = message.get('data', {})
+        text = data.get('utterance', data.get('text', ''))
+        if text:
+            logger.info(f"AI Response → browser: {text[:80]}")
+            socketio.emit('ai:response', {'text': text})
+
+    def on_ai_response(self, message):
+        """Retransmite evento ai:response si existe en el bus."""
+        data = message.get('data', {})
+        text = data.get('text', '')
+        if text:
+            socketio.emit('ai:response', {'text': text})
 
     def run(self):
         logger.info("Starting Web Service (Flask + SocketIO)...")
