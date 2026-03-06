@@ -122,9 +122,11 @@ threading.Thread(target=bus.run_forever, daemon=True).start()
 def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    # NOTA: Strict-Transport-Security (HSTS) eliminado — el servidor corre en HTTP.
+    # Enviarlo causaría ERR_SSL_PROTOCOL_ERROR en Chrome al forzar HTTPS en HTTP.
     response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
     return response
 
 # --- API del Buscador y Visor ---
