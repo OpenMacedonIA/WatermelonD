@@ -1609,10 +1609,10 @@ def run_server():
         print(f"🔒 HTTPS Enabled. Found dynamic certs at: {cert_dir}")
         print(f"   [CERT] {ssl_cert}\n   [KEY]  {ssl_key}")
         print(f"[START] Neo Web Admin running on https://{host}:{port}")
-        # Se pasa certfile y keyfile a SocketIO (Eventlet/Werkzeug lo soportan así)
+        # Se pasa ssl_context para Werkzeug
         socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
                      log_output=False, allow_unsafe_werkzeug=True, 
-                     certfile=ssl_cert, keyfile=ssl_key)
+                     ssl_context=(ssl_cert, ssl_key))
     else:
         print("⚠️ HTTPS Disabled. Valid *.pem certs not found in dynamic search.")
         print(f"[START] Neo Web Admin running on http://{host}:{port}")
