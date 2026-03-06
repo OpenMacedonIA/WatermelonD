@@ -1565,6 +1565,8 @@ def api_config_get():
 def run_server():
     """Inicia el servidor Flask con SocketIO."""
     import logging
+    import subprocess
+    import glob
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
     
@@ -1573,22 +1575,46 @@ def run_server():
     port = web_config.get('port', 5000)
     debug_mode = web_config.get('debug', False)
     
-    # Comprobar Certificados SSL
-    cert_dir = os.path.join(os.getcwd(), 'config', 'certs')
-    cert_file = os.path.join(cert_dir, 'neo.crt')
-    key_file = os.path.join(cert_dir, 'neo.key')
+    # ── Búsqueda de Certificados SSL Dinámica ──
+    ssl_cert = ssl_key = cert_dir = None
+    search_dirs = [os.getcwd(), os.path.expanduser('~')]
     
-    ssl_context = None
-    if os.path.exists(cert_file) and os.path.exists(key_file):
-        print(f" HTTPS Enabled. Using certs from {cert_dir}")
-        # ssl_context = (cert_file, key_file) # Desactivado para compatibilidad con Kiosco
-        ssl_context = None 
-    else:
-        print("[WARN] HTTPS Disabled. Certs not found in config/certs/")
+    # Intenta obtener la raíz de mkcert dinámicamente
+    try:
+        caroot = subprocess.check_output(['mkcert', '-CAROOT'], text=True).strip()
+        search_dirs.append(caroot)
+        search_dirs.append(os.path.dirname(caroot)) # Padre de CAROOT por si se generó arriba
+    except Exception:
+        pass
         
-    print(f"[START] Neo Web Admin running on https://{host}:{port}" if ssl_context else f"[START] Neo Web Admin running on http://{host}:{port}")
-    
-    # FORZAR DEBUG=FALSE para evitar el fallback de Werkzeug que causa 'write() before start_response'
-    # NOTA: eventlet no soporta 'ssl_context' (usa keyfile/certfile), así que lo eliminamos.
-    # SSL está actualmente desactivado en el código superior (ssl_context=None).
-    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, log_output=False, allow_unsafe_werkzeug=True)
+    # Agrega directorios globales usuales en las VMs
+    search_dirs.extend(glob.glob('/home/*/WatermelonD'))
+    search_dirs.extend(glob.glob('/root/WatermelonD'))
+    search_dirs.append(os.path.join(os.getcwd(), 'config', 'certs'))
+
+    for d in search_dirs:
+        if not os.path.exists(d): continue
+        keys = glob.glob(os.path.join(d, '*-key.pem'))
+        if keys:
+            ssl_key = keys[0]
+            ssl_cert = ssl_key.replace('-key.pem', '.pem')
+            if os.path.exists(ssl_cert):
+                cert_dir = d
+                break
+            else:
+                ssl_key = ssl_cert = None
+
+    # ── Arranque ──
+    if ssl_cert and ssl_key:
+        print(f"🔒 HTTPS Enabled. Found dynamic certs at: {cert_dir}")
+        print(f"   [CERT] {ssl_cert}\n   [KEY]  {ssl_key}")
+        print(f"[START] Neo Web Admin running on https://{host}:{port}")
+        # Se pasa certfile y keyfile a SocketIO (Eventlet/Werkzeug lo soportan así)
+        socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
+                     log_output=False, allow_unsafe_werkzeug=True, 
+                     certfile=ssl_cert, keyfile=ssl_key)
+    else:
+        print("⚠️ HTTPS Disabled. Valid *.pem certs not found in dynamic search.")
+        print(f"[START] Neo Web Admin running on http://{host}:{port}")
+        socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
+                     log_output=False, allow_unsafe_werkzeug=True)
