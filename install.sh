@@ -505,7 +505,7 @@ xset s off
 xset s noblank
 openbox &
 echo "Esperando backend..."
-while ! curl -s http://localhost:5000/face > /dev/null; do sleep 2; done
+while ! curl -s https://localhost:5000/face > /dev/null; do sleep 2; done
 CHROMIUM_BIN="chromium"
 command -v chromium-browser &> /dev/null && CHROMIUM_BIN="chromium-browser"
 while true; do
@@ -932,7 +932,7 @@ function install_web_client() {
     echo "===   Instalación Cliente Web Remoto  ==="
     echo "========================================="
     
-    read -p "IP del Servidor NeoCore (ej: http://192.168.1.50:5000): " NEO_IP
+    read -p "IP del Servidor NeoCore (ej: https://192.168.1.50:5000): " NEO_IP
     NEO_IP=${NEO_IP:-http://localhost:5000}
     
     if [[ ! "$NEO_IP" =~ ^http ]]; then NEO_IP="http://$NEO_IP"; fi
