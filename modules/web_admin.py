@@ -888,7 +888,7 @@ def api_ssh_delete():
 
 
 @app.route('/api/voice/audio', methods=['POST'])
-@login_required
+@csrf.exempt
 def voice_audio_inject():
     """Recibe audio crudo (PCM16 base64) del navegador e inyecta en el bus STT."""
     import logging
