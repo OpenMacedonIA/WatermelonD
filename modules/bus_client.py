@@ -8,8 +8,7 @@ logger = logging.getLogger("BusClient")
 
 class BusClient:
     def __init__(self, host='localhost', port=5000, name="UnknownClient"):
-        # Desactivamos verificación SSL local para que pueda conectarse internamente si el server es HTTPS
-        self.sio = socketio.Client(ssl_verify=False)
+        self.sio = socketio.Client()
         self.host = host
         self.port = port
         self.name = name
@@ -78,32 +77,24 @@ class BusClient:
         self.sio.wait()
 
     def connect(self):
-        """Conectar al bus probando HTTP y HTTPS localmente con lógica de reintento."""
-        urls_to_try = [
-            f"https://{self.host}:{self.port}",
-            f"http://{self.host}:{self.port}",
-        ]
+        """Conectar al bus con lógica de reintento."""
+        url = f"http://{self.host}:{self.port}"
+        print(f"DEBUG: BusClient connecting to {url}")
         
-        url_idx = 0
         while not self.connected:
-            url = urls_to_try[url_idx % len(urls_to_try)]
-            print(f"DEBUG: [{self.name}] BusClient connecting to {url}")
-            
             try:
                 # Forzar polling porque el servidor se está ejecutando en modo threading (sin websockets)
                 self.sio.connect(url, transports=['polling'], wait_timeout=5)
-                # Si llegamos aquí, conexión exitosa
+                # Si llegamos aquí, conexión exitosa (el manejador de eventos establece self.connected)
+                # self.connected = True # Dejar que el manejador de eventos haga esto
                 break 
             except Exception as e:
-                if self.host != 'localhost':
-                    logger.warning(f"Connection failed ({url}): {e}")
+                if self.host != 'localhost': # Solo registrar errores para conexiones remotas para evitar spam local durante inicio
+                    logger.warning(f"Connection failed ({url}): {e}. Retrying in 5s...")
                 else:
-                    logger.debug(f"Connection failed ({url}): {e}")
-                
-                # Probar el otro protocolo en la siguiente iteración
-                url_idx += 1
-                if url_idx % len(urls_to_try) == 0:
-                    time.sleep(3) # Solo esperar si han fallado ambos
+                    # Debug solo para localhost para mantener los logs limpios
+                    logger.debug(f"Connection failed ({url}): {e}. Retrying in 5s...")
+                time.sleep(5)
 
     def close(self):
         self.sio.disconnect()

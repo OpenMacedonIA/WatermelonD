@@ -1575,46 +1575,11 @@ def run_server():
     port = web_config.get('port', 5000)
     debug_mode = web_config.get('debug', False)
     
-    # ── Búsqueda de Certificados SSL Dinámica ──
-    ssl_cert = ssl_key = cert_dir = None
-    search_dirs = [os.getcwd(), os.path.expanduser('~')]
+    # Comprobar Certificados SSL (Solo para compatibilidad heredada, aquí está forzado HTTP)
+    cert_dir = os.path.join(os.getcwd(), 'config', 'certs')
     
-    # Intenta obtener la raíz de mkcert dinámicamente
-    try:
-        caroot = subprocess.check_output(['mkcert', '-CAROOT'], text=True).strip()
-        search_dirs.append(caroot)
-        search_dirs.append(os.path.dirname(caroot)) # Padre de CAROOT por si se generó arriba
-    except Exception:
-        pass
-        
-    # Agrega directorios globales usuales en las VMs
-    search_dirs.extend(glob.glob('/home/*/WatermelonD'))
-    search_dirs.extend(glob.glob('/root/WatermelonD'))
-    search_dirs.append(os.path.join(os.getcwd(), 'config', 'certs'))
-
-    for d in search_dirs:
-        if not os.path.exists(d): continue
-        keys = glob.glob(os.path.join(d, '*-key.pem'))
-        if keys:
-            ssl_key = keys[0]
-            ssl_cert = ssl_key.replace('-key.pem', '.pem')
-            if os.path.exists(ssl_cert):
-                cert_dir = d
-                break
-            else:
-                ssl_key = ssl_cert = None
-
     # ── Arranque ──
-    if ssl_cert and ssl_key:
-        print(f" HTTPS Enabled. Found dynamic certs at: {cert_dir}")
-        print(f"   [CERT] {ssl_cert}\n   [KEY]  {ssl_key}")
-        print(f"[START] Neo Web Admin running on https://{host}:{port}")
-        # Se pasa ssl_context para Werkzeug
-        socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
-                     log_output=False, allow_unsafe_werkzeug=True, 
-                     ssl_context=(ssl_cert, ssl_key))
-    else:
-        print("HTTPS Disabled. Valid *.pem certs not found in dynamic search.")
-        print(f"[START] Neo Web Admin running on http://{host}:{port}")
-        socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
-                     log_output=False, allow_unsafe_werkzeug=True)
+    print(f"⚠️ NeoCore Web Admin running exclusively on HTTP (Internal Bus)")
+    print(f"[START] Neo Web Admin running on http://{host}:{port}")
+    socketio.run(app, host=host, port=port, debug=False, use_reloader=False, 
+                 log_output=False, allow_unsafe_werkzeug=True)
