@@ -219,6 +219,7 @@ class NeoCore:
         self.sysadmin_manager = SysAdminManager() if SysAdminManager else None
         self.ssh_manager = SSHManager()
         self.wifi_manager = WifiManager()
+        self.secure_intent_matcher = SecureIntentMatcher() if SecureIntentMatcher else None
 
         # --- Inyectar Gestores en Web Admin (Estado Compartido) ---
         if WEB_ADMIN_DISPONIBLE and self.web_server:
