@@ -1105,7 +1105,23 @@ class NeoCore:
                     if is_visual and self.web_server: 
                          self.app_logger.info("Visual command detected. Emitting CLI event.")
                     
-                    # 2. Validar y Ejecutar vía SysAdminManager
+                    # 2. Validar comandos destructivos
+                    destructive_keywords = ['rm', 'delete', 'ban', 'block', 'kill', 'drop']
+                    
+                    # Búsqueda exacta de palabra para evitar que 'arm' o 'format' activen 'rm'
+                    import re
+                    needs_confirmation = False
+                    for kw in destructive_keywords:
+                        if re.search(rf"\b{kw}\b", generated_command.lower()):
+                            needs_confirmation = True
+                            break
+                    
+                    if needs_confirmation:
+                        self.pending_mango_command = generated_command
+                        self.speak(f"Aviso de seguridad, se va a ejecutar un comando peligroso: {generated_command} ¿Confirmas su ejecución?")
+                        return
+                    
+                    # 3. Validar y Ejecutar vía SysAdminManager
                     if self.sysadmin_manager:
                         is_valid, val_msg = self.sysadmin_manager.validate_command_flags(generated_command)
                         if not is_valid:
