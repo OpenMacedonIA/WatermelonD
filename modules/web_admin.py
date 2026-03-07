@@ -75,9 +75,17 @@ def inject_status():
 
 @socketio.on('message')
 def handle_message(data):
-    """Retransmite mensajes broadcast a todos los clientes conectados (Bus)."""
+    """Retransmite mensajes broadcast a todos los clientes conectados y al Bus interno."""
     # print(f"DEBUG: Transmitiendo mensaje: {data}")
     emit('message', data, broadcast=True)
+    
+    # Forward al Bus interno para que el NLU y otros servicios lo procesen
+    if isinstance(data, dict) and 'type' in data:
+        msg_type = data['type']
+        try:
+            bus.emit(msg_type, data)
+        except Exception as e:
+            print(f"Error forwarding message to bus: {e}")
 
 from modules.bus_client import BusClient
 
