@@ -360,6 +360,11 @@ class SysAdminManager:
             if not flags:
                 return True, None
                 
+            # Lista de comandos complejos que usan subcomandos o gestionan sus propios flags internamente
+            COMPLEX_CMDS = ['docker', 'git', 'apt', 'apt-get', 'systemctl', 'sudo', 'npm', 'npx', 'pip', 'ip']
+            if executable in COMPLEX_CMDS:
+                return True, None
+                
             # Obtener ayuda (limitado a 5s para no bloquear)
             # Probamos --help primero, es el estándar más rápido
             try:
