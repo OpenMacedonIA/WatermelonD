@@ -1150,6 +1150,47 @@ class NeoCore:
                                 else:
                                     self.speak(f"He encontrado {lines_found} archivos.")
                                     self.last_find_results = output
+                            elif generated_command.strip() == 'ls' or generated_command.strip().startswith('ls '):
+                                files = 0
+                                dirs = 0
+                                lines = [line.strip() for line in output.splitlines() if line.strip() and not line.startswith('total ')]
+                                
+                                is_long_format = False
+                                if lines and any(line.startswith(('d', '-')) and len(line.split()) >= 8 for line in lines[:3]):
+                                    is_long_format = True
+                                
+                                if is_long_format:
+                                    for line in lines:
+                                        if line.startswith('d'):
+                                            dirs += 1
+                                        elif line.startswith('-'):
+                                            files += 1
+                                else:
+                                    import os
+                                    import shlex
+                                    # Intentar determinar el objetivo del ls
+                                    target_dir = "."
+                                    try:
+                                        parts = shlex.split(generated_command)
+                                        for p in parts[1:]:
+                                            if not p.startswith('-') and os.path.exists(p):
+                                                target_dir = p
+                                                break
+                                    except:
+                                        pass
+                                        
+                                    for item in lines:
+                                        full_path = os.path.join(target_dir, item)
+                                        if os.path.isdir(full_path):
+                                            dirs += 1
+                                        else:
+                                            files += 1
+                                            
+                                texto_archivos = f"{files} archivos" if files != 1 else "1 archivo"
+                                texto_dirs = f"{dirs} directorios" if dirs != 1 else "1 directorio"
+                                
+                                self.speak(f"Hay {texto_archivos} y {texto_dirs}.")
+                                self.last_find_results = output
                             elif len(output) < 200:
                                 self.speak(f"Hecho: {output}")
                             else:
