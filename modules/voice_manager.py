@@ -290,21 +290,16 @@ class VoiceManager:
                 return
 
             vosk_logger.info(f"Cargando Sherpa-ONNX Whisper desde {model_dir}...")
-            config = sherpa_onnx.OfflineRecognizerConfig(
-                model_config=sherpa_onnx.OfflineModelConfig(
-                    whisper=sherpa_onnx.OfflineWhisperModelConfig(
-                        encoder=encoder,
-                        decoder=decoder,
-                        language="es",   # Requerido desde sherpa-onnx >= 1.10
-                        task="transcribe",
-                    ),
-                    tokens=tokens,
-                    num_threads=1,
-                    debug=False,
-                ),
+            # API >= 1.10: usar factory method from_whisper() en vez de OfflineRecognizerConfig
+            self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
+                encoder=encoder,
+                decoder=decoder,
+                tokens=tokens,
+                language="es",
+                task="transcribe",
+                num_threads=1,
                 decoding_method="greedy_search",
             )
-            self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer(config)
             vosk_logger.info("Sherpa-ONNX Whisper cargado correctamente.")
         except Exception as e:
             vosk_logger.error(f"Error cargando Sherpa-ONNX: {e}")
