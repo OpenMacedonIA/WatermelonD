@@ -1354,10 +1354,9 @@ RUN git clone https://github.com/libfann/fann.git /tmp/fann && \
     cd /tmp/fann && cmake . && make && make install && \
     ldconfig && rm -rf /tmp/fann
 
-# Crear usuario no-root para el servicio
-RUN useradd -ms /bin/bash neo
+# Configurar el directorio de trabajo
 WORKDIR /app
-COPY --chown=neo:neo . .
+COPY . .
 
 # Crear venv e instalar dependencias Python
 RUN python3 -m venv venv && \
@@ -1366,13 +1365,10 @@ RUN python3 -m venv venv && \
     venv/bin/pip install Flask-WTF eventlet Flask-Limiter
 
 # Crear directorios necesarios
-RUN mkdir -p logs config database models piper/voices && \
-    chown -R neo:neo /app
+RUN mkdir -p logs config database models piper/voices
 
 # Copiar config base si no existe
 RUN [ -f config/config.json ] || ([ -f config/config.json.example ] && cp config/config.json.example config/config.json) || echo '{}' > config/config.json
-
-USER neo
 
 EXPOSE 5000
 
