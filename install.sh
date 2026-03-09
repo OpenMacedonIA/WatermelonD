@@ -1080,6 +1080,17 @@ function install_distrobox() {
     cat > "$SETUP_SCRIPT" << 'BOXSETUP'
 #!/bin/bash
 set -e
+if ! command -v git &> /dev/null; then
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y git
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y git
+    elif command -v pacman &> /dev/null; then
+        sudo pacman -Sy --noconfirm git
+    elif command -v zypper &> /dev/null; then
+        sudo zypper install -y git
+    fi
+fi
 cd "$HOME"
 if [ ! -d WatermelonD ]; then
     git clone https://github.com/OpenMacedonIA/WatermelonD.git
