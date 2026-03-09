@@ -929,19 +929,21 @@ class NeoCore:
                         return
 
                 # --- PRE-ROUTER: SISTEMA (apagar/reiniciar/volumen/alarmas/temporizador/agenda) ---
-                # Se ejecuta ANTES del router categorizador. Si hay match, el comando
+                # Se ejecuta ANTES del router categorizador. Si hay match, SIEMPRE
                 # se gestiona aquí y se descarta el pipeline de clasificación.
                 if self.system_intent_matcher:
                     try:
                         system_handled = self.system_intent_matcher.process(command_text)
                         if system_handled:
                             app_logger.info(
-                                f"[SystemIntentMatcher] Comando gestionado antes del router: '{command_text}'"
+                                f"[SystemIM] Interceptado antes del router: '{command_text}'"
                             )
                             return
                     except Exception as _sie:
-                        app_logger.error(f"[SystemIntentMatcher] Error: {_sie}")
-                        # No interrumpir el flujo principal si el pre-router falla
+                        app_logger.error(f"[SystemIM] Excepción en process(): {_sie}")
+                        # Aunque haya error, NO enviamos al router si el intent era de sistema.
+                        # El matcher ya habrá hablado con el usuario.
+                        return
 
                 # --- 1. NUEVA ARQUITECTURA DE ENRUTADOR ---
                 # "Capa de Normalización"

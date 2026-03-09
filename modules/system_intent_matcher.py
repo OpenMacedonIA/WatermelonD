@@ -184,37 +184,46 @@ class SystemIntentMatcher:
 
         Returns:
             True  → el comando fue gestionado (no debe enviarse al router)
-            False → no hay match, continuar con el flujo normal
+            False → no hay match en ningún nivel, continuar con el flujo normal
+
+        IMPORTANTE: Si el intent ES detectado, SIEMPRE se gestiona aquí aunque
+        no se pueda extraer contexto. El handler pedirá los datos al usuario.
+        Esto evita que el router reciba comandos de sistema y los malinterprete.
         """
         intent = self._find_intent(command_text)
         if not intent:
             return False
 
-        # Extraer contexto si el intent lo requiere
+        # Intentar extraer contexto si el intent lo requiere
         context = {}
         if intent.get("requires_context"):
             extractors = intent.get("context_extractors", {})
             context = self._extract_context(command_text, extractors)
 
-            # Si falta contexto requerido, no gestionar (dejar al router)
+            # OJO: si no hay contexto, NO abandonamos al router.
+            # El handler correspondiente preguntará al usuario.
             if not context:
-                logger.warning(
-                    f"Intent '{intent['name']}' requiere contexto pero no se extrajo nada. "
-                    f"Dejando pasar al router."
+                logger.info(
+                    f"Intent '{intent['name']}' matchado sin contexto extraído — "
+                    f"handler pedirá los datos al usuario."
                 )
-                return False
 
         action = intent.get("action", "")
         category = intent.get("category", "unknown")
 
-        logger.info(f"Ejecutando acción '{action}' (cat={category}, ctx={context})")
+        logger.info(f"[SystemIM] Acción '{action}' (cat={category}, ctx={context})")
 
         try:
-            return self._dispatch(action, command_text, context)
+            dispatched = self._dispatch(action, command_text, context)
+            if dispatched:
+                return True
+            # Si _dispatch no encontró handler, avisar pero consumir igualmente
+            logger.warning(f"[SystemIM] Acción '{action}' sin handler registrado.")
+            return True  # Consumido para no mandar al router
         except Exception as e:
-            logger.error(f"Error ejecutando acción '{action}': {e}")
+            logger.error(f"[SystemIM] Error en acción '{action}': {e}", exc_info=True)
             self.core.speak("Ha ocurrido un error ejecutando ese comando de sistema.")
-            return True  # Consumido (aunque con error)
+            return True  # Consumido aunque con error
 
     # ------------------------------------------------------------------ #
     #  Dispatcher                                                          #
