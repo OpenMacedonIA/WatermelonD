@@ -1341,6 +1341,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     network-manager wireless-tools iw \
     mosquitto mosquitto-clients \
     build-essential libssl-dev libffi-dev \
+    libfann-dev swig pkg-config \
     whiptail nano \
     && rm -rf /var/lib/apt/lists/*
 
