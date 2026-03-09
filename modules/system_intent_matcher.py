@@ -470,19 +470,11 @@ class SystemIntentMatcher:
         self.core.speak(f"Temporizador de {human} en marcha. ¡Tic-tac!")
         logger.info(f"Temporizador: {seconds}s")
 
-        # Lanzar el temporizador en un hilo
-        import threading
         from datetime import datetime, timedelta
         self.core.active_timer_end_time = datetime.now() + timedelta(seconds=seconds)
-
-        def _timer_thread():
-            import time
-            time.sleep(seconds)
-            self.core.speak(f"¡El temporizador de {human} ha terminado!")
-            logger.info(f"Temporizador de {seconds}s finalizado.")
-
-        t = threading.Thread(target=_timer_thread, daemon=True, name="SystemTimer")
-        t.start()
+        # NeoCore._check_frequent_tasks() detecta active_timer_end_time cada segundo
+        # y avisa al usuario. NO lanzar un thread adicional o habrá doble aviso.
+        logger.info(f"[TIMER] active_timer_end_time fijado en {self.core.active_timer_end_time} (+{seconds}s)")
 
     # ------------------------------------------------------------------ #
     #  Handlers — CALENDAR                                                 #
