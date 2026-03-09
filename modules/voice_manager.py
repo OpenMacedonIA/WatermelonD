@@ -387,9 +387,31 @@ class VoiceManager:
 
                             if text:
                                 vosk_logger.info(f"Sherpa escuchó: '{text}'")
-                                ww = self._check_wake_word(text)
 
-                                self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
+                                # ── Filtro de etiquetas de ambiente de Whisper ──
+                                # Whisper devuelve cosas como [music], [ruido], [aplausos]
+                                # que no son instrucciones y confunden al router.
+                                import re as _re
+                                _MUSIC_TAGS = _re.compile(
+                                    r'^\[(música|music|singing|canto|cantar)\]$',
+                                    _re.IGNORECASE
+                                )
+                                _AMBIENT_TAG = _re.compile(r'^\[.{1,40}\]$')
+
+                                if _MUSIC_TAGS.match(text):
+                                    # Easter egg: notas musicales en la cara
+                                    vosk_logger.info("[EASTER EGG] Sherpa detectó música 🎵")
+                                    if self.bus:
+                                        self.bus.emit('face:music_easter_egg', {})
+                                    if self.update_face:
+                                        self.update_face('music_egg')
+                                elif _AMBIENT_TAG.match(text):
+                                    # Otra etiqueta de ambiente (étiqueta de sonido) → descartar
+                                    vosk_logger.debug(f"Etiqueta de ambiente descartada: {text}")
+                                else:
+                                    # Texto real → pasar al router normalmente
+                                    ww = self._check_wake_word(text)
+                                    self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
                         else:
                             vosk_logger.debug(f"Audio demasiado corto ({len(audio_buffer)} frames), descartado.")
 
