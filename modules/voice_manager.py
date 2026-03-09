@@ -295,13 +295,14 @@ class VoiceManager:
                     whisper=sherpa_onnx.OfflineWhisperModelConfig(
                         encoder=encoder,
                         decoder=decoder,
+                        language="es",   # Requerido desde sherpa-onnx >= 1.10
+                        task="transcribe",
                     ),
                     tokens=tokens,
                     num_threads=1,
                     debug=False,
                 ),
                 decoding_method="greedy_search",
-                language="es",
             )
             self.sherpa_recognizer = sherpa_onnx.OfflineRecognizer(config)
             vosk_logger.info("Sherpa-ONNX Whisper cargado correctamente.")
