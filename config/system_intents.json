@@ -1,0 +1,241 @@
+{
+  "intents": [
+    {
+      "name": "apagar_sistema",
+      "category": "power",
+      "action": "system_shutdown",
+      "requires_context": false,
+      "triggers": [
+        "apaga el sistema",
+        "apaga la máquina",
+        "apaga el ordenador",
+        "apaga el equipo",
+        "apaga el pc",
+        "apágate",
+        "apaga todo",
+        "apagar el sistema",
+        "apagar la máquina",
+        "apagar el ordenador",
+        "apagar el equipo",
+        "apagar el pc",
+        "cierra todo y apaga",
+        "apaga ya",
+        "shutdown",
+        "poweroff"
+      ]
+    },
+    {
+      "name": "reiniciar_sistema",
+      "category": "power",
+      "action": "system_reboot",
+      "requires_context": false,
+      "triggers": [
+        "reinicia el sistema",
+        "reinicia el ordenador",
+        "reinicia el equipo",
+        "reinicia el pc",
+        "reinicia la máquina",
+        "reiniciar el sistema",
+        "reiniciar el ordenador",
+        "reiniciar el equipo",
+        "reiniciar la máquina",
+        "reiniciar el pc",
+        "haz un reboot",
+        "reboot",
+        "reinicia",
+        "reinicia ya",
+        "reinicia el ordenador ahora"
+      ]
+    },
+    {
+      "name": "subir_volumen",
+      "category": "volume",
+      "action": "volume_up",
+      "requires_context": false,
+      "triggers": [
+        "sube el volumen",
+        "sube el audio",
+        "sube el sonido",
+        "más alto",
+        "más volumen",
+        "sube el volumen un poco",
+        "pon más volumen",
+        "sube el volumen del sistema",
+        "volumen más alto",
+        "pon más alto"
+      ]
+    },
+    {
+      "name": "bajar_volumen",
+      "category": "volume",
+      "action": "volume_down",
+      "requires_context": false,
+      "triggers": [
+        "baja el volumen",
+        "baja el audio",
+        "baja el sonido",
+        "más bajo",
+        "menos volumen",
+        "baja el volumen un poco",
+        "pon menos volumen",
+        "baja el volumen del sistema",
+        "volumen más bajo",
+        "pon más bajo"
+      ]
+    },
+    {
+      "name": "silenciar",
+      "category": "volume",
+      "action": "volume_mute",
+      "requires_context": false,
+      "triggers": [
+        "silencio",
+        "silencia el volumen",
+        "mutea el sistema",
+        "mutea el volumen",
+        "pon en silencio",
+        "quitame el sonido",
+        "desactiva el sonido",
+        "silencia el audio",
+        "quita el sonido",
+        "apaga el sonido",
+        "mute",
+        "ponlo en mute"
+      ]
+    },
+    {
+      "name": "volumen_especifico",
+      "category": "volume",
+      "action": "volume_set",
+      "requires_context": true,
+      "context_extractors": {
+        "level": "(\\d+)"
+      },
+      "triggers": [
+        "pon el volumen al",
+        "pon el volumen a",
+        "volumen al",
+        "sube el volumen al",
+        "baja el volumen al",
+        "ajusta el volumen al",
+        "pon el audio al",
+        "ajusta el sonido al"
+      ]
+    },
+    {
+      "name": "crear_alarma",
+      "category": "alarm",
+      "action": "alarm_create",
+      "requires_context": true,
+      "context_extractors": {
+        "time": "(\\d{1,2}(?::\\d{2})?(?:\\s*(?:de la mañana|de la tarde|de la noche|am|pm))?)"
+      },
+      "triggers": [
+        "pon una alarma",
+        "pon una alarma a las",
+        "despiértame a las",
+        "despiertame a las",
+        "avísame a las",
+        "avisame a las",
+        "crea una alarma",
+        "nueva alarma",
+        "alarma a las",
+        "pon alarma a las",
+        "ponme una alarma",
+        "ponme la alarma",
+        "programa una alarma"
+      ]
+    },
+    {
+      "name": "listar_alarmas",
+      "category": "alarm",
+      "action": "alarm_list",
+      "requires_context": false,
+      "triggers": [
+        "qué alarmas tengo",
+        "que alarmas tengo",
+        "mis alarmas",
+        "lista alarmas",
+        "lista mis alarmas",
+        "muestra las alarmas",
+        "alarmas activas",
+        "cuántas alarmas tengo",
+        "cuantas alarmas tengo",
+        "qué alarmas hay",
+        "que alarmas hay"
+      ]
+    },
+    {
+      "name": "crear_temporizador",
+      "category": "timer",
+      "action": "timer_create",
+      "requires_context": true,
+      "context_extractors": {
+        "duration": "(\\d+)\\s*(?:minuto[s]?|min|segundo[s]?|seg|hora[s]?|h)"
+      },
+      "triggers": [
+        "pon un temporizador",
+        "pon un temporizador de",
+        "temporizador de",
+        "cuenta atrás de",
+        "cuenta atras de",
+        "avísame en",
+        "avisame en",
+        "pon una cuenta atrás",
+        "pon un contador",
+        "ponme un temporizador",
+        "ponme un temporizador de",
+        "cronómetro de",
+        "cuenta regresiva de"
+      ]
+    },
+    {
+      "name": "ver_agenda",
+      "category": "calendar",
+      "action": "calendar_today",
+      "requires_context": false,
+      "triggers": [
+        "qué hay en mi agenda",
+        "que hay en mi agenda",
+        "mi agenda",
+        "qué tengo hoy",
+        "que tengo hoy",
+        "qué eventos tengo",
+        "que eventos tengo",
+        "cuáles son mis citas",
+        "cuales son mis citas",
+        "qué citas tengo",
+        "que citas tengo",
+        "muestra mi agenda",
+        "muestra la agenda",
+        "agenda del día",
+        "agenda de hoy",
+        "qué pasa hoy",
+        "que pasa hoy",
+        "mis eventos de hoy",
+        "eventos del día"
+      ]
+    },
+    {
+      "name": "ver_agenda_fecha",
+      "category": "calendar",
+      "action": "calendar_date",
+      "requires_context": true,
+      "context_extractors": {
+        "date": "(mañana|pasado mañana|lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo|\\d{1,2}(?:\\s*de\\s*(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre))?)"
+      },
+      "triggers": [
+        "qué tengo el",
+        "que tengo el",
+        "agenda para el",
+        "qué hay el",
+        "que hay el",
+        "eventos del",
+        "citas del",
+        "agenda del",
+        "qué pasa el",
+        "que pasa el"
+      ]
+    }
+  ]
+}

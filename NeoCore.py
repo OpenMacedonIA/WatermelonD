@@ -66,6 +66,11 @@ except ImportError:
     SecureIntentMatcher = None
 
 try:
+    from modules.system_intent_matcher import SystemIntentMatcher
+except ImportError:
+    SystemIntentMatcher = None
+
+try:
     import modules.web_admin as web_admin_module
     from modules.web_admin import run_server, update_face, set_audio_status
     WEB_ADMIN_DISPONIBLE = True
@@ -220,6 +225,8 @@ class NeoCore:
         self.ssh_manager = SSHManager()
         self.wifi_manager = WifiManager()
         self.secure_intent_matcher = SecureIntentMatcher() if SecureIntentMatcher else None
+        # Pre-router de comandos de sistema (apagar, volumen, alarmas, temporizador, calendario)
+        self.system_intent_matcher = None  # Se inicializa tras cargar alarm_manager / calendar_manager
 
         # --- Inyectar Gestores en Web Admin (Estado Compartido) ---
         if WEB_ADMIN_DISPONIBLE and self.web_server:
@@ -309,6 +316,17 @@ class NeoCore:
         
         # --- Carga de Contenido (Recursos) ---
         self.load_resources()
+
+        # --- Pre-Router de Sistema (requiere alarm_manager y calendar_manager listos) ---
+        if SystemIntentMatcher:
+            try:
+                self.system_intent_matcher = SystemIntentMatcher(self)
+                self.app_logger.info("[OK] SystemIntentMatcher inicializado (pre-router de sistema).")
+            except Exception as _e:
+                self.app_logger.error(f"[ERROR] SystemIntentMatcher no pudo inicializarse: {_e}")
+                self.system_intent_matcher = None
+        else:
+            self.app_logger.warning("SystemIntentMatcher no disponible (módulo no encontrado).")
         
         # --- Variables de estado ---
         self.consecutive_failures = 0
@@ -909,6 +927,21 @@ class NeoCore:
                             else:
                                 self.speak("De nada.")
                         return
+
+                # --- PRE-ROUTER: SISTEMA (apagar/reiniciar/volumen/alarmas/temporizador/agenda) ---
+                # Se ejecuta ANTES del router categorizador. Si hay match, el comando
+                # se gestiona aquí y se descarta el pipeline de clasificación.
+                if self.system_intent_matcher:
+                    try:
+                        system_handled = self.system_intent_matcher.process(command_text)
+                        if system_handled:
+                            app_logger.info(
+                                f"[SystemIntentMatcher] Comando gestionado antes del router: '{command_text}'"
+                            )
+                            return
+                    except Exception as _sie:
+                        app_logger.error(f"[SystemIntentMatcher] Error: {_sie}")
+                        # No interrumpir el flujo principal si el pre-router falla
 
                 # --- 1. NUEVA ARQUITECTURA DE ENRUTADOR ---
                 # "Capa de Normalización"
