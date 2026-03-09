@@ -236,6 +236,74 @@
         "qué pasa el",
         "que pasa el"
       ]
+    },
+    {
+      "name": "hora_actual",
+      "category": "datetime",
+      "action": "datetime_time",
+      "requires_context": false,
+      "triggers": [
+        "qué hora es",
+        "que hora es",
+        "dime la hora",
+        "tienes hora",
+        "qué hora tienes",
+        "que hora tienes",
+        "hora actual",
+        "oye qué hora es",
+        "oye que hora es",
+        "me puedes decir la hora",
+        "dime qué hora es",
+        "dime que hora es",
+        "qué hora son",
+        "que hora son",
+        "qué horas son",
+        "que horas son",
+        "a qué hora estamos",
+        "a que hora estamos",
+        "dime la hora actual",
+        "qué hora es ahora"
+      ]
+    },
+    {
+      "name": "fecha_actual",
+      "category": "datetime",
+      "action": "datetime_date",
+      "requires_context": false,
+      "triggers": [
+        "qué día es hoy",
+        "que dia es hoy",
+        "que día es hoy",
+        "dime la fecha",
+        "a cuánto estamos",
+        "a cuanto estamos",
+        "qué fecha es hoy",
+        "que fecha es hoy",
+        "cuál es la fecha",
+        "cual es la fecha",
+        "qué fecha tenemos",
+        "que fecha tenemos",
+        "dime la fecha de hoy",
+        "fecha de hoy",
+        "qué día es",
+        "que dia es"
+      ]
+    },
+    {
+      "name": "dia_semana",
+      "category": "datetime",
+      "action": "datetime_weekday",
+      "requires_context": false,
+      "triggers": [
+        "qué día de la semana es",
+        "que dia de la semana es",
+        "en qué día estamos",
+        "en que dia estamos",
+        "qué día de la semana estamos",
+        "que dia de la semana estamos",
+        "en qué día de la semana estamos",
+        "en que dia de la semana estamos"
+      ]
     }
   ]
 }

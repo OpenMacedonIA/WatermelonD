@@ -234,6 +234,10 @@ class SystemIntentMatcher:
         "timer_create":     "_handle_timer_create",
         "calendar_today":   "_handle_calendar_today",
         "calendar_date":    "_handle_calendar_date",
+        # Datetime — interceptados para evitar carga del LLM
+        "datetime_time":    "_handle_datetime_time",
+        "datetime_date":    "_handle_datetime_date",
+        "datetime_weekday": "_handle_datetime_weekday",
     }
 
     def _dispatch(self, action: str, command: str, context: Dict) -> bool:
@@ -555,3 +559,75 @@ class SystemIntentMatcher:
                 self.core.speak(f"A las {time_str}: {desc}.")
             else:
                 self.core.speak(f"{desc}.")
+
+    # ------------------------------------------------------------------ #
+    #  Handlers — DATETIME (hora / fecha / día)                            #
+    # ------------------------------------------------------------------ #
+
+    def _handle_datetime_time(self, command: str, context: Dict):
+        """Responde la hora actual directamente sin pasar por el LLM."""
+        from datetime import datetime
+        import random
+
+        now = datetime.now()
+        hora = now.strftime("%H:%M")
+        hora_hablada = now.strftime("%-H y %M minutos") if now.minute != 0 else now.strftime("%-H en punto")
+
+        # Variedad de respuestas coloquiales
+        respuestas = [
+            f"Son las {hora_hablada}.",
+            f"Ahora mismo son las {hora}.",
+            f"Pues son las {hora_hablada}, colega.",
+            f"Mira el reloj, vago... Es broma, son las {hora_hablada}.",
+            f"Las {hora_hablada} en el reloj del sistema.",
+        ]
+        self.core.speak(random.choice(respuestas))
+        logger.info(f"[DATETIME] Hora respondida: {hora} (sin LLM)")
+
+    def _handle_datetime_date(self, command: str, context: Dict):
+        """Responde la fecha actual directamente sin pasar por el LLM."""
+        from datetime import datetime
+        import random
+        import locale
+
+        now = datetime.now()
+        # Intentar formato localizado
+        try:
+            locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+        except Exception:
+            pass
+
+        fecha = now.strftime("%A, %d de %B de %Y")
+        fecha_corta = now.strftime("%d/%m/%Y")
+
+        respuestas = [
+            f"Hoy es {fecha}.",
+            f"Estamos a {fecha}.",
+            f"Hoy es {fecha}, para que no te pierdas.",
+            f"La fecha de hoy es {fecha_corta}.",
+        ]
+        self.core.speak(random.choice(respuestas))
+        logger.info(f"[DATETIME] Fecha respondida: {fecha} (sin LLM)")
+
+    def _handle_datetime_weekday(self, command: str, context: Dict):
+        """Responde el día de la semana directamente sin pasar por el LLM."""
+        from datetime import datetime
+        import random
+        import locale
+
+        now = datetime.now()
+        try:
+            locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+        except Exception:
+            pass
+
+        dia = now.strftime("%A").capitalize()
+
+        respuestas = [
+            f"Hoy es {dia}.",
+            f"Estamos en {dia}.",
+            f"{dia}, por si no tenías el calendario a mano.",
+        ]
+        self.core.speak(random.choice(respuestas))
+        logger.info(f"[DATETIME] Día de semana respondido: {dia} (sin LLM)")
+
