@@ -12,6 +12,9 @@ import time
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 
+from modules.logger import app_logger
+
+
 # Importar el módulo brain explícitamente para acceder a learn_alias si es necesario mediante importación directa o asegurar que la bd lo tiene
 from modules.brain import Brain
 
