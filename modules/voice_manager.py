@@ -320,8 +320,9 @@ class VoiceManager:
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
         RATE = 16000
-        THRESHOLD = 500 # Sensibilidad (coincide con el script de depuración)
-        SILENCE_LIMIT = 20 # ~1s de silencio para activarse
+        THRESHOLD = 800       # Subido de 500 — filtra ruido ambiental y golpes suaves
+        SILENCE_LIMIT = 30    # ~1.9s de silencio para cortar (antes 20 ~1.3s)
+        MIN_RECORDING_FRAMES = 12  # Mínimo ~0.75s de voz para enviar a Whisper
         
         p = pyaudio.PyAudio()
         device_index = self.config_manager.get('stt', {}).get('input_device_index', None)
@@ -345,7 +346,7 @@ class VoiceManager:
         
         while self.is_listening:
             try:
-                if self.speaker.is_busy or self.is_processing:
+                if self.speaker.is_busy or self.is_processing or self.is_muted:
                     time.sleep(0.1)
                     continue
                 
@@ -372,27 +373,26 @@ class VoiceManager:
                     audio_buffer.append(data)
                     
                     if silence_frames > SILENCE_LIMIT:
-                        # Fin del habla
-                        if self.update_face: self.update_face('thinking')
-                        
-                        raw_data = b''.join(audio_buffer)
-                        samples = np.frombuffer(raw_data, dtype=np.int16).astype(np.float32) / 32768.0
-                        
-                        s = self.sherpa_recognizer.create_stream()
-                        s.accept_waveform(RATE, samples)
-                        self.sherpa_recognizer.decode_stream(s)
-                        text = s.result.text.strip()
-                        
-                        if text:
-                            vosk_logger.info(f"Sherpa escuchó: '{text}'")
-                            ww = self._check_wake_word(text)
-                            
-                            # Proveer búfer de contexto (últimos 5s + frase actual)
-                            # En realidad, audio_buffer contiene la frase. 
-                            # Idealmente pasaríamos audio_buffer para biometría.
-                            
-                            self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
-                        
+                        # Fin del habla — solo procesar si la grabación es suficientemente larga
+                        if len(audio_buffer) >= MIN_RECORDING_FRAMES:
+                            if self.update_face: self.update_face('thinking')
+
+                            raw_data = b''.join(audio_buffer)
+                            samples = np.frombuffer(raw_data, dtype=np.int16).astype(np.float32) / 32768.0
+
+                            s = self.sherpa_recognizer.create_stream()
+                            s.accept_waveform(RATE, samples)
+                            self.sherpa_recognizer.decode_stream(s)
+                            text = s.result.text.strip()
+
+                            if text:
+                                vosk_logger.info(f"Sherpa escuchó: '{text}'")
+                                ww = self._check_wake_word(text)
+
+                                self.on_command_detected(text, ww if ww else 'neo', audio_buffer)
+                        else:
+                            vosk_logger.debug(f"Audio demasiado corto ({len(audio_buffer)} frames), descartado.")
+
                         audio_buffer = []
                         is_recording = False
                         silence_frames = 0
