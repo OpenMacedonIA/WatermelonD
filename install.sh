@@ -1336,7 +1336,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Dependencias del sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 python3-pip python3-venv \
+    python3.10 python3.10-dev python3-pip python3-venv \
     portaudio19-dev python3-pyaudio \
     alsa-utils alsa-base libasound2 \
     libvlc-dev vlc-bin \
