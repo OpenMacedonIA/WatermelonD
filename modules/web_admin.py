@@ -75,9 +75,13 @@ def inject_status():
 
 @socketio.on('message')
 def handle_message(data):
-    """Retransmite mensajes broadcast a todos los clientes conectados (Bus)."""
-    # print(f"DEBUG: Transmitiendo mensaje: {data}")
-    emit('message', data, broadcast=True)
+    """Retransmite mensajes a todos los clientes conectados excepto al emisor (Bus).
+    
+    IMPORTANTE: include_self=False evita el doble procesamiento.
+    Sin esto, el ciclo era: ClienteA emite → servidor recibe → broadcast incluye ClienteA
+    → ClienteA procesa 2 veces → Piper habla dos veces.
+    """
+    emit('message', data, broadcast=True, include_self=False)
 
 from modules.bus_client import BusClient
 
