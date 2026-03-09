@@ -573,9 +573,12 @@ class NeoCore:
 
     def setup_vlc(self):
         """Inicializa la instancia de VLC para reproducción de radio."""
-        if vlc:
-            instance = vlc.Instance()
-            return instance, instance.media_player_new()
+        try:
+            if vlc:
+                instance = vlc.Instance()
+                return instance, instance.media_player_new()
+        except Exception as e:
+            app_logger.warning(f"No se pudo inicializar VLC: {e}. La radio/media puede que gno funcione.")
         return None, None
 
     def on_closing(self):
