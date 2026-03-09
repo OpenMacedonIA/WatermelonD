@@ -703,6 +703,142 @@ def api_wifi_connect():
     success, msg = wifi_manager.connect(ssid, password)
     return jsonify({'success': success, 'message': msg})
 
+# ─── Bluetooth ────────────────────────────────────────────────────────────────
+
+@app.route('/api/bluetooth/status', methods=['GET'])
+@login_required
+def api_bluetooth_status():
+    """Devuelve si el Bluetooth está encendido o apagado."""
+    try:
+        result = subprocess.run(
+            ['rfkill', 'list', 'bluetooth'],
+            capture_output=True, text=True, timeout=5
+        )
+        # "Soft blocked: yes" → apagado
+        blocked = 'Soft blocked: yes' in result.stdout
+        return jsonify({'enabled': not blocked, 'raw': result.stdout.strip()})
+    except Exception as e:
+        return jsonify({'enabled': False, 'error': str(e)})
+
+@app.route('/api/bluetooth/toggle', methods=['POST'])
+@login_required
+def api_bluetooth_toggle():
+    """Activa o desactiva el adaptador Bluetooth."""
+    try:
+        # Obtener estado actual
+        check = subprocess.run(['rfkill', 'list', 'bluetooth'], capture_output=True, text=True, timeout=5)
+        currently_blocked = 'Soft blocked: yes' in check.stdout
+
+        if currently_blocked:
+            subprocess.run(['rfkill', 'unblock', 'bluetooth'], timeout=5)
+            # Asegurarse de que el servicio bluetoothd está activo
+            subprocess.run(['systemctl', 'start', 'bluetooth'], capture_output=True, timeout=5)
+            return jsonify({'success': True, 'enabled': True, 'message': 'Bluetooth activado'})
+        else:
+            subprocess.run(['rfkill', 'block', 'bluetooth'], timeout=5)
+            return jsonify({'success': True, 'enabled': False, 'message': 'Bluetooth desactivado'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ─── Hotspot WiFi ─────────────────────────────────────────────────────────────
+
+HOTSPOT_SSID     = 'OpenMacedonIA'
+HOTSPOT_PASSWORD = '0penMaced0n1A'
+HOTSPOT_CON_NAME = 'NeoHotspot'
+
+def _is_connected_to_wifi() -> bool:
+    """Devuelve True si hay una conexión WiFi activa (no el hotspot propio)."""
+    try:
+        result = subprocess.run(
+            ['nmcli', '-t', '-f', 'TYPE,STATE', 'con', 'show', '--active'],
+            capture_output=True, text=True, timeout=5
+        )
+        for line in result.stdout.splitlines():
+            if line.startswith('wifi:') and 'activated' in line:
+                # Excluir el hotspot propio
+                con_name = subprocess.run(
+                    ['nmcli', '-t', '-f', 'NAME,TYPE,STATE', 'con', 'show', '--active'],
+                    capture_output=True, text=True, timeout=5
+                ).stdout
+                for cline in con_name.splitlines():
+                    parts = cline.split(':')
+                    if len(parts) >= 3 and parts[1] == 'wifi' and parts[2] == 'activated':
+                        if parts[0] != HOTSPOT_CON_NAME:
+                            return True
+        return False
+    except Exception:
+        return False
+
+def _is_hotspot_active() -> bool:
+    """Devuelve True si el hotspot NeoHotspot está activo."""
+    try:
+        result = subprocess.run(
+            ['nmcli', '-t', '-f', 'NAME,STATE', 'con', 'show', '--active'],
+            capture_output=True, text=True, timeout=5
+        )
+        return HOTSPOT_CON_NAME in result.stdout and 'activated' in result.stdout
+    except Exception:
+        return False
+
+@app.route('/api/hotspot/status', methods=['GET'])
+@login_required
+def api_hotspot_status():
+    """Devuelve si el hotspot está activo y si hay WiFi conectado."""
+    hotspot_on   = _is_hotspot_active()
+    wifi_ok      = _is_connected_to_wifi()
+    return jsonify({
+        'hotspot_active': hotspot_on,
+        'wifi_connected': wifi_ok,
+        'ssid': HOTSPOT_SSID,
+        'password': HOTSPOT_PASSWORD,
+    })
+
+@app.route('/api/hotspot/toggle', methods=['POST'])
+@login_required
+def api_hotspot_toggle():
+    """Activa o desactiva el punto de acceso WiFi."""
+    try:
+        if _is_hotspot_active():
+            # Apagar hotspot
+            subprocess.run(
+                ['nmcli', 'con', 'down', HOTSPOT_CON_NAME],
+                capture_output=True, timeout=10
+            )
+            return jsonify({'success': True, 'hotspot_active': False, 'message': 'Punto de acceso desactivado'})
+        else:
+            # Crear/activar hotspot — si ya existe la conexión, solo activarla
+            check = subprocess.run(
+                ['nmcli', 'con', 'show', HOTSPOT_CON_NAME],
+                capture_output=True, text=True, timeout=5
+            )
+            if check.returncode != 0:
+                # Crear perfil nuevo
+                subprocess.run([
+                    'nmcli', 'con', 'add',
+                    'type', 'wifi',
+                    'ifname', 'wlan0',
+                    'con-name', HOTSPOT_CON_NAME,
+                    'autoconnect', 'no',
+                    'ssid', HOTSPOT_SSID,
+                    'mode', 'ap',
+                    '802-11-wireless.band', 'bg',
+                    'ipv4.method', 'shared',
+                    '802-11-wireless-security.key-mgmt', 'wpa-psk',
+                    '802-11-wireless-security.psk', HOTSPOT_PASSWORD,
+                ], capture_output=True, timeout=15)
+
+            result = subprocess.run(
+                ['nmcli', 'con', 'up', HOTSPOT_CON_NAME],
+                capture_output=True, text=True, timeout=15
+            )
+            if result.returncode == 0:
+                return jsonify({'success': True, 'hotspot_active': True, 'message': f'Punto de acceso "{HOTSPOT_SSID}" activo'})
+            else:
+                return jsonify({'success': False, 'hotspot_active': False, 'message': result.stderr.strip()})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
 @app.route('/api/dashboard/data', methods=['GET'])
 def api_dashboard_data():
     """API para datos del dashboard (Smart Mirror). No requiere login para funcionar en modo Kiosk."""
