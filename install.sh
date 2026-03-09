@@ -258,9 +258,13 @@ function install_standard() {
     fi
 
     # Habilitar Mosquitto
-    if systemctl list-unit-files | grep -q mosquitto.service; then
-        sudo systemctl enable mosquitto
-        sudo systemctl start mosquitto
+    if [ -d /run/systemd/system ] && command -v systemctl &>/dev/null; then
+        if systemctl list-unit-files | grep -q mosquitto.service; then
+            sudo systemctl enable mosquitto || true
+            sudo systemctl start mosquitto || true
+        fi
+    else
+        echo " [INFO] Omitiendo habilitación de mosquitto via systemctl (systemd no detectado)"
     fi
     
     # --- CONFIGURAR PERMISOS DE RED ---
