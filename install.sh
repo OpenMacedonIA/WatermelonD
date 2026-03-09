@@ -186,11 +186,10 @@ function install_standard() {
     else
         echo "----------------------------------------------------------------"
         echo "  Sistema NO-Debian detectado."
-        echo "Para garantizar la compatibilidad, se recomienda usar Distrobox."
+        echo "  Elige cómo desplegar WatermelonD:"
         echo "----------------------------------------------------------------"
-        chmod +x setup_distrobox.sh
-        exec ./setup_distrobox.sh
-        return # Detener ejecución aquí ya que exec reemplaza proceso usualmente, pero por seguridad
+        choose_deployment_mode
+        return
     fi
 
     echo ""
@@ -927,7 +926,372 @@ EOF
 # ==============================================================================
 
 
-function install_web_client() {
+# ==============================================================================
+# MODOS DE DESPLIEGUE: DISTROBOX / DOCKER / PODMAN
+# ==============================================================================
+
+function choose_deployment_mode() {
+    local DEPLOY_OPT
+    DEPLOY_OPT=$(whiptail --title "Modo de Despliegue" --menu \
+        "Sistema no-Debian detectado.\nElige cómo desplegar WatermelonD:" 18 72 4 \
+        "1" "Distrobox    — Contenedor ligero integrado en el sistema" \
+        "2" "Docker       — Contenedor Docker (requiere Docker instalado)" \
+        "3" "Podman       — Alternativa rootless a Docker" \
+        "4" "Instalación directa (sin contenedor, bajo tu responsabilidad)" \
+        3>&1 1>&2 2>&3) || { whiptail --msgbox "Cancelado." 8 40; return; }
+
+    case "$DEPLOY_OPT" in
+        1) install_distrobox ;;
+        2) install_docker    ;;
+        3) install_podman    ;;
+        4)
+            # Continuar con la instalación estándar sin contenedor
+            PKG_MANAGER="unknown"
+            INSTALL_CMD="echo [DRY-RUN]"
+            whiptail --msgbox "Modo directo seleccionado.\nDebes instalar manualmente las dependencias del sistema." 10 60
+            ;;
+    esac
+}
+
+# ── Distrobox ─────────────────────────────────────────────────────────────────
+
+function install_distrobox() {
+    echo ""
+    echo "========================================="
+    echo "===    DESPLIEGUE VIA DISTROBOX       ==="
+    echo "========================================="
+
+    # 1. Instalar Distrobox si no está
+    if ! command -v distrobox &> /dev/null; then
+        echo "Instalando Distrobox..."
+        curl -s https://raw.githubusercontent.com/89luca89/distrobox/main/install | bash -s -- --prefix ~/.local
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+
+    # 2. Necesitamos Podman o Docker como backend
+    if ! command -v podman &> /dev/null && ! command -v docker &> /dev/null; then
+        whiptail --title "Backend Requerido" --msgbox \
+            "Distrobox necesita Podman o Docker como backend.\n\nInstala uno de ellos primero:\n  • Podman: https://podman.io/getting-started/installation\n  • Docker: https://docs.docker.com/get-docker/" \
+            14 70
+        echo "Instalando Podman como backend de Distrobox..."
+        # Intentar instalar según distro
+        if command -v dnf &>/dev/null;  then sudo dnf install -y podman
+        elif command -v pacman &>/dev/null; then sudo pacman -Sy --noconfirm podman
+        elif command -v zypper &>/dev/null; then sudo zypper install -y podman
+        elif command -v xbps-install &>/dev/null; then sudo xbps-install -Sy podman
+        else
+            echo "No se pudo instalar Podman automáticamente. Instálalo manualmente."
+            exit 1
+        fi
+    fi
+
+    local BOX_NAME="watermelond"
+    local BOX_IMAGE="ubuntu:22.04"
+
+    # Preguntar imagen base
+    BOX_IMAGE=$(whiptail --inputbox \
+        "Imagen base para Distrobox:\n(Recomendada: ubuntu:22.04)" \
+        10 60 "ubuntu:22.04" 3>&1 1>&2 2>&3) || BOX_IMAGE="ubuntu:22.04"
+
+    echo "Creando contenedor Distrobox '$BOX_NAME' con imagen $BOX_IMAGE..."
+    distrobox create --name "$BOX_NAME" --image "$BOX_IMAGE" --yes 2>/dev/null || true
+
+    echo "Instalando WatermelonD dentro de Distrobox..."
+    distrobox enter "$BOX_NAME" -- bash -c "
+        set -e
+        cd ~
+        [ -d WatermelonD ] || git clone https://github.com/OpenMacedonIA/WatermelonD.git
+        cd WatermelonD
+        git submodule update --init --remote --recursive
+        bash install.sh
+    "
+
+    # Crear lanzador en el host
+    cat > "$HOME/.local/bin/watermelond" << 'LAUNCHER'
+#!/bin/bash
+distrobox enter watermelond -- bash -c "cd ~/WatermelonD && ./start.sh"
+LAUNCHER
+    chmod +x "$HOME/.local/bin/watermelond"
+
+    whiptail --msgbox "Distrobox configurado.\n\nLanza WatermelonD con:\n  watermelond\n\n(o distrobox enter watermelond)" 12 60
+}
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+
+function install_docker() {
+    echo ""
+    echo "========================================="
+    echo "===     DESPLIEGUE VIA DOCKER         ==="
+    echo "========================================="
+
+    # 1. Comprobar/instalar Docker
+    if ! command -v docker &> /dev/null; then
+        echo "Docker no encontrado. Instalando..."
+        if command -v apt-get &>/dev/null; then
+            curl -fsSL https://get.docker.com | sudo bash
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y docker
+            sudo systemctl enable --now docker
+        elif command -v pacman &>/dev/null; then
+            sudo pacman -Sy --noconfirm docker
+            sudo systemctl enable --now docker
+        else
+            whiptail --msgbox "Instala Docker manualmente desde:\nhttps://docs.docker.com/get-docker/" 10 60
+            exit 1
+        fi
+        sudo usermod -aG docker "$USER"
+        echo "[AVISO] Puede que necesites cerrar sesión para aplicar grupo docker."
+    fi
+
+    # 2. Comprobar/instalar docker-compose (v2 o v1)
+    if ! docker compose version &>/dev/null && ! command -v docker-compose &>/dev/null; then
+        echo "Instalando docker-compose plugin..."
+        sudo apt-get install -y docker-compose-plugin 2>/dev/null || \
+        pip3 install docker-compose 2>/dev/null || \
+        echo "[AVISO] docker-compose no instalado. Instala manualmente si lo necesitas."
+    fi
+
+    # 3. Generar Dockerfile si no existe
+    _generate_dockerfile
+
+    # 4. Generar docker-compose.yml si no existe
+    _generate_docker_compose
+
+    # 5. Preguntar modo de arranque
+    local DOCKER_MODE
+    DOCKER_MODE=$(whiptail --title "Modo Docker" --menu \
+        "Elige cómo lanzar WatermelonD:" 14 70 3 \
+        "1" "docker-compose up   (recomendado, con volumen persistente)" \
+        "2" "docker run          (simple, sin compose)" \
+        "3" "Solo generar imagen (sin levantar)" \
+        3>&1 1>&2 2>&3) || DOCKER_MODE="1"
+
+    echo "Construyendo imagen watermelond..."
+    docker build -t watermelond:latest .
+
+    case "$DOCKER_MODE" in
+        1)
+            echo "Levantando con docker-compose..."
+            if docker compose version &>/dev/null; then
+                docker compose up -d
+            else
+                docker-compose up -d
+            fi
+            ;;
+        2)
+            echo "Levantando con docker run..."
+            docker run -d \
+                --name watermelond \
+                --restart unless-stopped \
+                --device /dev/snd \
+                --privileged \
+                -p 5000:5000 \
+                -v "$(pwd)/config:/app/config" \
+                -v "$(pwd)/models:/app/models" \
+                -v "$(pwd)/database:/app/database" \
+                -v "$(pwd)/logs:/app/logs" \
+                watermelond:latest
+            ;;
+        3)
+            echo "Imagen construida. Usa 'docker run' o 'docker-compose up' para lanzar."
+            ;;
+    esac
+
+    whiptail --msgbox "Docker configurado.\n\nComandos útiles:\n  docker ps                    → ver contenedores\n  docker compose logs -f       → ver logs\n  docker compose restart       → reiniciar\n  docker exec -it watermelond bash → entrar" 14 70
+}
+
+# ── Podman ────────────────────────────────────────────────────────────────────
+
+function install_podman() {
+    echo ""
+    echo "========================================="
+    echo "===     DESPLIEGUE VIA PODMAN         ==="
+    echo "========================================="
+
+    # 1. Comprobar/instalar Podman
+    if ! command -v podman &> /dev/null; then
+        echo "Podman no encontrado. Instalando..."
+        if command -v apt-get &>/dev/null;   then sudo apt-get install -y podman
+        elif command -v dnf &>/dev/null;     then sudo dnf install -y podman
+        elif command -v pacman &>/dev/null;  then sudo pacman -Sy --noconfirm podman
+        elif command -v zypper &>/dev/null;  then sudo zypper install -y podman
+        elif command -v xbps-install &>/dev/null; then sudo xbps-install -Sy podman
+        else
+            whiptail --msgbox "Instala Podman manualmente desde:\nhttps://podman.io/getting-started/installation" 10 60
+            exit 1
+        fi
+    fi
+
+    # 2. Generar Dockerfile y compose si no existen
+    _generate_dockerfile
+    _generate_docker_compose "podman"
+
+    # 3. Preguntar modo
+    local PODMAN_MODE
+    PODMAN_MODE=$(whiptail --title "Modo Podman" --menu \
+        "Elige cómo lanzar WatermelonD:" 14 70 3 \
+        "1" "podman-compose up   (recomendado, persistente)" \
+        "2" "podman run          (simple, sin compose)" \
+        "3" "Solo construir imagen" \
+        3>&1 1>&2 2>&3) || PODMAN_MODE="1"
+
+    echo "Construyendo imagen con Podman (rootless)..."
+    podman build -t watermelond:latest .
+
+    case "$PODMAN_MODE" in
+        1)
+            if ! command -v podman-compose &>/dev/null; then
+                echo "Instalando podman-compose..."
+                pip3 install podman-compose 2>/dev/null || \
+                    echo "[AVISO] Instala podman-compose manualmente si es necesario."
+            fi
+            podman-compose up -d
+            ;;
+        2)
+            podman run -d \
+                --name watermelond \
+                --restart unless-stopped \
+                --privileged \
+                -p 5000:5000 \
+                -v "$(pwd)/config:/app/config:Z" \
+                -v "$(pwd)/models:/app/models:Z" \
+                -v "$(pwd)/database:/app/database:Z" \
+                -v "$(pwd)/logs:/app/logs:Z" \
+                watermelond:latest
+
+            # Habilitar autostart con systemd (Podman rootless)
+            mkdir -p ~/.config/systemd/user
+            podman generate systemd --name watermelond --files --new 2>/dev/null || true
+            mv container-watermelond.service ~/.config/systemd/user/ 2>/dev/null || true
+            systemctl --user daemon-reload
+            systemctl --user enable --now container-watermelond.service 2>/dev/null || true
+            ;;
+        3)
+            echo "Imagen Podman construida. Usa 'podman run' o 'podman-compose up' para lanzar."
+            ;;
+    esac
+
+    whiptail --msgbox "Podman configurado.\n\nComandos útiles:\n  podman ps                     → ver contenedores\n  podman logs -f watermelond    → ver logs\n  podman restart watermelond    → reiniciar\n  podman exec -it watermelond bash → entrar" 14 70
+}
+
+# ── Generadores de Dockerfile y Compose ───────────────────────────────────────
+
+function _generate_dockerfile() {
+    if [ -f "Dockerfile" ]; then
+        echo " Dockerfile ya existe, no se sobreescribe."
+        return
+    fi
+    echo "Generando Dockerfile..."
+    cat > Dockerfile << 'DOCKEREOF'
+# WatermelonD — Dockerfile
+# Compatible con Docker y Podman
+FROM ubuntu:22.04
+
+LABEL org.opencontainers.image.title="WatermelonD"
+LABEL org.opencontainers.image.description="NeoCore AI Assistant Backend"
+LABEL org.opencontainers.image.source="https://github.com/OpenMacedonIA/WatermelonD"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    JACK_NO_START_SERVER=1 \
+    TZ=Europe/Madrid
+
+# Dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 python3-pip python3-venv \
+    portaudio19-dev python3-pyaudio \
+    alsa-utils alsa-base libasound2 \
+    libvlc-dev vlc-bin \
+    ffmpeg git git-lfs curl wget sqlite3 \
+    libbluetooth-dev bluez bluez-tools \
+    network-manager wireless-tools iw \
+    mosquitto mosquitto-clients \
+    build-essential libssl-dev libffi-dev \
+    whiptail nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear usuario no-root para el servicio
+RUN useradd -ms /bin/bash neo
+WORKDIR /app
+COPY --chown=neo:neo . .
+
+# Crear venv e instalar dependencias Python
+RUN python3 -m venv venv && \
+    venv/bin/pip install --upgrade pip && \
+    venv/bin/pip install -r requirements.txt && \
+    venv/bin/pip install Flask-WTF eventlet Flask-Limiter
+
+# Crear directorios necesarios
+RUN mkdir -p logs config database models piper/voices && \
+    chown -R neo:neo /app
+
+# Copiar config base si no existe
+RUN [ -f config/config.json ] || ([ -f config/config.json.example ] && cp config/config.json.example config/config.json) || echo '{}' > config/config.json
+
+USER neo
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/dashboard || exit 1
+
+CMD ["venv/bin/python", "NeoCore.py"]
+DOCKEREOF
+    echo " Dockerfile generado."
+}
+
+function _generate_docker_compose() {
+    local ENGINE="${1:-docker}"
+    if [ -f "docker-compose.yml" ] || [ -f "compose.yml" ]; then
+        echo " docker-compose.yml ya existe, no se sobreescribe."
+        return
+    fi
+    echo "Generando docker-compose.yml..."
+    # La etiqueta :Z en volumes es necesaria para Podman con SELinux
+    local VOL_SUFFIX=""
+    [ "$ENGINE" = "podman" ] && VOL_SUFFIX=":Z"
+
+    cat > docker-compose.yml << COMPOSEEOF
+# WatermelonD — docker-compose.yml
+# Compatible con docker compose v2 y podman-compose
+name: watermelond
+
+services:
+  neocore:
+    build: .
+    image: watermelond:latest
+    container_name: watermelond
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config:/app/config${VOL_SUFFIX}
+      - ./models:/app/models${VOL_SUFFIX}
+      - ./database:/app/database${VOL_SUFFIX}
+      - ./logs:/app/logs${VOL_SUFFIX}
+      - ./piper:/app/piper${VOL_SUFFIX}
+    environment:
+      - PYTHONUNBUFFERED=1
+      - JACK_NO_START_SERVER=1
+      - TZ=Europe/Madrid
+    # Acceso a audio del host (micrófono y altavoz)
+    # En Podman puede necesitar --privileged o configuración de /dev
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - audio
+    # healthcheck integrado en el Dockerfile
+    # Descomentar para logs detallados:
+    # logging:
+    #   driver: "json-file"
+    #   options:
+    #     max-size: "10m"
+    #     max-file: "3"
+COMPOSEEOF
+    echo " docker-compose.yml generado."
+}
+
+
     echo "========================================="
     echo "===   Instalación Cliente Web Remoto  ==="
     echo "========================================="
@@ -1017,12 +1381,15 @@ if ! command -v whiptail &> /dev/null; then
 fi
 
 while true; do
-    OPTION=$(whiptail --title "Instalador WatermelonD" --menu "Seleccione una opción de instalación:" 20 78 6 \
-        "1" "Instalación ESTÁNDAR (Nodo Principal)" \
-        "2" "Cliente Web Remoto" \
-        "3" "Satélite (Network Bros)" \
-        "4" "Configuración Developer (Split Repos)" \
-        "5" "Herramientas / Mantenimiento" \
+    OPTION=$(whiptail --title "Instalador WatermelonD" --menu "Seleccione una opción de instalación:" 24 78 9 \
+        "1" "Instalación ESTÁNDAR (Nodo Principal — sistema Debian/Ubuntu)" \
+        "2" "Despliegue via Distrobox (cualquier distro, ligero)" \
+        "3" "Despliegue via Docker" \
+        "4" "Despliegue via Podman (rootless)" \
+        "5" "Cliente Web Remoto" \
+        "6" "Satélite (Network Bros)" \
+        "7" "Configuración Developer (Split Repos)" \
+        "8" "Herramientas / Mantenimiento" \
         "0" "Salir" \
         3>&1 1>&2 2>&3)
     
@@ -1033,34 +1400,49 @@ while true; do
     fi
 
     case $OPTION in
-        1) 
+        1)
             whiptail --title "Instalación Estándar" --msgbox "Iniciando instalación del nodo principal...\n\nEsto instalará:\n- Core del sistema\n- Interfaz Web\n- Base de datos\n- Dependencias necesarias" 12 60
             install_standard
             exit 0
             ;;
-        2) 
+        2)
+            whiptail --title "Distrobox" --msgbox "Configurando WatermelonD en un contenedor Distrobox..." 8 60
+            install_distrobox
+            exit 0
+            ;;
+        3)
+            whiptail --title "Docker" --msgbox "Configurando despliegue con Docker..." 8 60
+            install_docker
+            exit 0
+            ;;
+        4)
+            whiptail --title "Podman" --msgbox "Configurando despliegue con Podman (rootless)..." 8 60
+            install_podman
+            exit 0
+            ;;
+        5)
             whiptail --title "Cliente Web" --msgbox "Iniciando instalación del cliente web remoto..." 8 60
             install_web_client
             exit 0
             ;;
-        3) 
+        6)
             whiptail --title "Satélite" --msgbox "Configurando dispositivo como satélite..." 8 60
             install_satellite
             exit 0
             ;;
-        4) 
+        7)
             whiptail --title "Developer" --msgbox "Configurando repositorios para desarrollo..." 8 60
             install_dev_repos
             exit 0
             ;;
-        5) 
+        8)
             maintenance_menu
             ;;
-        0) 
+        0)
             whiptail --msgbox "¡Hasta pronto!" 8 40
             exit 0
             ;;
-        *) 
+        *)
             whiptail --msgbox "Opción inválida. Por favor intenta de nuevo." 8 50
             ;;
     esac
