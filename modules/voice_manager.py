@@ -399,7 +399,6 @@ class VoiceManager:
                                 _AMBIENT_TAG = _re.compile(r'^\[.{1,40}\]$')
 
                                 if _MUSIC_TAGS.match(text):
-                                    # Easter egg: notas musicales en la cara
                                     vosk_logger.info("[EASTER EGG] Sherpa detectó música 🎵")
                                     if self.bus:
                                         self.bus.emit('face:music_easter_egg', {})

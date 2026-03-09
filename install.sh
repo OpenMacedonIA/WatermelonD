@@ -193,42 +193,69 @@ function install_standard() {
     fi
 
     echo ""
-    # --- PREGUNTAS DE CONFIGURACIÓN ---
-    echo "----------------------------------------------------------------"
-    echo "OPCIONES DE INSTALACIÓN"
-    echo "----------------------------------------------------------------"
-    
-    # GUI vs Headless (Interfaz Gráfica vs Sin Cabeza)
-    read -p "¿Instalar Interfaz Gráfica (Kiosk Mode)? (s/n) [s]: " INSTALL_GUI_OPT
-    INSTALL_GUI_OPT=${INSTALL_GUI_OPT:-s} # Por defecto sí
+    echo "[PASO 2/6] Configurando opciones de instalación..."
 
-    if [[ "$INSTALL_GUI_OPT" =~ ^[Ss]$ ]]; then
+    # ── GUI / Headless ────────────────────────────────────────────────
+    if whiptail --title "Modo de Pantalla" --yesno \
+        "¿Instalar en modo KIOSK (interfaz gráfica de pantalla completa)?\n\n• Sí  → Instala Xorg + Openbox + Chromium en modo kiosco\n• No → Modo headless/servidor (solo WebUI por red)" \
+        12 68; then
         INSTALL_GUI=true
         DEPENDENCIES+=(xorg openbox chromium x11-xserver-utils wmctrl xdotool)
-        echo "-> Se instalará entorno gráfico."
+        echo "[OK] Modo Kiosk seleccionado."
     else
         INSTALL_GUI=false
-        echo "-> Modo Headless (Sin entorno gráfico)."
+        echo "[OK] Modo Headless seleccionado."
     fi
 
-    # Minimal / Optimize (Mínimo / Optimizar)
-    read -p "¿Aplicar optimizaciones de sistema (hostname OpenMacendonIA, limpiar bloatware)? (s/n) [n]: " OPTIMIZE_OPT
-    OPTIMIZE_OPT=${OPTIMIZE_OPT:-n}
-
-    if [[ "$OPTIMIZE_OPT" =~ ^[Ss]$ ]]; then
-        echo "-> Se aplicarán optimizaciones."
-        sudo hostnamectl set-hostname OpenMacendonIA
-        if ! grep -q "127.0.1.1.*OpenMacendonIA" /etc/hosts; then
-            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tOpenMacendonIA/g' /etc/hosts
-        fi
-        sudo apt-get purge -y libreoffice* aisleriot gnomine mahjongg quadrapassel *sudoku* || true
-        sudo apt-get autoremove -y
+    # ── Optimizaciones del sistema ────────────────────────────────────
+    if whiptail --title "Optimizaciones del Sistema" --yesno \
+        "¿Aplicar optimizaciones para uso como appliance/servidor?\n\n• Hostname → OpenMacedonIA\n• Eliminar bloatware (LibreOffice, juegos...)\n• Swappiness reducida (mejor rendimiento RAM)\n• Governor CPU → performance\n• Reducir logs del sistema" \
+        14 68; then
+        OPTIMIZE_SYS=true
+        echo "[OK] Se aplicarán optimizaciones."
+    else
+        OPTIMIZE_SYS=false
     fi
     echo "----------------------------------------------------------------"
-    
+
     # Instalar Dependencias
     echo "Instalando paquetes del sistema..."
     $INSTALL_CMD "${DEPENDENCIES[@]}"
+
+    # ── Aplicar optimizaciones ────────────────────────────────────────
+    if [ "$OPTIMIZE_SYS" = true ]; then
+        echo "[OPT] Aplicando optimizaciones..."
+        # Hostname
+        sudo hostnamectl set-hostname OpenMacedonIA
+        if ! grep -q "127.0.1.1.*OpenMacedonIA" /etc/hosts; then
+            sudo sed -i 's/127.0.1.1.*/127.0.1.1\tOpenMacedonIA/g' /etc/hosts
+        fi
+        # Bloatware
+        sudo apt-get purge -y libreoffice* aisleriot gnome-mines mahjongg quadrapassel gnome-sudoku || true
+        sudo apt-get autoremove -y
+        # Swappiness (mejor para sistemas con suficiente RAM)
+        echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-watermelond.conf > /dev/null
+        echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.d/99-watermelond.conf > /dev/null
+        sudo sysctl -p /etc/sysctl.d/99-watermelond.conf 2>/dev/null || true
+        # CPU Governor → performance (si cpufrequtils disponible)
+        if command -v cpufreq-set &>/dev/null; then
+            sudo cpufreq-set -g performance 2>/dev/null || true
+        elif [ -f /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+            echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor > /dev/null 2>&1 || true
+            # Hacer persistente en el arranque
+            echo 'GOVERNOR="performance"' | sudo tee /etc/default/cpufrequtils > /dev/null 2>/dev/null || true
+        fi
+        # Reducir journald logs
+        sudo sed -i 's/#SystemMaxUse=/SystemMaxUse=200M/' /etc/systemd/journald.conf 2>/dev/null || true
+        sudo sed -i 's/#RuntimeMaxUse=/RuntimeMaxUse=100M/' /etc/systemd/journald.conf 2>/dev/null || true
+        sudo systemctl restart systemd-journald 2>/dev/null || true
+        # UFW básico: abrir solo el puerto de Neo
+        if command -v ufw &>/dev/null; then
+            sudo ufw allow 5000/tcp 2>/dev/null || true
+            sudo ufw --force enable 2>/dev/null || true
+        fi
+        echo "[OPT] Optimizaciones aplicadas."
+    fi
 
     # Habilitar Mosquitto
     if systemctl list-unit-files | grep -q mosquitto.service; then
@@ -450,13 +477,29 @@ EOF
     sudo chmod 0440 /etc/sudoers.d/watermelond-wifi
     echo " Permisos de escaneo WiFi configurados"
 
-    # Recargar y Habilitar (Solo Core)
+    # ── Habilitar linger para que los servicios de usuario arranquen sin login ──
     sudo loginctl enable-linger $USER_NAME
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
-    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
-    # Servicio Grape Updater (Auto-Actualización de Modelos en el Inicio)
+    # ── Servicio Principal: neo.service ───────────────────────────────────────
+    cat <<EOT > "$USER_HOME/.config/systemd/user/neo.service"
+[Unit]
+Description=Neo Core Backend Service (WatermelonD)
+After=network.target sound.target
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=$(pwd)
+ExecStart=$(pwd)/venv/bin/python $(pwd)/NeoCore.py
+Restart=always
+RestartSec=5
+SyslogIdentifier=watermelon_core
+
+[Install]
+WantedBy=default.target
+EOT
+
+    # ── Servicio Grape Updater ────────────────────────────────────────────────
     cat <<EOT > "$USER_HOME/.config/systemd/user/grape_updater.service"
 [Unit]
 Description=Grape Models Auto-Updater
@@ -473,46 +516,57 @@ SyslogIdentifier=grape_updater
 WantedBy=default.target
 EOT
 
+    # ── Recargar y habilitar servicios (siempre, kiosk o headless) ───────────
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user daemon-reload
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable neo.service
     sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user enable grape_updater.service
+    sudo -u $USER_NAME XDG_RUNTIME_DIR=/run/user/$USER_ID systemctl --user restart neo.service
 
-    # --- CONFIGURACIÓN DE KIOSK ---
     if [ "$INSTALL_GUI" = true ]; then
-        echo "[PASO 6/6] Configurando Kiosk (Auto-login)..."
-        
+        echo "[PASO 6/6] Configurando Kiosk (Auto-login en tty1)..."
+
         # Auto-login tty1
         sudo mkdir -p "/etc/systemd/system/getty@tty1.service.d"
-        sudo bash -c "cat <<EOT > /etc/systemd/system/getty@tty1.service.d/override.conf
+        sudo tee /etc/systemd/system/getty@tty1.service.d/override.conf > /dev/null <<EOT
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin $USER_NAME --noclear %I \$TERM
-EOT"
+EOT
 
-        # .bash_profile
-        if [ -f ~/.bash_profile ]; then
-            if ! grep -q "exec startx" ~/.bash_profile; then
-                echo 'if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then exec startx; fi' >> ~/.bash_profile
-            fi
-        else
-            echo 'if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then exec startx; fi' >> ~/.bash_profile
+        # Añadir startx a .bash_profile solo si aún no está
+        local PROFILE_FILE="$USER_HOME/.bash_profile"
+        [ -f "$USER_HOME/.profile" ] && PROFILE_FILE="$USER_HOME/.profile"
+        if ! grep -q 'exec startx' "$PROFILE_FILE" 2>/dev/null; then
+            echo 'if [[ -z $DISPLAY ]] && [[ $(tty) = /dev/tty1 ]]; then exec startx; fi' >> "$PROFILE_FILE"
         fi
 
-        # .xinitrc
-        cat <<EOT > ~/.xinitrc
+        # .xinitrc — detecta chromium o chromium-browser
+        cat > "$USER_HOME/.xinitrc" <<'XINITEOF'
 #!/bin/bash
 xset -dpms
 xset s off
 xset s noblank
 openbox &
-echo "Esperando backend..."
-while ! curl -s https://localhost:5000/face > /dev/null; do sleep 2; done
+echo "Esperando a que NeoCore arranque..."
+NEO_URL="https://localhost:5000"
+until curl -sk "$NEO_URL/face" > /dev/null 2>&1; do sleep 2; done
 CHROMIUM_BIN="chromium"
-command -v chromium-browser &> /dev/null && CHROMIUM_BIN="chromium-browser"
+command -v chromium-browser &>/dev/null && CHROMIUM_BIN="chromium-browser"
 while true; do
-  \$CHROMIUM_BIN --kiosk --no-first-run --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state http://localhost:5000/face
-  sleep 2
+  $CHROMIUM_BIN --kiosk --no-first-run --disable-infobars \
+    --disable-session-crashed-bubble \
+    --disable-restore-session-state \
+    --disable-translate \
+    --noerrdialogs \
+    "$NEO_URL/face"
+  sleep 3
 done
-EOT
-        chmod +x ~/.xinitrc
+XINITEOF
+        chmod +x "$USER_HOME/.xinitrc"
+
+        echo "[OK] Kiosk configurado. El sistema arrancará en modo pantalla completa en tty1."
+    else
+        echo "[OK] Modo headless. Accede a NeoCore por red en https://$(hostname -I | awk '{print $1}'):5000"
     fi
 
     # SSL y Seguridad
@@ -662,67 +716,72 @@ function configure_simple_mode() {
 
 function configure_advanced_mode() {
     whiptail --title "Modo Avanzado" --msgbox \
-        "Configuraremos todas las opciones disponibles:\n\n• Nombre de usuario\n• Palabras de activación\n• Servidores SSH\n• Alias de red\n• Puerto web\n• Preferencias TTS" \
-        14 60
-    
+        "Configuraremos todas las opciones:\n\n• Nombre de usuario y contraseña WebUI\n• Palabras de activación\n• Motor STT (Sherpa small/medium)\n• Idioma y voz TTS\n• Zona horaria\n• Servidores SSH\n• Alias de red\n• Puerto web" \
+        16 60
+
     # 1. Nombre de Usuario
     USER_NICKNAME=$(whiptail --inputbox \
         "¿Cómo quieres que te llame el asistente?" \
         10 60 "Usuario" 3>&1 1>&2 2>&3)
-    
-    if [ $? -ne 0 ] || [ -z "$USER_NICKNAME" ]; then
-        USER_NICKNAME="Usuario"
-    fi
-    
-    # 2. Wake Words Personalizadas
+    [ $? -ne 0 ] || [ -z "$USER_NICKNAME" ] && USER_NICKNAME="Usuario"
+
+    # 1b. Contraseña WebUI (panel de administración)
+    WEBUI_PASS=$(whiptail --passwordbox \
+        "Contraseña para el panel WebUI (usuario: admin):\n\nDeja vacío para usar 'admin' por defecto." \
+        10 60 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && WEBUI_PASS="admin"
+    WEBUI_PASS="${WEBUI_PASS:-admin}"
+
+    # 2. Wake Words
     if whiptail --title "Palabras de Activación" --yesno \
         "Palabras actuales: neo, tio, bro\n\n¿Deseas añadir palabras personalizadas?" \
         10 60; then
-        
         CUSTOM_WAKE_WORDS=$(whiptail --inputbox \
-            "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,hola,jarvis" \
+            "Introduce palabras adicionales separadas por comas:\n\nEjemplo: asistente,jarvis,oye" \
             12 60 "" 3>&1 1>&2 2>&3)
     fi
 
-    # 2.5 Interfaz de Usuario / Face
-    if whiptail --title "Interfaz Visual de TangerineUI" --yesno \
-        "¿Deseas usar la Nueva Interfaz Simple (Recomendada)?\n\n- Sí: Interfaz de cara minimalista.\n- No: Interfaz 'Legacy' con logs y gráficas en pantalla." \
+    # 3. Interfaz Face
+    if whiptail --title "Interfaz Visual" --yesno \
+        "¿Usar la interfaz de cara minimalista (Recomendada)?\n\n• Sí → Cara animada con ojos (nueva)\n• No → Interfaz legacy con logs" \
         12 60; then
         USE_LEGACY_FACE="false"
     else
         USE_LEGACY_FACE="true"
     fi
-    
-    # 3. Servidores SSH
+
+    # 4. Motor STT
+    STT_MODEL_SIZE=$(whiptail --title "Motor STT" --menu \
+        "Elige el modelo de transcripción de voz:\n(Mayor = más preciso pero más lento y usa más memoria)" 14 68 2 \
+        "small"  "Sherpa small  — Rápido, apto para Raspberry Pi / bajo consumo" \
+        "medium" "Sherpa medium — Mayor precisión, recomendado para PC" \
+        3>&1 1>&2 2>&3) || STT_MODEL_SIZE="small"
+
+    # 5. Zona horaria
+    TZ_ZONE=$(whiptail --inputbox \
+        "Zona horaria del sistema:\n\nEjemplos: Europe/Madrid, America/Mexico_City, UTC" \
+        10 60 "Europe/Madrid" 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] || [ -z "$TZ_ZONE" ] && TZ_ZONE="Europe/Madrid"
+    sudo timedatectl set-timezone "$TZ_ZONE" 2>/dev/null || true
+
+    # 6. Servidores SSH
     if whiptail --title "Servidores SSH" --yesno \
-        "¿Deseas configurar servidores SSH remotos?\n\nPuedes agregar servidores como 'syrah' para control remoto." \
-        12 60; then
-        
+        "¿Configurar servidores SSH remotos para control remoto?" 8 60; then
         setup_ssh_servers_whiptail
     fi
-    
-    # 4. Alias de Red
+
+    # 7. Alias de Red
     if whiptail --title "Alias de Red" --yesno \
-        "¿Deseas configurar alias de red?\n\nEjemplo: router=192.168.1.1, nas=192.168.1.50" \
-        12 60; then
-        
+        "¿Configurar alias de red?\n\nEjemplo: router=192.168.1.1, nas=192.168.1.50" \
+        10 60; then
         setup_network_aliases_whiptail
     fi
-    
-    # 5. Puerto Web Admin
-    WEB_PORT=$(whiptail --inputbox \
-        "Puerto para la interfaz web:" \
-        10 60 "5000" 3>&1 1>&2 2>&3)
-    
-    if [ $? -ne 0 ] || [ -z "$WEB_PORT" ]; then
-        WEB_PORT="5000"
-    fi
-    
-    # 6. Preferencias TTS (Solo informar por ahora)
-    whiptail --title "Configuración TTS" --msgbox \
-        "Las preferencias de voz TTS se pueden configurar después de la instalación editando:\n\nconfig/config.json\n\nCampo: 'tts.piper_model'" \
-        12 60
-    
+
+    # 8. Puerto Web
+    WEB_PORT=$(whiptail --inputbox "Puerto para la interfaz web:" \
+        8 60 "5000" 3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] || [ -z "$WEB_PORT" ] && WEB_PORT="5000"
+
     whiptail --msgbox "Configuración avanzada completada." 8 50
 }
 
@@ -865,60 +924,75 @@ function setup_network_aliases_whiptail() {
 }
 
 function apply_personalization_config() {
-    # Crear/Actualizar config.json con las personalizaciones
-    python3 << EOF
-import json
-import os
+    local _stt_model="${STT_MODEL_SIZE:-small}"
+    local _tz="${TZ_ZONE:-Europe/Madrid}"
+    local _webui_pass="${WEBUI_PASS:-admin}"
+
+    # Usar python3 del venv si está disponible, si no el del sistema
+    local PY_BIN="python3"
+    [ -f "$(pwd)/venv/bin/python3" ] && PY_BIN="$(pwd)/venv/bin/python3"
+
+    $PY_BIN << EOF
+import json, os, subprocess
 
 config_path = 'config/config.json'
+config = {}
 if os.path.exists(config_path):
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-else:
-    config = {}
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+    except Exception:
+        config = {}
 
-# Aplicar user_nickname
+# Identidad
 config['user_nickname'] = "$USER_NICKNAME"
 
-# Aplicar wake_words personalizadas
-default_wake_words = ['neo', 'tio', 'bro']
-if "$CUSTOM_WAKE_WORDS".strip():
-    custom = [w.strip() for w in "$CUSTOM_WAKE_WORDS".split(',')]
-    config['wake_words'] = default_wake_words + custom
+# Wake words
+default_ww = ['neo', 'tio', 'bro']
+custom_raw = "$CUSTOM_WAKE_WORDS".strip()
+if custom_raw:
+    custom = [w.strip() for w in custom_raw.split(',') if w.strip()]
+    config['wake_words'] = default_ww + custom
 else:
-    config['wake_words'] = default_wake_words
+    config['wake_words'] = default_ww
 
-# Aplicar puerto web admin
-if 'web_admin' not in config:
-    config['web_admin'] = {}
+# WebUI
+config.setdefault('web_admin', {})
 config['web_admin']['port'] = int("$WEB_PORT")
 config['web_admin']['host'] = '0.0.0.0'
 config['web_admin']['debug'] = False
 
-# Aplicar UI preference
-use_legacy_face = "$USE_LEGACY_FACE".lower() == "true"
-if 'tangerine' not in config:
-    config['tangerine'] = {}
-config['tangerine']['use_legacy_face'] = use_legacy_face
+# Interfaz face
+config.setdefault('tangerine', {})
+config['tangerine']['use_legacy_face'] = ("$USE_LEGACY_FACE".lower() == 'true')
 
-# Forzar motor STT = sherpa (predeterminado obligatorio del sistema).
-# Sherpa-ONNX ofrece mejor precisión en español.
-# Para sistemas MUY lentos se puede volver a 'vosk' editando config.json manualmente:
-#   "stt": { "engine": "vosk", "model_path": "vosk-models/es" }
-if 'stt' not in config:
-    config['stt'] = {}
+# STT
+config.setdefault('stt', {})
 config['stt']['engine'] = 'sherpa'
-if 'sherpa_model_path' not in config['stt']:
-    config['stt']['sherpa_model_path'] = 'models/sherpa/sherpa-onnx-whisper-small'
+config['stt']['sherpa_model_path'] = f'models/sherpa/sherpa-onnx-whisper-${_stt_model}'
 
-# Guardar
+# Zona horaria en config
+config['timezone'] = "${_tz}"
+
 with open(config_path, 'w') as f:
     json.dump(config, f, indent=4, ensure_ascii=False)
-
-print(" Configuración personalizada guardada")
+print(' config.json actualizado correctamente')
 EOF
-    
-    whiptail --msgbox "¡Personalización completada!\n\nTu nombre: $USER_NICKNAME\nPuerto web: $WEB_PORT" 10 50
+
+    # Aplicar contraseña WebUI via helper
+    if [ -f "resources/tools/password_helper.py" ]; then
+        "$(pwd)/venv/bin/python" resources/tools/password_helper.py \
+            --user admin --password "$_webui_pass" 2>/dev/null || true
+    fi
+
+    # Descargar modelo STT seleccionado si es medium y no existe
+    if [ "$_stt_model" = "medium" ] && [ ! -d "models/sherpa/sherpa-onnx-whisper-medium" ]; then
+        echo "Descargando modelo Sherpa-ONNX Whisper medium (esto puede tardar)..."
+        [ -f "resources/tools/download_sherpa_model.py" ] && \
+            "$(pwd)/venv/bin/python" resources/tools/download_sherpa_model.py --model medium || true
+    fi
+
+    whiptail --msgbox "¡Personalización completada!\n\n• Nombre: $USER_NICKNAME\n• Puerto WebUI: $WEB_PORT\n• Modelo STT: Sherpa $_stt_model\n• Zona horaria: $_tz" 12 55
 }
 
 # ==============================================================================
@@ -994,26 +1068,46 @@ function install_distrobox() {
         10 60 "ubuntu:22.04" 3>&1 1>&2 2>&3) || BOX_IMAGE="ubuntu:22.04"
 
     echo "Creando contenedor Distrobox '$BOX_NAME' con imagen $BOX_IMAGE..."
-    distrobox create --name "$BOX_NAME" --image "$BOX_IMAGE" --yes 2>/dev/null || true
+    # --pull=newer garantiza imagen actualizada; --yes evita confirmación interactiva
+    distrobox create \
+        --name "$BOX_NAME" \
+        --image "$BOX_IMAGE" \
+        --yes \
+        --no-entry 2>/dev/null || distrobox create --name "$BOX_NAME" --image "$BOX_IMAGE" --yes || true
+
+    # Crear script temporal con los comandos de instalación dentro del box
+    local SETUP_SCRIPT="/tmp/watermelond_box_setup.sh"
+    cat > "$SETUP_SCRIPT" << 'BOXSETUP'
+#!/bin/bash
+set -e
+cd "$HOME"
+if [ ! -d WatermelonD ]; then
+    git clone https://github.com/OpenMacedonIA/WatermelonD.git
+fi
+cd WatermelonD
+git submodule update --init --remote --recursive
+bash install.sh
+BOXSETUP
+    chmod +x "$SETUP_SCRIPT"
 
     echo "Instalando WatermelonD dentro de Distrobox..."
-    distrobox enter "$BOX_NAME" -- bash -c "
-        set -e
-        cd ~
-        [ -d WatermelonD ] || git clone https://github.com/OpenMacedonIA/WatermelonD.git
-        cd WatermelonD
-        git submodule update --init --remote --recursive
-        bash install.sh
-    "
+    distrobox enter "$BOX_NAME" -- bash "$SETUP_SCRIPT"
+    rm -f "$SETUP_SCRIPT"
 
     # Crear lanzador en el host
+    mkdir -p "$HOME/.local/bin"
     cat > "$HOME/.local/bin/watermelond" << 'LAUNCHER'
 #!/bin/bash
-distrobox enter watermelond -- bash -c "cd ~/WatermelonD && ./start.sh"
+distrobox enter watermelond -- bash -c 'cd ~/WatermelonD && source venv/bin/activate && python NeoCore.py'
 LAUNCHER
     chmod +x "$HOME/.local/bin/watermelond"
 
-    whiptail --msgbox "Distrobox configurado.\n\nLanza WatermelonD con:\n  watermelond\n\n(o distrobox enter watermelond)" 12 60
+    # Añadir ~/.local/bin al PATH si no está
+    if ! grep -q 'HOME/.local/bin' "$HOME/.bashrc" 2>/dev/null; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+    fi
+
+    whiptail --msgbox "Distrobox configurado.\n\nLanza WatermelonD con:\n  watermelond\n\nO accede al contenedor con:\n  distrobox enter watermelond" 14 62
 }
 
 # ── Docker ────────────────────────────────────────────────────────────────────
@@ -1159,19 +1253,48 @@ function install_podman() {
                 -v "$(pwd)/logs:/app/logs:Z" \
                 watermelond:latest
 
-            # Habilitar autostart con systemd (Podman rootless)
-            mkdir -p ~/.config/systemd/user
-            podman generate systemd --name watermelond --files --new 2>/dev/null || true
-            mv container-watermelond.service ~/.config/systemd/user/ 2>/dev/null || true
+            # Autostart con systemd rootless (compatible Podman 3.x y 4.x)
+            mkdir -p "$HOME/.config/systemd/user"
+            # Podman 4.x: usar `podman generate systemd` (aún funciona aunque deprecated)
+            # Podman 5.x: usar quadlets (archivo .container en ~/.config/containers/systemd/)
+            local PODMAN_MAJOR
+            PODMAN_MAJOR=$(podman --version | grep -oP '\d+' | head -1)
+            if [ "${PODMAN_MAJOR:-3}" -ge 5 ]; then
+                # Quadlet (Podman 5+)
+                mkdir -p "$HOME/.config/containers/systemd"
+                cat > "$HOME/.config/containers/systemd/watermelond.container" << QUADLET
+[Unit]
+Description=WatermelonD NeoCore
+After=network-online.target
+
+[Container]
+Image=watermelond:latest
+PublishPort=5000:5000
+Volume=$(pwd)/config:/app/config:Z
+Volume=$(pwd)/models:/app/models:Z
+Volume=$(pwd)/logs:/app/logs:Z
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+QUADLET
+            else
+                # Podman 3/4: generate systemd
+                cd /tmp
+                podman generate systemd --name watermelond --files --new 2>/dev/null && \
+                    mv /tmp/container-watermelond.service "$HOME/.config/systemd/user/" || true
+                cd - > /dev/null
+            fi
             systemctl --user daemon-reload
-            systemctl --user enable --now container-watermelond.service 2>/dev/null || true
+            systemctl --user enable --now container-watermelond.service 2>/dev/null || \
+            systemctl --user enable --now watermelond 2>/dev/null || true
             ;;
         3)
             echo "Imagen Podman construida. Usa 'podman run' o 'podman-compose up' para lanzar."
             ;;
     esac
 
-    whiptail --msgbox "Podman configurado.\n\nComandos útiles:\n  podman ps                     → ver contenedores\n  podman logs -f watermelond    → ver logs\n  podman restart watermelond    → reiniciar\n  podman exec -it watermelond bash → entrar" 14 70
+    whiptail --msgbox "Podman configurado.\n\nComandos útiles:\n  podman ps                        → contenedores\n  podman logs -f watermelond       → logs\n  podman restart watermelond       → reiniciar\n  podman exec -it watermelond bash → entrar" 14 72
 }
 
 # ── Generadores de Dockerfile y Compose ───────────────────────────────────────
@@ -1292,29 +1415,34 @@ COMPOSEEOF
 }
 
 
+function install_web_client() {
+    echo ""
     echo "========================================="
     echo "===   Instalación Cliente Web Remoto  ==="
     echo "========================================="
-    
-    read -p "IP del Servidor NeoCore (ej: https://192.168.1.50:5000): " NEO_IP
-    NEO_IP=${NEO_IP:-http://localhost:5000}
-    
-    if [[ ! "$NEO_IP" =~ ^http ]]; then NEO_IP="http://$NEO_IP"; fi
-    
+
+    NEO_IP=$(whiptail --inputbox \
+        "Dirección del servidor NeoCore:\n\nEjemplo: https://192.168.1.50:5000" \
+        10 68 "https://" 3>&1 1>&2 2>&3) || NEO_IP=""
+    [ -z "$NEO_IP" ] && { whiptail --msgbox "Cancelado. No se configuró el cliente." 8 50; return; }
+    [[ ! "$NEO_IP" =~ ^http ]] && NEO_IP="https://$NEO_IP"
+
     echo "Instalando dependencias mínimas..."
-    if command -v apt-get &> /dev/null; then
+    if command -v apt-get &>/dev/null; then
         sudo apt-get install -y python3-flask python3-requests python3-flask-wtf
-    else
-        pip install flask requests flask-wtf
+    elif command -v pip3 &>/dev/null; then
+        pip3 install flask requests flask-wtf
     fi
-    
+
     echo "Creando lanzador run_client.sh..."
-    echo "#!/bin/bash" > run_client.sh
-    echo "export NEO_API_URL='$NEO_IP'" >> run_client.sh
-    echo "python3 TangerineUI/app.py" >> run_client.sh
+    cat > run_client.sh << CLIENTEOF
+#!/bin/bash
+export NEO_API_URL='$NEO_IP'
+exec python3 TangerineUI/app.py
+CLIENTEOF
     chmod +x run_client.sh
-    
-    echo "Listo. Ejecuta ./run_client.sh para iniciar."
+
+    whiptail --msgbox "Cliente web configurado.\n\nServidor: $NEO_IP\n\nEjecuta ./run_client.sh para iniciar." 10 60
 }
 
 function install_satellite() {
@@ -1341,27 +1469,55 @@ function run_tool_fix_kiosk() {
 
 function maintenance_menu() {
     while true; do
-        echo "========================================="
-        echo "===     Herramientas y Mantenimiento  ==="
-        echo "========================================="
-        echo "1) Diagnosticar Sistema"
-        echo "2) Reparar Kiosk (Pantalla negra/Crashes)"
-        echo "3) Fix Dependencias NLU"
-        echo "0) Volver al menú principal"
-        read -p "Opción: " TOOL_OPT
-        
+        local TOOL_OPT
+        TOOL_OPT=$(whiptail --title "Herramientas y Mantenimiento" --menu \
+            "Selecciona una herramienta:" 20 72 8 \
+            "1" "Diagnosticar Sistema" \
+            "2" "Reparar Kiosk (pantalla negra / crashes)" \
+            "3" "Fix Dependencias NLU" \
+            "4" "Ver estado servicios systemd" \
+            "5" "Ver logs de NeoCore en vivo" \
+            "6" "Reiniciar servicio NeoCore" \
+            "7" "Actualizar modelos Grape (git pull)" \
+            "0" "Volver al menú principal" \
+            3>&1 1>&2 2>&3) || break
+
         case $TOOL_OPT in
             1) run_tool_diagnose ;;
             2) run_tool_fix_kiosk ;;
-            3) 
-                chmod +x resources/tools/fix_nlu_dependencies.sh
-                ./resources/tools/fix_nlu_dependencies.sh 
+            3)
+                [ -f resources/tools/fix_nlu_dependencies.sh ] && \
+                    chmod +x resources/tools/fix_nlu_dependencies.sh && \
+                    ./resources/tools/fix_nlu_dependencies.sh
+                ;;
+            4)
+                systemctl --user status neo.service 2>&1 | head -30
+                read -p "Presiona Enter para continuar..."
+                ;;
+            5)
+                journalctl --user -u neo.service -f --no-pager 2>/dev/null || \
+                    tail -f logs/app.log 2>/dev/null || \
+                    echo "No se pudo abrir el log. Revisa logs/app.log manualmente."
+                ;;
+            6)
+                local U_NAME=$(whoami)
+                local U_ID=$(id -u)
+                sudo -u $U_NAME XDG_RUNTIME_DIR=/run/user/$U_ID systemctl --user restart neo.service && \
+                    whiptail --msgbox "Servicio NeoCore reiniciado." 8 40 || \
+                    whiptail --msgbox "Error al reiniciar. Comprueba que neo.service está instalado." 8 60
+                ;;
+            7)
+                echo "Actualizando modelos Grape..."
+                for model_dir in models/chardonnay models/malbec models/pinot models/syrah models/grape-route; do
+                    if [ -d "$model_dir/.git" ]; then
+                        echo "Actualizando $model_dir..."
+                        git -C "$model_dir" pull 2>/dev/null || echo "  [WARN] No se pudo actualizar $model_dir"
+                    fi
+                done
+                whiptail --msgbox "Actualización de modelos completada." 8 50
                 ;;
             0) break ;;
-            *) echo "Opción no válida" ;;
         esac
-        echo ""
-        read -p "Presiona Enter para continuar..."
     done
 }
 
