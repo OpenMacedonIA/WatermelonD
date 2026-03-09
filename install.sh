@@ -1340,7 +1340,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     portaudio19-dev python3-pyaudio \
     alsa-utils alsa-base libasound2 \
     libvlc-dev vlc-bin \
-    ffmpeg git git-lfs curl wget sqlite3 \
+    ffmpeg git git-lfs curl wget sqlite3 cmake \
     libbluetooth-dev bluez bluez-tools \
     network-manager wireless-tools iw \
     mosquitto mosquitto-clients \
@@ -1348,6 +1348,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfann-dev swig pkg-config \
     whiptail nano \
     && rm -rf /var/lib/apt/lists/*
+
+# Compilar e instalar libfann desde código fuente (requerido para el wheel de fann2)
+RUN git clone https://github.com/libfann/fann.git /tmp/fann && \
+    cd /tmp/fann && cmake . && make && make install && \
+    ldconfig && rm -rf /tmp/fann
 
 # Crear usuario no-root para el servicio
 RUN useradd -ms /bin/bash neo
