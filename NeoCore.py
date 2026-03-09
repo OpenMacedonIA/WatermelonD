@@ -748,7 +748,7 @@ class NeoCore:
 
                  # Result Handling
                  if success:
-                     self.handle_action_result_with_chat(command_text, output)
+                     self.handle_action_result_with_chat(command_text, output, source_command=command_to_run)
                      return True
                  else:
                      error_msg = output
@@ -1309,7 +1309,7 @@ class NeoCore:
                          self.speak(f"Ejecutando: {mango_cmd}")
                          success, output = self.sysadmin_manager.run_command(mango_cmd)
                          result_text = output if success else f"Error: {output}"
-                         self.handle_action_result_with_chat(command_text, result_text)
+                         self.handle_action_result_with_chat(command_text, result_text, source_command=mango_cmd)
                          return
                      else:
                          self.pending_mango_command = mango_cmd
@@ -1331,9 +1331,14 @@ class NeoCore:
                 self.is_processing_command = False
                 if update_face: update_face('idle')
 
-    def handle_action_result_with_chat(self, command_text, result_text):
+    def handle_action_result_with_chat(self, command_text, result_text, source_command: str = ""):
         """Procesa el resultado de una acción y decide cómo responder (Smart Filtering)."""
         app_logger.info(f"Procesando resultado de acción. Longitud: {len(result_text)}")
+
+        # --- MALBEC: Si es un comando Docker de ejecución, usar frase contextual ---
+        if self._is_docker_exec_command(source_command):
+            self.speak(self._get_docker_phrase(source_command))
+            return
 
         # 1. Filtro para 'ls' / listar archivos
         if "ls " in command_text.lower() or "listar" in command_text.lower() or "lista" in command_text.lower():
@@ -1687,6 +1692,96 @@ class NeoCore:
 
         return None
 
+    # Frases por tipo de operación Docker (Malbec)
+    _DOCKER_PHRASES = {
+        'run': [
+            "Contenedor desplegado y corriendo.",
+            "El contenedor acaba de arrancar.",
+            "Despliegue completado, ya está activo.",
+            "Instancia levantada correctamente.",
+            "Contenedor en producción.",
+            "Listo, el servicio está en línea.",
+        ],
+        'start': [
+            "Contenedor iniciado.",
+            "El servicio ha vuelto a la vida.",
+            "Arrancado sin problemas.",
+            "Contenedor activo de nuevo.",
+            "Inicio completado correctamente.",
+        ],
+        'stop': [
+            "Contenedor detenido.",
+            "El servicio ha sido parado limpiamente.",
+            "Contenedor apagado sin incidencias.",
+            "Proceso detenido correctamente.",
+            "El contenedor ya no está en ejecución.",
+        ],
+        'restart': [
+            "Contenedor reiniciado.",
+            "El servicio se ha reiniciado correctamente.",
+            "Reinicio completado, volviendo al servicio.",
+            "Contenedor refrescado y activo.",
+            "Ciclo de reinicio completado sin errores.",
+        ],
+        'exec': [
+            "Comando ejecutado dentro del contenedor.",
+            "Instrucción procesada en el contenedor.",
+            "Ejecución interna completada.",
+            "El contenedor ha procesado la orden.",
+        ],
+        'rm': [
+            "Contenedor eliminado.",
+            "Instancia borrada del sistema.",
+            "El contenedor ha sido removido correctamente.",
+            "Limpieza completada, contenedor fuera del registro.",
+        ],
+        'pull': [
+            "Imagen descargada correctamente.",
+            "La imagen ya está disponible en local.",
+            "Descarga completada desde el registro.",
+            "Imagen lista para desplegar.",
+        ],
+        'up': [
+            "Stack levantado correctamente.",
+            "Servicios en línea.",
+            "Todos los contenedores del stack están activos.",
+            "Composición desplegada sin errores.",
+            "El entorno está operativo.",
+        ],
+        'down': [
+            "Stack detenido y limpiado.",
+            "Servicios apagados correctamente.",
+            "Todos los contenedores han sido parados.",
+            "Composición desmontada sin problemas.",
+        ],
+        'default': [
+            "Operación Docker completada.",
+            "Docker ha procesado la instrucción correctamente.",
+            "Comando ejecutado sin errores.",
+            "Todo en orden.",
+        ],
+    }
+
+    def _get_docker_phrase(self, command: str) -> str:
+        """Devuelve una frase aleatoria contextual según la operación Docker detectada."""
+        import re
+        # Orden de prioridad: comandos más específicos primero
+        order = ['restart', 'run', 'start', 'stop', 'exec', 'pull', 'rm', 'up', 'down']
+        for action in order:
+            if re.search(rf'\bdocker\b.*\b{action}\b', command, re.IGNORECASE):
+                return random.choice(self._DOCKER_PHRASES[action])
+        return random.choice(self._DOCKER_PHRASES['default'])
+
+    def _is_docker_exec_command(self, command: str) -> bool:
+        """Devuelve True si el comando es una ejecución Docker (run, start, stop, restart, exec...)."""
+        if not command:
+            return False
+        import re
+        return bool(re.search(
+            r'\bdocker\b.*(\brun\b|\bstart\b|\bstop\b|\brestart\b|\bexec\b|\brm\b|\bpull\b|\bup\b|\bdown\b)',
+            command, re.IGNORECASE
+        ))
+
     def handle_mango_confirmation(self, text):
         """Confirma o cancela un comando de sistema propuesto por Mango."""
         command = self.pending_mango_command
@@ -1700,7 +1795,11 @@ class NeoCore:
                 import subprocess
                 result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
                 output = result.stdout.strip() or result.stderr.strip()
-                if output:
+
+                # --- MALBEC: Si es un comando Docker de ejecución, usar frase contextual ---
+                if self._is_docker_exec_command(command):
+                    self.speak(self._get_docker_phrase(command))
+                elif output:
                     # Limitar salida hablada
                     spoken_output = output[:200]
                     self.speak(f"Resultado: {spoken_output}")
