@@ -648,6 +648,12 @@ class NeoCore:
              
              app_logger.info(f"Comando limpio (sin WW): '{command_clean}'")
              
+             # Ignorar capturas ambientales o alucinaciones (ej. "(pasos)", "[ruido]")
+             if _re.match(r'^[\(\[\*].*[\)\]\*]$', command_clean.strip()):
+                 app_logger.info(f"Descartando ruido ambiental detectado: '{command_clean}'")
+                 self.voice_manager.set_processing(False)
+                 return
+             
              # Extend active listening for follow-up
              self.active_listening_end_time = time.time() + 8
              
@@ -1382,7 +1388,7 @@ class NeoCore:
 
         # --- MALBEC: Si es un comando Docker de ejecución, usar frase contextual ---
         if self._is_docker_exec_command(source_command):
-            self.speak(self._get_docker_phrase(source_command))
+            self.speak(self._get_docker_phrase(source_command, result_text))
             return
 
         # 1. Filtro para 'ls' / listar archivos
@@ -1807,23 +1813,48 @@ class NeoCore:
         ],
     }
 
-    def _get_docker_phrase(self, command: str) -> str:
-        """Devuelve una frase aleatoria contextual según la operación Docker detectada."""
+    def _get_docker_phrase(self, command: str, output: str = None) -> str:
+        """Devuelve una frase aleatoria contextual según la operación Docker/Podman detectada."""
         import re
+        
+        container_name = None
+        is_run_or_start = bool(re.search(r'\b(docker|podman)\b.*\b(run|start|up)\b', command, re.IGNORECASE))
+        
+        if is_run_or_start:
+            name_match = re.search(r'--name\s+([^\s]+)', command)
+            if name_match:
+                container_name = name_match.group(1).strip("'\"")
+            elif output and re.match(r'^[a-fA-F0-9]{64}$', output.strip()):
+                bin_cmd = "podman" if "podman" in command.lower() else "docker"
+                try:
+                    import subprocess
+                    ins_res = subprocess.run(f"{bin_cmd} inspect --format '{{{{.Name}}}}' {output.strip()}", shell=True, capture_output=True, text=True, timeout=5)
+                    if ins_res.returncode == 0 and ins_res.stdout.strip():
+                        container_name = ins_res.stdout.strip().lstrip('/')
+                except Exception:
+                    pass
+
         # Orden de prioridad: comandos más específicos primero
         order = ['restart', 'run', 'start', 'stop', 'exec', 'pull', 'rm', 'up', 'down']
+        phrase = random.choice(self._DOCKER_PHRASES['default'])
+        
         for action in order:
-            if re.search(rf'\bdocker\b.*\b{action}\b', command, re.IGNORECASE):
-                return random.choice(self._DOCKER_PHRASES[action])
-        return random.choice(self._DOCKER_PHRASES['default'])
+            if re.search(rf'\b(docker|podman)\b.*\b{action}\b', command, re.IGNORECASE):
+                phrase = random.choice(self._DOCKER_PHRASES[action])
+                break
+                
+        if container_name:
+            phrase += f" El contenedor se llama {container_name}."
+            
+        return phrase
 
     def _is_docker_exec_command(self, command: str) -> bool:
-        """Devuelve True si el comando es una ejecución Docker (run, start, stop, restart, exec...)."""
+        """Devuelve True si el comando es una ejecución Docker/Podman (run, start, stop, restart, exec...)."""
         if not command:
             return False
         import re
         return bool(re.search(
-            r'\bdocker\b.*(\brun\b|\bstart\b|\bstop\b|\brestart\b|\bexec\b|\brm\b|\bpull\b|\bup\b|\bdown\b)',
+            r'\b(docker|podman)\b.*(\brun\b|\bstart\b|\bstop\b|\brestart\b|\bexec\b|\brm\b|\bpull\b|\bup\b|\bdown\b)',
             command, re.IGNORECASE
         ))
 
@@ -1843,7 +1874,7 @@ class NeoCore:
 
                 # --- MALBEC: Si es un comando Docker de ejecución, usar frase contextual ---
                 if self._is_docker_exec_command(command):
-                    self.speak(self._get_docker_phrase(command))
+                    self.speak(self._get_docker_phrase(command, output))
                 elif output:
                     # Limitar salida hablada
                     spoken_output = output[:200]
