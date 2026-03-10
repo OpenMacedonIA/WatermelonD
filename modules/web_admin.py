@@ -145,7 +145,7 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     # NOTA: Strict-Transport-Security (HSTS) eliminado — el servidor corre en HTTP.
     # Enviarlo causaría ERR_SSL_PROTOCOL_ERROR en Chrome al forzar HTTPS en HTTP.
-    response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com;"
+    response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-src * http://* https://* data: blob:;"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
     return response
