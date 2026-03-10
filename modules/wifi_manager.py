@@ -274,13 +274,72 @@ class WifiManager:
         """
         try:
             logger.info(f"Connecting to {ssid}...")
+            
+            # 1. Asegurar un rescan previo para refrescar la caché de NetworkManager
+            subprocess.run(["nmcli", "device", "wifi", "rescan"], capture_output=True, timeout=5)
+            
+            # 2. Intento normal
             cmd = ["nmcli", "device", "wifi", "connect", ssid, "password", password]
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
-            logger.info(f"Successfully connected to {ssid}")
-            return True, "Connected successfully"
-        except subprocess.CalledProcessError as e:
-            err_msg = e.stderr.strip()
-            logger.error(f"Failed to connect to {ssid}: {err_msg}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                logger.info(f"Successfully connected to {ssid}")
+                return True, "Connected successfully"
+                
+            err_msg = result.stderr.strip() or result.stdout.strip()
+            logger.warning(f"Standard connect failed for {ssid}: {err_msg}")
+            
+            # 3. Fallback: creación de perfil forzado contra fallos de descubrimiento / caché
+            if "no se " in err_msg.lower() or "not found" in err_msg.lower() or "no network" in err_msg.lower():
+                logger.info(f"Fallback: Attempting manual profile creation for {ssid}...")
+                
+                check = subprocess.run(['nmcli', '-t', '-f', 'NAME', 'con', 'show'], capture_output=True, text=True)
+                profiles = [p.strip() for p in check.stdout.splitlines() if p.strip()]
+                
+                iface = self._get_wireless_interface()
+                
+                if ssid in profiles:
+                    logger.info(f"Profile {ssid} exists. Updating PSK...")
+                    subprocess.run([
+                        'nmcli', 'con', 'modify', ssid, 
+                        '802-11-wireless-security.key-mgmt', 'wpa-psk', 
+                        '802-11-wireless-security.psk', password
+                    ], capture_output=True)
+                else:
+                    logger.info(f"Creating new profile for {ssid}...")
+                    add_cmd = [
+                        'nmcli', 'con', 'add',
+                        'type', 'wifi',
+                        'con-name', ssid,
+                        'ssid', ssid,
+                        '802-11-wireless-security.key-mgmt', 'wpa-psk',
+                        '802-11-wireless-security.psk', password
+                    ]
+                    if iface:
+                        add_cmd.extend(['ifname', iface])
+                        
+                    res_add = subprocess.run(add_cmd, capture_output=True, text=True)
+                    if res_add.returncode != 0:
+                        logger.error(f"Failed to create profile: {res_add.stderr.strip()}")
+                        return False, err_msg
+                
+                # Intentar levantar conexión
+                up_cmd = ['nmcli', 'con', 'up', ssid]
+                res_up = subprocess.run(up_cmd, capture_output=True, text=True)
+                
+                if res_up.returncode == 0:
+                    logger.info(f"Successfully connected to {ssid} via fallback profile")
+                    return True, "Connected successfully"
+                else:
+                    err_msg2 = res_up.stderr.strip() or res_up.stdout.strip()
+                    logger.error(f"Fallback connection failed: {err_msg2}")
+                    return False, err_msg2
+
             return False, err_msg
+            
+        except subprocess.TimeoutExpired:
+            return False, "Connection timed out"
         except Exception as e:
+            logger.error(f"Exception connecting to {ssid}: {e}")
             return False, str(e)
+
