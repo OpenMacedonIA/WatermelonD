@@ -229,26 +229,45 @@ class WifiManager:
             return None
 
     def _get_wireless_interface(self):
-        """Obtener el nombre de la interfaz inalámbrica (wlan0, wlp3s0, etc) - en caché"""
-        # Devolver resultado en caché si ya lo comprobamos
+        """Obtener el nombre de la interfaz inalámbrica gestionada por NetworkManager - en caché"""
         if self._interface_check_done:
             return self._wireless_interface_cache
         
         try:
-            # Intentar ip link show
-            result = subprocess.run(["ip", "link", "show"], capture_output=True, text=True, timeout=5)
-            for line in result.stdout.splitlines():
-                # Buscar nombres de interfaz que empiecen por 'wl'
+            # Primero intentar con nmcli para asegurarnos de que el dispositivo está manejado (evita 'strictly unmanaged')
+            result = subprocess.run(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE", "device"], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                wifi_devices = []
+                for line in result.stdout.splitlines():
+                    parts = line.split(':')
+                    if len(parts) >= 3 and parts[1] == 'wifi':
+                        device_name, dev_type, state = parts[0], parts[1], parts[2]
+                        # Ignorar explícitamente los que están 'unmanaged'
+                        if state != 'unmanaged':
+                            # Si está conectado o disponible, es candidato
+                            wifi_devices.append(device_name)
+                
+                if wifi_devices:
+                    # Devolver el primero que sea válido (por ej. wlo1 en lugar del wlp1s0 no gestionado)
+                    selected_iface = wifi_devices[0]
+                    logger.info(f"Found managed wireless interface via nmcli: {selected_iface}")
+                    self._wireless_interface_cache = selected_iface
+                    self._interface_check_done = True
+                    return selected_iface
+
+            # Fallback a ip link si nmcli falla
+            result_ip = subprocess.run(["ip", "link", "show"], capture_output=True, text=True, timeout=5)
+            for line in result_ip.stdout.splitlines():
                 match = re.search(r'^\d+:\s+(wl\w+):', line)
                 if match:
                     interface = match.group(1)
-                    logger.info(f"Found wireless interface: {interface}")
+                    logger.info(f"Found wireless interface via ip link: {interface}")
                     self._wireless_interface_cache = interface
                     self._interface_check_done = True
                     return interface
             
             # Alternativa: probar nombres comunes
-            for iface in ['wlan0', 'wlp3s0', 'wlp2s0', 'wlan1']:
+            for iface in ['wlan0', 'wlp3s0', 'wlp2s0', 'wlan1', 'wlo1']:
                 check = subprocess.run(["ip", "link", "show", iface], capture_output=True, timeout=2)
                 if check.returncode == 0:
                     logger.info(f"Found wireless interface (fallback): {iface}")
@@ -256,8 +275,7 @@ class WifiManager:
                     self._interface_check_done = True
                     return iface
             
-            # No se encontró interfaz - registrar solo UNA VEZ
-            logger.warning("No wireless interface found (Ethernet-only system or VM)")
+            logger.warning("No wireless interface found")
             self._interface_check_done = True
             self._wireless_interface_cache = None
             return None
