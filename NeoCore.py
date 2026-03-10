@@ -913,8 +913,14 @@ class NeoCore:
                 # También comprobar el gestor de intenciones para saludo/despedida para capturar variaciones
                 best_intent = self.intent_manager.find_best_intent(command_text)
                 if best_intent and best_intent.get('name') in ['saludo', 'despedida', 'agradecimiento']:
-                    # Saludo/despedida de alta o media confianza del gestor de intenciones
-                    confidence = float(best_intent.get('confidence', 0))
+                    # confidence es siempre numérico (float 0.0-1.0) desde IntentManager
+                    _conf_raw = best_intent.get('confidence', 0)
+                    if isinstance(_conf_raw, str):
+                        # Compatibilidad con versiones antiguas que podían devolver string
+                        _conf_map = {'high': 0.90, 'medium': 0.70, 'low': 0.40}
+                        confidence = _conf_map.get(_conf_raw.lower(), 0.50) * 100
+                    else:
+                        confidence = float(_conf_raw) * 100  # Normalizar a escala 0-100
                     if confidence >= 80:  # Alta confianza
                         # Usar respuesta de atajo si está disponible, de lo contrario genérica
                         shortcut_response = self._check_conversational_shortcuts(command_text)
@@ -1177,7 +1183,43 @@ class NeoCore:
                                  except: pass
                             
                             # Heurística: Si la salida es corta/legible, háblala.
-                            if generated_command.strip().startswith('find'):
+                            if generated_command.strip().startswith('ping'):
+                                # --- Intérprete de resultados PING ---
+                                import re as _re
+                                # Extraer destino del comando (ej: google.com, 192.168.1.1)
+                                _ping_target_match = _re.search(r'ping[^a-z]*(?:-[^\s]+\s+\d+\s+)?(\S+)', generated_command)
+                                _ping_target = _ping_target_match.group(1) if _ping_target_match else "el destino"
+                                
+                                # Buscar línea de estadísticas: "4 packets transmitted, 4 received, 0% packet loss"
+                                _loss_match = _re.search(r'(\d+)%\s+packet\s+loss', output)
+                                # Buscar latencia media: "rtt min/avg/max/mdev = 12.3/15.7/20.1/2.8 ms"
+                                _rtt_match = _re.search(r'rtt[^=]+=\s*[\d.]+/([\d.]+)/', output)
+                                
+                                if _loss_match:
+                                    _loss_pct = int(_loss_match.group(1))
+                                    _avg_ms = _rtt_match.group(1) if _rtt_match else None
+                                    
+                                    if _loss_pct == 0:
+                                        if _avg_ms:
+                                            self.speak(f"Ping a {_ping_target} exitoso. Latencia media de {_avg_ms} milisegundos.")
+                                        else:
+                                            self.speak(f"Ping a {_ping_target} exitoso. Todos los paquetes llegaron.")
+                                    elif _loss_pct == 100:
+                                        self.speak(f"Sin respuesta de {_ping_target}. Host inaccesible o sin conexión.")
+                                    else:
+                                        if _avg_ms:
+                                            self.speak(f"Ping a {_ping_target} con problemas. Pérdida del {_loss_pct} por ciento. Latencia media {_avg_ms} milisegundos.")
+                                        else:
+                                            self.speak(f"Ping a {_ping_target} con pérdida del {_loss_pct} por ciento de paquetes.")
+                                else:
+                                    # No se encontró línea de estadísticas (ej: ping falló inmediatamente)
+                                    if 'unknown host' in output.lower() or 'name or service not known' in output.lower():
+                                        self.speak(f"No se pudo resolver el nombre {_ping_target}. Comprueba la conexión DNS.")
+                                    elif 'network is unreachable' in output.lower():
+                                        self.speak(f"Red inaccesible. Comprueba tu conexión.")
+                                    else:
+                                        self.speak(f"Ping ejecutado. No pude interpretar el resultado.")
+                            elif generated_command.strip().startswith('find'):
                                 lines_found = len([line for line in output.splitlines() if line.strip()])
                                 if lines_found == 0:
                                     self.speak("No he encontrado ningún archivo.")
@@ -1673,7 +1715,7 @@ class NeoCore:
         # 1. Gestor de Intenciones (NLP)
         intent = self.intent_manager.find_best_intent(command_text)
         if intent and intent.get('score', 0) > 70:
-             app_logger.info(f"Intent detectado: {intent.get('name', 'Unknown')} ({intent.get('confidence', 'N/A')})")
+             app_logger.info(f"Intent detectado: {intent.get('name', 'Unknown')} ({intent.get('confidence_label', intent.get('confidence', 'N/A'))})")
              # Aquí iría la lógica de ejecución de intents, por ahora devolvemos respuesta simple o delegamos
              # En la versión refactorizada, NeoCore delegaba esto.
              # Para simplificar: si hay intent, podríamos mapearlo a una acción.

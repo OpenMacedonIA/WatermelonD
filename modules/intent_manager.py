@@ -95,10 +95,12 @@ class IntentManager:
             result_intent['score'] = best_score
             
             if best_score > 80:
-                result_intent['confidence'] = 'high'
+                result_intent['confidence'] = best_score / 100.0  # float 0.0-1.0
+                result_intent['confidence_label'] = 'high'
                 return result_intent
             elif best_score > 65:
-                result_intent['confidence'] = 'low'
+                result_intent['confidence'] = best_score / 100.0  # float 0.0-1.0
+                result_intent['confidence_label'] = 'low'
                 return result_intent
         
         return None

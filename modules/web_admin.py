@@ -990,6 +990,65 @@ def api_actions():
     
     return jsonify({'success': False, 'output': 'Acción desconocida'})
 
+@app.route('/api/docker/ps', methods=['GET'])
+@login_required
+def api_docker_ps():
+    """Devuelve la lista de contenedores Docker/Podman en formato estructurado."""
+    import shutil
+
+    # Detectar el motor de contenedores disponible (docker > podman)
+    engine = 'docker' if shutil.which('docker') else ('podman' if shutil.which('podman') else None)
+
+    if not engine:
+        return jsonify({'success': False, 'message': 'Docker ni Podman encontrados en el sistema.', 'containers': []})
+
+    try:
+        # Formato personalizado con delimitador para parseo fácil
+        fmt = '{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}|{{.RunningFor}}'
+        result = subprocess.run(
+            [engine, 'ps', '-a', f'--format={fmt}'],
+            capture_output=True, text=True, timeout=10
+        )
+
+        containers = []
+        for line in result.stdout.strip().splitlines():
+            if not line.strip():
+                continue
+            parts = line.split('|')
+            if len(parts) >= 6:
+                status_raw = parts[3]
+                # Determinar estado simplificado
+                if status_raw.lower().startswith('up'):
+                    state = 'running'
+                elif 'exited' in status_raw.lower():
+                    state = 'exited'
+                elif 'paused' in status_raw.lower():
+                    state = 'paused'
+                else:
+                    state = 'unknown'
+
+                containers.append({
+                    'id':      parts[0][:12],
+                    'name':    parts[1],
+                    'image':   parts[2],
+                    'status':  status_raw,
+                    'state':   state,
+                    'ports':   parts[4] if parts[4] else '—',
+                    'running_for': parts[5],
+                })
+
+        return jsonify({
+            'success': True,
+            'engine': engine,
+            'count': len(containers),
+            'containers': containers
+        })
+
+    except subprocess.TimeoutExpired:
+        return jsonify({'success': False, 'message': 'Tiempo de espera agotado.', 'containers': []})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e), 'containers': []})
+
 # --- API SSH ---
 
 @app.route('/api/ssh/list', methods=['GET'])
