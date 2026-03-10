@@ -275,38 +275,50 @@ class WifiManager:
         try:
             logger.info(f"Connecting to {ssid}...")
             
+            iface = self._get_wireless_interface()
+            
             # 1. Asegurar un rescan previo para refrescar la caché de NetworkManager
-            subprocess.run(["nmcli", "device", "wifi", "rescan"], capture_output=True, timeout=5)
+            rescan_cmd = ["nmcli", "device", "wifi", "rescan"]
+            if iface:
+                rescan_cmd.extend(["ifname", iface])
+            subprocess.run(rescan_cmd, capture_output=True, timeout=5)
             
             # 2. Intento normal
             cmd = ["nmcli", "device", "wifi", "connect", ssid, "password", password]
+            if iface:
+                cmd.extend(["ifname", iface])
+                
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             if result.returncode == 0:
-                logger.info(f"Successfully connected to {ssid}")
+                logger.info(f"Successfully connected to {ssid} on {iface or 'default'}")
                 return True, "Connected successfully"
                 
             err_msg = result.stderr.strip() or result.stdout.strip()
             logger.warning(f"Standard connect failed for {ssid}: {err_msg}")
             
-            # 3. Fallback: creación de perfil forzado contra fallos de descubrimiento / caché
-            if "no se " in err_msg.lower() or "not found" in err_msg.lower() or "no network" in err_msg.lower():
-                logger.info(f"Fallback: Attempting manual profile creation for {ssid}...")
+            # 3. Fallback: creación de perfil forzado contra fallos de descubrimiento / caché / interfaz errónea
+            # Ampliamos para incluir el fallo "No suitable device found" u otros de activación
+            if "no se " in err_msg.lower() or "not found" in err_msg.lower() or "no network" in err_msg.lower() or "no suitable device" in err_msg.lower() or "activ" in err_msg.lower():
+                logger.info(f"Fallback: Attempting manual profile creation/update for {ssid}...")
                 
                 check = subprocess.run(['nmcli', '-t', '-f', 'NAME', 'con', 'show'], capture_output=True, text=True)
                 profiles = [p.strip() for p in check.stdout.splitlines() if p.strip()]
                 
-                iface = self._get_wireless_interface()
-                
                 if ssid in profiles:
-                    logger.info(f"Profile {ssid} exists. Updating PSK...")
-                    subprocess.run([
+                    logger.info(f"Profile {ssid} exists. Updating PSK and binding to {iface or 'default_iface'}...")
+                    modify_cmd = [
                         'nmcli', 'con', 'modify', ssid, 
                         '802-11-wireless-security.key-mgmt', 'wpa-psk', 
                         '802-11-wireless-security.psk', password
-                    ], capture_output=True)
+                    ]
+                    if iface:
+                        # Asegurar que el perfil solo puede usarse en la interfaz WiFi y no en docker0
+                        modify_cmd.extend(['connection.interface-name', iface])
+                        
+                    subprocess.run(modify_cmd, capture_output=True)
                 else:
-                    logger.info(f"Creating new profile for {ssid}...")
+                    logger.info(f"Creating new profile for {ssid} binding to {iface or 'default'}...")
                     add_cmd = [
                         'nmcli', 'con', 'add',
                         'type', 'wifi',
@@ -316,15 +328,18 @@ class WifiManager:
                         '802-11-wireless-security.psk', password
                     ]
                     if iface:
-                        add_cmd.extend(['ifname', iface])
+                        add_cmd.extend(['ifname', iface, 'connection.interface-name', iface])
                         
                     res_add = subprocess.run(add_cmd, capture_output=True, text=True)
                     if res_add.returncode != 0:
                         logger.error(f"Failed to create profile: {res_add.stderr.strip()}")
                         return False, err_msg
                 
-                # Intentar levantar conexión
+                # Intentar levantar conexión forzada en la interfaz correcta
                 up_cmd = ['nmcli', 'con', 'up', ssid]
+                if iface:
+                    up_cmd.extend(['ifname', iface])
+                    
                 res_up = subprocess.run(up_cmd, capture_output=True, text=True)
                 
                 if res_up.returncode == 0:
