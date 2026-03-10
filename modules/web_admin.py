@@ -1570,23 +1570,33 @@ def api_dashboard_layout():
 
 # --- API DE ARCHIVOS ---
 
+_EXPLORER_ROOT = os.path.expanduser('~')  # Directorio raíz del explorador
+
+def _safe_path(path):
+    """Devuelve una ruta absoluta segura dentro del home del usuario."""
+    if not path or path in ('/', '~'):
+        return _EXPLORER_ROOT
+    # Resolver ~ y rutas relativas
+    path = os.path.expanduser(path)
+    path = os.path.realpath(path)
+    return path
+
 @app.route('/api/files/list', methods=['POST'])
 @login_required
 def api_files_list():
     """Lista directorio."""
-    path = request.json.get('path')
-    if not path:
-        path = os.path.expanduser('~') # Por defecto a HOME en lugar de /
+    raw_path = request.json.get('path', '')
+    path = _safe_path(raw_path)
     success, items = file_manager.list_directory(path)
     if success:
-        return jsonify({'success': True, 'items': items})
-    return jsonify({'success': False, 'message': items})
+        return jsonify({'success': True, 'items': items, 'current_path': path})
+    return jsonify({'success': False, 'message': items, 'current_path': path})
 
 @app.route('/api/files/read', methods=['POST'])
 @login_required
 def api_files_read():
     """Lee archivo."""
-    path = request.json.get('path')
+    path = _safe_path(request.json.get('path', ''))
     success, content = file_manager.read_file(path)
     if success:
         return jsonify({'success': True, 'content': content})
@@ -1597,8 +1607,40 @@ def api_files_read():
 def api_files_save():
     """Guarda archivo."""
     data = request.json
-    success, msg = file_manager.save_file(data['path'], data['content'])
+    path = _safe_path(data.get('path', ''))
+    success, msg = file_manager.save_file(path, data.get('content', ''))
     return jsonify({'success': success, 'message': msg})
+
+@app.route('/api/files/delete', methods=['POST'])
+@login_required
+def api_files_delete():
+    """Elimina archivo o directorio vacío."""
+    import shutil
+    path = _safe_path(request.json.get('path', ''))
+    try:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/files/mkdir', methods=['POST'])
+@login_required
+def api_files_mkdir():
+    """Crea directorio."""
+    parent = _safe_path(request.json.get('parent', ''))
+    name   = request.json.get('name', '').strip()
+    if not name or '/' in name or '..' in name:
+        return jsonify({'success': False, 'message': 'Nombre no válido'})
+    new_dir = os.path.join(parent, name)
+    try:
+        os.makedirs(new_dir, exist_ok=True)
+        return jsonify({'success': True, 'path': new_dir})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 
 @app.route('/api/visual/content', methods=['GET'])
 def api_visual_content():
