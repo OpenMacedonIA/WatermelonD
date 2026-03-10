@@ -25,7 +25,7 @@ class AIEngine:
             app_logger.info("Configurado modelo Gemma Q8 (Lazy Loading).")
         else:
             self.model_path = self.default_path
-            app_logger.info(f"Configured default model: {self.model_path} (Lazy Loading)")
+            app_logger.info(f"Configurado modelo por defecto: {self.model_path} (Lazy Loading)")
 
         self.llm = None
         self.is_ready = False

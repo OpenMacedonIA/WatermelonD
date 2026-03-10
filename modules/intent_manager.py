@@ -25,7 +25,7 @@ class IntentManager:
         network_intents = load_json_data(network_intents_path, 'intents')
         if network_intents:
             self.intents.extend(network_intents)
-            app_logger.info(f"Loaded {len(network_intents)} network intents.")
+            app_logger.info(f"Cargados {len(network_intents)} intents de red.")
 
         # Pre-procesar intenciones para búsqueda rápida
         self.intent_map = {}
@@ -36,7 +36,7 @@ class IntentManager:
         
         # Optimización: Pre-calcular lista de triggers
         self.triggers_list = list(self.intent_map.keys())
-        app_logger.info(f"Pre-processed {len(self.intent_map)} intents for fast lookup.")
+        app_logger.info(f"Pre-procesadas {len(self.intent_map)} intenciones para búsqueda rápida.")
 
     from functools import lru_cache
 
