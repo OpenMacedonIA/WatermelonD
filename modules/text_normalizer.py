@@ -48,7 +48,7 @@ class TextNormalizer:
                         # Mapeamos la variante incorrecta a la canónica
                         self.replacements[variant.lower()] = canonical
             
-            app_logger.info(f"Normalizer cargado con {len(self.replacements)} términos correctivos.")
+            app_logger.info(f"Normalizer loaded with {len(self.replacements)} corrective terms.")
             
         except Exception as e:
             app_logger.error(f"Error cargando diccionario de normalización: {e}")

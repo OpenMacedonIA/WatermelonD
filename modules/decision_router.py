@@ -33,10 +33,10 @@ class DecisionRouter:
     def _load_model(self):
         """Carga el Pipeline de Clasificación de Texto."""
         try:
-            app_logger.info(f"Cargando Router Model (Pipeline) desde: {self.model_path}...")
+            app_logger.info(f"Loading Router Model (Pipeline) from: {self.model_path}...")
             # Usamos pipeline para inferencia directa. Asume que el modelo tiene id2label configurado.
             self.classifier = pipeline("text-classification", model=self.model_path, top_k=1)
-            app_logger.info("Router Model cargado exitosamente.")
+            app_logger.info("Router Model loaded successfully.")
         except Exception as e:
             app_logger.error(f"Error cargando Router Model: {e}")
             self.enabled = False

@@ -80,7 +80,7 @@ class SystemIntentMatcher:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             intents = data.get("intents", [])
-            logger.info(f"Cargados {len(intents)} system intents desde {path}")
+            logger.info(f"Loaded {len(intents)} system intents from {path}")
             return intents
         except Exception as e:
             logger.error(f"Error cargando {path}: {e}")

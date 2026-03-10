@@ -114,7 +114,7 @@ class SocketLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-app_logger.info("El registro de logs ha sido iniciado (desde NeoCore Refactored).")
+app_logger.info("Log recording has started (from NeoCore Refactored).")
 
 class NeoCore:
     """
@@ -124,7 +124,7 @@ class NeoCore:
     def __init__(self):
         # --- Asignar Logger al objeto para que los Skills lo usen ---
         self.app_logger = app_logger
-        self.app_logger.info("Iniciando Neo Core (System v2.5.0 - Optimized)...")
+        self.app_logger.info("Starting Neo Core (System v2.5.0 - Optimized)...")
 
         try:
             locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
@@ -251,7 +251,7 @@ class NeoCore:
                 self.vision_manager = None
         else:
             self.vision_manager = None
-            self.app_logger.info("VisionManager deshabilitado por configuración (evita Segfaults).")
+            self.app_logger.info("VisionManager disabled by configuration (prevents Segfaults).")
         self.file_manager = FileManager()
         self.cast_manager = CastManager()
         self.cast_manager.start_discovery() # Start looking for TVs/Speakers
@@ -310,7 +310,7 @@ class NeoCore:
             self.voice_auth_skill = VoiceAuthSkill(self)
         except ImportError:
              self.voice_auth_skill = None
-             app_logger.info("Habilidad Opcional 'VoiceAuth' no encontrada.")
+             app_logger.info("Optional Skill 'VoiceAuth' not found.")
         
         self.vlc_instance, self.player = self.setup_vlc()
         
@@ -321,7 +321,7 @@ class NeoCore:
         if SystemIntentMatcher:
             try:
                 self.system_intent_matcher = SystemIntentMatcher(self)
-                self.app_logger.info("[OK] SystemIntentMatcher inicializado (pre-router de sistema).")
+                self.app_logger.info("[OK] SystemIntentMatcher initialized (system pre-router).")
             except Exception as _e:
                 self.app_logger.error(f"[ERROR] SystemIntentMatcher no pudo inicializarse: {_e}")
                 self.system_intent_matcher = None
@@ -477,7 +477,7 @@ class NeoCore:
         if WEB_ADMIN_DISPONIBLE:
             self._thread_web = threading.Thread(target=run_server, daemon=True, name="Web_Server")
             self._thread_web.start()
-            app_logger.info("Servidor Web Admin iniciado en segundo plano.")
+            app_logger.info("Web Admin Server started in background.")
 
         # 5. Autorreparación
         self.health_manager.start()
@@ -543,7 +543,7 @@ class NeoCore:
 
     def load_resources(self):
         """Carga recursos estáticos (NLP, Seguridad, Visión)."""
-        app_logger.info("Cargando recursos del sistema...")
+        app_logger.info("Loading system resources...")
         
         # 1. NLP Resources
         try:
@@ -583,7 +583,7 @@ class NeoCore:
 
     def on_closing(self):
         """Limpieza al cerrar."""
-        app_logger.info("Cerrando Neo Core...")
+        app_logger.info("Closing Neo Core...")
         self.voice_manager.stop_listening()
         if self.player:
             self.player.stop()
@@ -646,11 +646,11 @@ class NeoCore:
                  self.voice_manager.set_processing(False)
                  return
              
-             app_logger.info(f"Comando limpio (sin WW): '{command_clean}'")
+             app_logger.info(f"Clean command (no WW): '{command_clean}'")
              
              # Ignorar capturas ambientales o alucinaciones (ej. "(pasos)", "[ruido]")
              if _re.match(r'^[\(\[\*].*[\)\]\*]$', command_clean.strip()):
-                 app_logger.info(f"Descartando ruido ambiental detectado: '{command_clean}'")
+                 app_logger.info(f"Discarding detected ambient noise: '{command_clean}'")
                  self.voice_manager.set_processing(False)
                  return
              
@@ -1277,6 +1277,8 @@ class NeoCore:
                                 
                                 self.speak(f"Hay {texto_archivos} y {texto_dirs}.")
                                 self.last_find_results = output
+                            elif self._is_docker_exec_command(generated_command):
+                                self.speak(self._get_docker_phrase(generated_command, output))
                             elif len(output) < 200:
                                 self.speak(f"Hecho: {output}")
                             else:
@@ -1303,10 +1305,10 @@ class NeoCore:
                 if self.brain:
                     alias_command = self.brain.process_input(command_text)
                     if alias_command:
-                        app_logger.info(f"Alias detectado: '{command_text}' -> '{alias_command}'")
+                        app_logger.info(f"Alias detected: '{command_text}' -> '{alias_command}'")
                         command_text = alias_command
 
-                app_logger.info(f"Comando: '{command_text}'. Buscando intención...")
+                app_logger.info(f"Command: '{command_text}'. Searching for intent...")
 
                 # --- Flujo de sugerencias / Aprendizaje ---
                 if self.pending_suggestion:
@@ -1384,7 +1386,7 @@ class NeoCore:
 
     def handle_action_result_with_chat(self, command_text, result_text, source_command: str = ""):
         """Procesa el resultado de una acción y decide cómo responder (Smart Filtering)."""
-        app_logger.info(f"Procesando resultado de acción. Longitud: {len(result_text)}")
+        app_logger.info(f"Processing action result. Length: {len(result_text)}")
 
         # --- MALBEC: Si es un comando Docker de ejecución, usar frase contextual ---
         if self._is_docker_exec_command(source_command):
@@ -1502,7 +1504,7 @@ class NeoCore:
 
                 if action_type == 'speak':
                     text_to_speak = action.get('text')
-                    app_logger.info(f"Procesando evento SPEAK: {text_to_speak}")
+                    app_logger.info(f"Processing SPEAK event: {text_to_speak}")
                     self.is_processing_command = True
                     
                     # Emitir respuesta IA a la UI
@@ -1521,7 +1523,7 @@ class NeoCore:
                         # Activar ventana de escucha activa (8 segundos)
                         self.active_listening_end_time = time.time() + 8
                         if update_face: update_face('listening') # Mantener cara de escucha
-                        app_logger.info("Ventana de escucha activa iniciada (8s).") 
+                        app_logger.info("Active listening window started (8s).") 
                 
                 elif action_type == 'mqtt_alert':
                     # Alerta crítica de un agente
@@ -1721,7 +1723,7 @@ class NeoCore:
         # 1. Gestor de Intenciones (NLP)
         intent = self.intent_manager.find_best_intent(command_text)
         if intent and intent.get('score', 0) > 70:
-             app_logger.info(f"Intent detectado: {intent.get('name', 'Unknown')} ({intent.get('confidence_label', intent.get('confidence', 'N/A'))})")
+             app_logger.info(f"Intent detected: {intent.get('name', 'Unknown')} ({intent.get('confidence_label', intent.get('confidence', 'N/A'))})")
              # Aquí iría la lógica de ejecución de intents, por ahora devolvemos respuesta simple o delegamos
              # En la versión refactorizada, NeoCore delegaba esto.
              # Para simplificar: si hay intent, podríamos mapearlo a una acción.
@@ -1731,7 +1733,7 @@ class NeoCore:
         # 2. Keyword Router (Comandos directos)
         router_response = self.keyword_router.process(command_text)
         if router_response:
-             app_logger.info(f"Keyword Router ejecutó: {command_text}")
+             app_logger.info(f"Keyword Router executed: {command_text}")
              if isinstance(router_response, str):
                  self.speak(router_response)
              return router_response

@@ -98,7 +98,7 @@ class SpecificModelRunner:
         sorted_models = sorted(self.stats.items(), key=lambda x: x[1], reverse=True)
         top_models = [m[0] for m in sorted_models[:self.max_models]]
         
-        app_logger.info(f"Pre-cargando modelos frecuentes: {top_models}")
+        app_logger.info(f"Pre-loading frequent models: {top_models}")
         for label in top_models:
             try:
                 self._load_model_into_memory(label)
@@ -125,7 +125,7 @@ class SpecificModelRunner:
                     to_remove.append(label)
             
             for label in to_remove:
-                app_logger.info(f"TTL Cleanup: Descargando modelo '{label}' (idle {self.MODEL_TTL_SECONDS}s)")
+                app_logger.info(f"TTL Cleanup: Unloading model '{label}' (idle {self.MODEL_TTL_SECONDS}s)")
                 # Usar pop() con default None para evitar KeyError en race conditions
                 # (el hilo de inferencia pudo cargar el modelo justo antes del cleanup)
                 self.sessions.pop(label, None)
@@ -153,7 +153,7 @@ class SpecificModelRunner:
             )
             if has_local_tokenizer:
                 tokenizer = AutoTokenizer.from_pretrained(model_dir)
-                app_logger.info(f"Tokenizer cargado desde directorio local: {model_dir}")
+                app_logger.info(f"Tokenizer loaded from local directory: {model_dir}")
             else:
                 # Buscar tokenizer en modelos hermanos locales antes de intentar descarga
                 sibling_models = ["chardonnay", "pinot", "syrah", "malbec"]
@@ -192,7 +192,7 @@ class SpecificModelRunner:
             sess_opts.log_severity_level = 3  # Suprimir warnings verbosos de ONNX
 
             if os.path.exists(encoder_file) and os.path.exists(decoder_file):
-                app_logger.info(f"Cargando Modelo Encoder-Decoder ({label}) en RAM...")
+                app_logger.info(f"Loading Encoder-Decoder Model ({label}) into RAM...")
                 encoder_session  = ort.InferenceSession(encoder_file,  sess_options=sess_opts)
                 decoder_session  = ort.InferenceSession(decoder_file,  sess_options=sess_opts)
                 dec_past_session = ort.InferenceSession(dec_past_file, sess_options=sess_opts) \
@@ -223,7 +223,7 @@ class SpecificModelRunner:
                 # Excluimos el target_label si estuviera (que no está)
                 lru_label = min(self.sessions.keys(), key=lambda k: self.last_access.get(k, 0))
                 
-                app_logger.info(f"Liberando RAM: Descargando modelo '{lru_label}' (LRU eviction).")
+                app_logger.info(f"Freeing RAM: Unloading model '{lru_label}' (LRU eviction).")
                 del self.sessions[lru_label]
                 del self.tokenizers[lru_label]
                 del self.last_access[lru_label]
@@ -242,7 +242,7 @@ class SpecificModelRunner:
         task_prefix = self.MODEL_TASK_PREFIXES.get(label, "")
         if task_prefix and not text.startswith(task_prefix):
             text = task_prefix + text
-            app_logger.info(f"Prefijo de tarea aplicado: '{task_prefix[:40]}...'")
+            app_logger.info(f"Applied task prefix: '{task_prefix[:40]}...'")
 
         # 3. Gestionar Memoria y Carga
         try:

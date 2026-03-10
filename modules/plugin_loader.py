@@ -14,7 +14,7 @@ class PluginLoader:
         if not os.path.exists(self.extensions_dir):
             os.makedirs(self.extensions_dir)
             
-        app_logger.info(f" Buscando plugins en: {self.extensions_dir}")
+        app_logger.info(f" Searching for plugins in: {self.extensions_dir}")
         sys.path.insert(0, self.extensions_dir)
 
         count = 0
@@ -27,7 +27,7 @@ class PluginLoader:
                 except Exception as e:
                     app_logger.error(f"[ERROR] Error cargando plugin '{plugin_name}': {e}")
         
-        app_logger.info(f"[OK] Se han cargado {count} plugins externos.")
+        app_logger.info(f"[OK] Loaded {count} external plugins.")
 
     def _load_single_plugin(self, name):
         """Carga un módulo dinámicamente e instancia su clase principal."""
