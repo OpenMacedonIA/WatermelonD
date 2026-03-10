@@ -467,6 +467,12 @@ def explorer():
     """Renderiza el explorador de archivos."""
     return render_template('explorer.html', page='explorer')
 
+@app.route('/browser')
+@login_required
+def browser():
+    """Renderiza un iframe para acceder a otros servicios web internamente."""
+    return render_template('browser.html', page='browser')
+
 @app.route('/knowledge')
 @login_required
 def knowledge():
