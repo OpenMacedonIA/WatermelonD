@@ -277,6 +277,11 @@ class WifiManager:
             
             iface = self._get_wireless_interface()
             
+            if iface:
+                # 0. Asegurar que NetworkManager gestione la interfaz (evitar el error 'strictly unmanaged')
+                manage_cmd = ["nmcli", "device", "set", iface, "managed", "yes"]
+                subprocess.run(manage_cmd, capture_output=True, timeout=5)
+            
             # 1. Asegurar un rescan previo para refrescar la caché de NetworkManager
             rescan_cmd = ["nmcli", "device", "wifi", "rescan"]
             if iface:
