@@ -43,6 +43,20 @@ app.secret_key = secret_key
 # Inicializar Protección CSRF
 csrf = CSRFProtect(app)
 
+# El proxy TangerineUI llama al backend sin poder reenviar el token CSRF
+# (solo reenvía cookies de sesión). Desactivamos el chequeo global y lo
+# aplicamos manualmente SOLO en las rutas de formulario HTML (/login, /settings…).
+# Las rutas /api/* son JSON endpoints protegidos por sesión → no necesitan CSRF.
+app.config['WTF_CSRF_CHECK_DEFAULT'] = False
+
+@app.before_request
+def _apply_csrf_on_html_forms():
+    """Activa CSRF solo en rutas de formulario HTML (no en /api/*)."""
+    if request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+        if not request.path.startswith('/api/') and not request.is_json:
+            csrf.protect()
+
+
 # Inicializar SocketIO
 # Revertir a threading para compatibilidad con PyAudio/Voice Threads
 # Se añadieron configuraciones de keepalive para prevenir desconexiones
