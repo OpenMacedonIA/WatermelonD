@@ -606,7 +606,6 @@ class NeoCore:
         command_lower = command.lower()
         
         # --- VISUAL FEEDBACK: STT RESULT ---
-        # --- VISUAL FEEDBACK: STT RESULT ---
         if self.web_server:
              try:
                  app_logger.info(f"Emitiendo resultado de STT: {command}")

@@ -25,7 +25,7 @@ def get_system_info():
         },
         "app": {
             "name": "Neo Core",
-            "version": "2.5.0",
+            "version": "3.0.0",
             "type": "Modular AI Assistant"
         },
         "libraries": {
