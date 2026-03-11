@@ -28,6 +28,7 @@ training_data/
 .flatpak_builder/
 NeoClient/
 build-dir/
+mkdocs.yml
 
 # init_db.py # Keep this if it's the schema creator
 
