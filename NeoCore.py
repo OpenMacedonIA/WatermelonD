@@ -1,5 +1,10 @@
 import threading
 import os
+
+# Prevent HuggingFace from attempting to connect to the internet, which causes crashes/freezes when offline
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 import queue
 import time
 import logging
