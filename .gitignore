@@ -24,8 +24,11 @@ database/brain.db-shm
 database/brain.db-wal
 training_data/
 .flatpak/
+.venv_distrobox/
+.flatpak_builder/
 NeoClient/
 build-dir/
+
 # init_db.py # Keep this if it's the schema creator
 
 # Configuration & Secrets
