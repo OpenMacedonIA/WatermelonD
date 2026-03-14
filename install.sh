@@ -1080,49 +1080,127 @@ function install_distrobox() {
         --no-entry 2>/dev/null || distrobox create --name "$BOX_NAME" --image "$BOX_IMAGE" --yes || true
 
     # Crear script temporal con los comandos de instalación dentro del box
+    # IMPORTANTE: Este script NO llama a install.sh recursivamente para evitar el bucle
+    # de whiptail interactivo dentro del contenedor. En su lugar, ejecuta los pasos
+    # de instalación directamente de forma no interactiva.
     local SETUP_SCRIPT="/tmp/watermelond_box_setup.sh"
     cat > "$SETUP_SCRIPT" << 'BOXSETUP'
 #!/bin/bash
 set -e
+
+# 1. Instalar git si falta
 if ! command -v git &> /dev/null; then
     if command -v apt-get &> /dev/null; then
-        sudo apt-get update && sudo apt-get install -y git
+        sudo apt-get update && sudo apt-get install -y git curl
     elif command -v dnf &> /dev/null; then
-        sudo dnf install -y git
+        sudo dnf install -y git curl
     elif command -v pacman &> /dev/null; then
-        sudo pacman -Sy --noconfirm git
+        sudo pacman -Sy --noconfirm git curl
     elif command -v zypper &> /dev/null; then
-        sudo zypper install -y git
+        sudo zypper install -y git curl
     fi
 fi
+
+# 2. Clonar repositorio si no existe
 cd "$HOME"
 if [ ! -d WatermelonD ]; then
-    git clone https://github.com/OpenMacedonIA/WatermelonD.git
+    git clone -b rc_180226 https://github.com/OpenMacedonIA/WatermelonD.git
 fi
 cd WatermelonD
-git submodule update --init --remote --recursive
-bash install.sh
+git submodule update --init --remote --recursive 2>/dev/null || true
+
+# 3. Instalar dependencias del sistema (Ubuntu/Debian dentro del box)
+if command -v apt-get &> /dev/null; then
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends \
+        python3 python3-pip python3-venv curl wget sqlite3 \
+        portaudio19-dev python3-pyaudio alsa-utils \
+        ffmpeg git-lfs cmake build-essential \
+        libssl-dev libffi-dev libfann-dev swig \
+        mosquitto mosquitto-clients \
+        net-tools 2>/dev/null || true
+fi
+
+# 4. Instalar uv y crear venv
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+    [ -f "$HOME/.local/bin/env" ] && source "$HOME/.local/bin/env" || true
+fi
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+VENV_DIR="$(pwd)/venv"
+[ -d "$VENV_DIR" ] && rm -rf "$VENV_DIR"
+uv venv "$VENV_DIR" --python 3.10 2>/dev/null || uv venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
+uv pip install --upgrade pip
+uv pip install -r requirements.txt
+uv pip install Flask-WTF eventlet Flask-Limiter 2>/dev/null || true
+
+# 5. Directorios necesarios
+for d in logs config database models piper/voices docs/brain_memory; do
+    mkdir -p "$d"
+    chmod 775 "$d"
+done
+
+# 6. Config por defecto
+if [ ! -f config/config.json ]; then
+    if [ -f config/config.json.example ]; then
+        cp config/config.json.example config/config.json
+    else
+        echo '{}' > config/config.json
+    fi
+fi
+
+# 7. Inicializar BD
+export PYTHONPATH=$(pwd)
+"$VENV_DIR/bin/python" database/init_db.py 2>/dev/null || true
+
+# 8. Certificado SSL
+mkdir -p config/certs
+if command -v openssl &>/dev/null && [ ! -f config/certs/neo.key ]; then
+    openssl req -x509 -newkey rsa:4096 \
+        -keyout config/certs/neo.key \
+        -out config/certs/neo.crt \
+        -days 3650 -nodes \
+        -subj "/CN=watermelond" 2>/dev/null || true
+    chmod 600 config/certs/neo.key 2>/dev/null || true
+fi
+
+echo ""
+echo "======================================================"
+echo "  WatermelonD instalado en el contenedor Distrobox."
+echo "  Inicia con:  cd ~/WatermelonD && source venv/bin/activate && python NeoCore.py"
+echo "======================================================"
 BOXSETUP
     chmod +x "$SETUP_SCRIPT"
 
     echo "Instalando WatermelonD dentro de Distrobox..."
     distrobox enter "$BOX_NAME" -- bash "$SETUP_SCRIPT"
+    local EXIT_CODE=$?
     rm -f "$SETUP_SCRIPT"
+
+    if [ $EXIT_CODE -ne 0 ]; then
+        whiptail --msgbox "[ERROR] La instalación dentro del contenedor falló (código $EXIT_CODE).\n\nRevisa la salida del terminal para más detalles." 10 70
+        return 1
+    fi
 
     # Crear lanzador en el host
     mkdir -p "$HOME/.local/bin"
     cat > "$HOME/.local/bin/watermelond" << 'LAUNCHER'
 #!/bin/bash
-distrobox enter watermelond -- bash -c 'cd ~/WatermelonD && source venv/bin/activate && python NeoCore.py'
+# Lanzador WatermelonD para Distrobox
+distrobox enter watermelond -- bash --login -c \
+    'cd ~/WatermelonD && source venv/bin/activate && exec python NeoCore.py'
 LAUNCHER
     chmod +x "$HOME/.local/bin/watermelond"
 
     # Añadir ~/.local/bin al PATH si no está
-    if ! grep -q 'HOME/.local/bin' "$HOME/.bashrc" 2>/dev/null; then
+    if ! grep -q '\.local/bin' "$HOME/.bashrc" 2>/dev/null; then
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
     fi
 
-    whiptail --msgbox "Distrobox configurado.\n\nLanza WatermelonD con:\n  watermelond\n\nO accede al contenedor con:\n  distrobox enter watermelond" 14 62
+    whiptail --msgbox "Distrobox configurado correctamente.\n\nLanza WatermelonD con:\n  watermelond\n\nO accede al contenedor con:\n  distrobox enter watermelond" 14 62
 }
 
 # ── Docker ────────────────────────────────────────────────────────────────────
@@ -1152,12 +1230,21 @@ function install_docker() {
         echo "[AVISO] Puede que necesites cerrar sesión para aplicar grupo docker."
     fi
 
-    # 2. Comprobar/instalar docker-compose (v2 o v1)
-    if ! docker compose version &>/dev/null && ! command -v docker-compose &>/dev/null; then
+    # 2. Comprobar/instalar docker-compose (v2 plugin o v1 standalone)
+    if ! docker compose version &>/dev/null 2>&1 && ! command -v docker-compose &>/dev/null; then
         echo "Instalando docker-compose plugin..."
-        sudo apt-get install -y docker-compose-plugin 2>/dev/null || \
-        pip3 install docker-compose 2>/dev/null || \
-        echo "[AVISO] docker-compose no instalado. Instala manualmente si lo necesitas."
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y docker-compose-plugin 2>/dev/null || true
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install -y docker-compose 2>/dev/null || true
+        elif command -v pacman &>/dev/null; then
+            sudo pacman -Sy --noconfirm docker-compose 2>/dev/null || true
+        fi
+        # Fallback: instalar con pip3
+        if ! docker compose version &>/dev/null 2>&1 && ! command -v docker-compose &>/dev/null; then
+            pip3 install docker-compose 2>/dev/null || \
+                echo "[AVISO] docker-compose no instalado. Instala manualmente si lo necesitas."
+        fi
     fi
 
     # 3. Generar Dockerfile si no existe
@@ -1175,8 +1262,11 @@ function install_docker() {
         "3" "Solo generar imagen (sin levantar)" \
         3>&1 1>&2 2>&3) || DOCKER_MODE="1"
 
-    echo "Construyendo imagen watermelond..."
-    docker build -t watermelond:latest .
+    echo "Construyendo imagen watermelond (esto puede tardar unos minutos)..."
+    docker build -t watermelond:latest . || {
+        whiptail --msgbox "[ERROR] docker build falló.\nRevisa el Dockerfile y los logs anteriores." 10 60
+        return 1
+    }
 
     case "$DOCKER_MODE" in
         1)
@@ -1257,25 +1347,29 @@ function install_podman() {
             podman-compose up -d
             ;;
         2)
+            # Eliminar contenedor anterior si existe
+            podman rm -f watermelond 2>/dev/null || true
+
             podman run -d \
                 --name watermelond \
-                --restart unless-stopped \
+                --restart=always \
                 --privileged \
                 -p 5000:5000 \
                 -v "$(pwd)/config:/app/config:Z" \
                 -v "$(pwd)/models:/app/models:Z" \
                 -v "$(pwd)/database:/app/database:Z" \
                 -v "$(pwd)/logs:/app/logs:Z" \
-                watermelond:latest
+                watermelond:latest || {
+                    whiptail --msgbox "[ERROR] podman run falló.\nRevisa los logs anteriores." 10 60
+                    return 1
+                }
 
-            # Autostart con systemd rootless (compatible Podman 3.x y 4.x)
-            mkdir -p "$HOME/.config/systemd/user"
-            # Podman 4.x: usar `podman generate systemd` (aún funciona aunque deprecated)
-            # Podman 5.x: usar quadlets (archivo .container en ~/.config/containers/systemd/)
+            # Autostart con systemd rootless (compatible Podman 3.x / 4.x / 5.x)
             local PODMAN_MAJOR
-            PODMAN_MAJOR=$(podman --version | grep -oP '\d+' | head -1)
+            PODMAN_MAJOR=$(podman --version 2>/dev/null | grep -oP '\d+' | head -1 || echo "3")
+
             if [ "${PODMAN_MAJOR:-3}" -ge 5 ]; then
-                # Quadlet (Podman 5+)
+                # Podman 5+: Quadlets
                 mkdir -p "$HOME/.config/containers/systemd"
                 cat > "$HOME/.config/containers/systemd/watermelond.container" << QUADLET
 [Unit]
@@ -1287,22 +1381,26 @@ Image=watermelond:latest
 PublishPort=5000:5000
 Volume=$(pwd)/config:/app/config:Z
 Volume=$(pwd)/models:/app/models:Z
+Volume=$(pwd)/database:/app/database:Z
 Volume=$(pwd)/logs:/app/logs:Z
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=default.target
 QUADLET
+                XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user daemon-reload
+                XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user enable --now watermelond.service 2>/dev/null || true
             else
-                # Podman 3/4: generate systemd
-                cd /tmp
-                podman generate systemd --name watermelond --files --new 2>/dev/null && \
+                # Podman 3/4: generate systemd (en subshell para no cambiar directorio del script)
+                mkdir -p "$HOME/.config/systemd/user"
+                (
+                    cd /tmp && \
+                    podman generate systemd --name watermelond --files --new 2>/dev/null && \
                     mv /tmp/container-watermelond.service "$HOME/.config/systemd/user/" || true
-                cd - > /dev/null
+                )
+                XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user daemon-reload
+                XDG_RUNTIME_DIR="/run/user/$(id -u)" systemctl --user enable --now container-watermelond.service 2>/dev/null || true
             fi
-            systemctl --user daemon-reload
-            systemctl --user enable --now container-watermelond.service 2>/dev/null || \
-            systemctl --user enable --now watermelond 2>/dev/null || true
             ;;
         3)
             echo "Imagen Podman construida. Usa 'podman run' o 'podman-compose up' para lanzar."
@@ -1346,8 +1444,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     mosquitto mosquitto-clients \
     build-essential libssl-dev libffi-dev \
     libfann-dev swig pkg-config \
-    whiptail nano \
+    openssl whiptail nano \
     && rm -rf /var/lib/apt/lists/*
+
+# Configurar git-lfs
+RUN git lfs install
 
 # Compilar e instalar libfann desde código fuente (requerido para el wheel de fann2)
 RUN git clone https://github.com/libfann/fann.git /tmp/fann && \
@@ -1358,17 +1459,34 @@ RUN git clone https://github.com/libfann/fann.git /tmp/fann && \
 WORKDIR /app
 COPY . .
 
+# Crear directorios necesarios CON permisos correctos
+# Esto evita el PermissionError al escribir logs y datos en runtime
+RUN mkdir -p logs config database models piper/voices docs/brain_memory && \
+    chmod -R 775 logs config database models piper/voices docs/brain_memory
+
+# Copiar config base si no existe
+RUN if [ ! -f config/config.json ]; then \
+        if [ -f config/config.json.example ]; then \
+            cp config/config.json.example config/config.json; \
+        else \
+            echo '{}' > config/config.json; \
+        fi; \
+    fi
+
+# Generar certificado SSL autofirmado para HTTPS
+RUN mkdir -p config/certs && \
+    openssl req -x509 -newkey rsa:4096 \
+        -keyout config/certs/neo.key \
+        -out config/certs/neo.crt \
+        -days 3650 -nodes \
+        -subj "/CN=watermelond" 2>/dev/null || true && \
+    chmod 600 config/certs/neo.key 2>/dev/null || true
+
 # Crear venv e instalar dependencias Python
 RUN python3 -m venv venv && \
     venv/bin/pip install --upgrade pip && \
     venv/bin/pip install -r requirements.txt && \
     venv/bin/pip install Flask-WTF eventlet Flask-Limiter
-
-# Crear directorios necesarios
-RUN mkdir -p logs config database models piper/voices
-
-# Copiar config base si no existe
-RUN [ -f config/config.json ] || ([ -f config/config.json.example ] && cp config/config.json.example config/config.json) || echo '{}' > config/config.json
 
 EXPOSE 5000
 
@@ -1391,6 +1509,18 @@ function _generate_docker_compose() {
     local VOL_SUFFIX=""
     [ "$ENGINE" = "podman" ] && VOL_SUFFIX=":Z"
 
+    # Detectar si /dev/snd existe (no en todos los servidores/VMs)
+    local AUDIO_BLOCK=""
+    if [ -e /dev/snd ]; then
+        AUDIO_BLOCK="    devices:\n      - /dev/snd:/dev/snd\n    group_add:\n      - audio"
+    else
+        AUDIO_BLOCK="    # /dev/snd no detectado en este host.\n    # Descomenta las siguientes líneas si tienes hardware de audio:\n    # devices:\n    #   - /dev/snd:/dev/snd\n    # group_add:\n    #   - audio"
+    fi
+
+    # restart policy: 'unless-stopped' no es válido en podman-compose, usar 'always'
+    local RESTART_POLICY="unless-stopped"
+    [ "$ENGINE" = "podman" ] && RESTART_POLICY="always"
+
     cat > docker-compose.yml << COMPOSEEOF
 # WatermelonD — docker-compose.yml
 # Compatible con docker compose v2 y podman-compose
@@ -1401,7 +1531,7 @@ services:
     build: .
     image: watermelond:latest
     container_name: watermelond
-    restart: unless-stopped
+    restart: ${RESTART_POLICY}
     ports:
       - "5000:5000"
     volumes:
@@ -1414,14 +1544,9 @@ services:
       - PYTHONUNBUFFERED=1
       - JACK_NO_START_SERVER=1
       - TZ=Europe/Madrid
-    # Acceso a audio del host (micrófono y altavoz)
-    # En Podman puede necesitar --privileged o configuración de /dev
-    devices:
-      - /dev/snd:/dev/snd
-    group_add:
-      - audio
+$(echo -e "$AUDIO_BLOCK")
     # healthcheck integrado en el Dockerfile
-    # Descomentar para logs detallados:
+    # Logs detallados (descomentar si necesitas):
     # logging:
     #   driver: "json-file"
     #   options:
